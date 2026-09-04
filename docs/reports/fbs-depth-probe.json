@@ -1,0 +1,717 @@
+{
+  "account": {
+    "company": "FBS Markets Inc.",
+    "currency": "USD",
+    "is_demo": true,
+    "margin_mode": "2",
+    "margin_mode_is_hedging": true,
+    "margin_mode_is_netting": false,
+    "server": "FBS-Demo"
+  },
+  "completed_at_utc": "2026-09-04T11:39:09.881249+00:00",
+  "depth": {
+    "EURUSD": {
+      "broker_symbol": "EURUSD",
+      "m1_bar_history": {
+        "conclusive_broker_depth": false,
+        "earliest_visible": "2026-05-29T17:09:00+00:00",
+        "elapsed_seconds": 0.121898,
+        "method": "copy_rates_from(old_date, count=1)",
+        "note": "chart-limited observation; set Max. bars in chart to Unlimited and re-probe for broker depth",
+        "requested_at": "2000-01-01T00:00:00+00:00",
+        "returned_after_requested_date": true,
+        "terminal_maxbars": 100000
+      },
+      "selected": true,
+      "server_trading_day_offset": {
+        "measured": false,
+        "reason": "MT5 tick/bar epoch timestamps are UTC and cannot reveal the broker session offset."
+      },
+      "specification": {
+        "available": true,
+        "currency_base": "EUR",
+        "currency_margin": "EUR",
+        "currency_profit": "USD",
+        "description": "Euro vs US Dollar",
+        "digits": "5",
+        "expiration_mode": "15",
+        "expiration_time": "0",
+        "filling_mode": "3",
+        "margin_initial": "0.0",
+        "name": "EURUSD",
+        "path": "Forex\\Main\\EURUSD",
+        "point": "1e-05",
+        "select": "True",
+        "session_close": "1.16249",
+        "session_open": "1.16261",
+        "spread": "9",
+        "spread_float": "True",
+        "swap_long": "-7.7",
+        "swap_mode": "1",
+        "swap_rollover3days": "3",
+        "swap_short": "2.0",
+        "trade_calc_mode": "0",
+        "trade_contract_size": "100000.0",
+        "trade_exemode": "2",
+        "trade_freeze_level": "0",
+        "trade_mode": "4",
+        "trade_stops_level": "0",
+        "trade_tick_size": "1e-05",
+        "trade_tick_value": "1.0",
+        "visible": "True",
+        "volume_max": "500.0",
+        "volume_min": "0.01",
+        "volume_step": "0.01"
+      },
+      "tick_fields": {
+        "available": true,
+        "both_sides_populated_count": 10000,
+        "both_sides_populated_fraction": 1.0,
+        "count": 10000,
+        "crossed_or_locked_count": 0,
+        "dtype_names": [
+          "time",
+          "bid",
+          "ask",
+          "last",
+          "volume",
+          "time_msc",
+          "flags",
+          "volume_real"
+        ],
+        "elapsed_seconds": 0.017636,
+        "has_time_msc": true,
+        "sample": {
+          "ask": "1.1599",
+          "bid": "1.15981",
+          "flags": "226",
+          "last": "0.0",
+          "time": "1788266405",
+          "time_msc": "1788266405904",
+          "volume": "0",
+          "volume_real": "0.0"
+        }
+      },
+      "tick_history": {
+        "attempts": [
+          {
+            "attempt": 1,
+            "count": 1,
+            "elapsed_seconds": 0.0092
+          }
+        ],
+        "earliest": "2011-12-19T00:00:08+00:00",
+        "earliest_time_msc": 1324252808000,
+        "method": "copy_ticks_from(requested_from, count=1)",
+        "requested_from": "2000-01-01T00:00:00+00:00"
+      }
+    },
+    "GBPUSD": {
+      "broker_symbol": "GBPUSD",
+      "m1_bar_history": {
+        "conclusive_broker_depth": false,
+        "earliest_visible": null,
+        "elapsed_seconds": 0.002884,
+        "error": {
+          "code": -1,
+          "message": "Terminal: Call failed"
+        },
+        "requested_at": "2000-01-01T00:00:00+00:00",
+        "terminal_maxbars": 100000
+      },
+      "selected": true,
+      "server_trading_day_offset": {
+        "measured": false,
+        "reason": "MT5 tick/bar epoch timestamps are UTC and cannot reveal the broker session offset."
+      },
+      "specification": {
+        "available": true,
+        "currency_base": "GBP",
+        "currency_margin": "GBP",
+        "currency_profit": "USD",
+        "description": "British Pound vs US Dollar",
+        "digits": "5",
+        "expiration_mode": "15",
+        "expiration_time": "0",
+        "filling_mode": "3",
+        "margin_initial": "0.0",
+        "name": "GBPUSD",
+        "path": "Forex\\Main\\GBPUSD",
+        "point": "1e-05",
+        "select": "True",
+        "session_close": "1.35224",
+        "session_open": "1.35246",
+        "spread": "11",
+        "spread_float": "True",
+        "swap_long": "-2.91",
+        "swap_mode": "1",
+        "swap_rollover3days": "3",
+        "swap_short": "-1.15",
+        "trade_calc_mode": "0",
+        "trade_contract_size": "100000.0",
+        "trade_exemode": "2",
+        "trade_freeze_level": "0",
+        "trade_mode": "4",
+        "trade_stops_level": "0",
+        "trade_tick_size": "1e-05",
+        "trade_tick_value": "1.0",
+        "visible": "True",
+        "volume_max": "500.0",
+        "volume_min": "0.01",
+        "volume_step": "0.01"
+      },
+      "tick_fields": {
+        "available": true,
+        "both_sides_populated_count": 10000,
+        "both_sides_populated_fraction": 1.0,
+        "count": 10000,
+        "crossed_or_locked_count": 0,
+        "dtype_names": [
+          "time",
+          "bid",
+          "ask",
+          "last",
+          "volume",
+          "time_msc",
+          "flags",
+          "volume_real"
+        ],
+        "elapsed_seconds": 0.069571,
+        "has_time_msc": true,
+        "sample": {
+          "ask": "1.3544",
+          "bid": "1.35429",
+          "flags": "96",
+          "last": "0.0",
+          "time": "1788264596",
+          "time_msc": "1788264596038",
+          "volume": "0",
+          "volume_real": "0.0"
+        }
+      },
+      "tick_history": {
+        "earliest": "2011-12-19T00:00:08+00:00",
+        "earliest_time_msc": 1324252808000,
+        "elapsed_seconds": 0.029808,
+        "method": "copy_ticks_from(requested_from, count=1)",
+        "requested_from": "2000-01-01T00:00:00+00:00"
+      }
+    },
+    "GER40": {
+      "broker_symbol": "DE30",
+      "m1_bar_history": {
+        "conclusive_broker_depth": false,
+        "earliest_visible": "2026-05-26T16:00:00+00:00",
+        "elapsed_seconds": 5.259286,
+        "method": "copy_rates_from(old_date, count=1)",
+        "note": "chart-limited observation; set Max. bars in chart to Unlimited and re-probe for broker depth",
+        "requested_at": "2000-01-01T00:00:00+00:00",
+        "returned_after_requested_date": true,
+        "terminal_maxbars": 100000
+      },
+      "selected": true,
+      "server_trading_day_offset": {
+        "measured": false,
+        "reason": "MT5 tick/bar epoch timestamps are UTC and cannot reveal the broker session offset."
+      },
+      "specification": {
+        "available": true,
+        "currency_base": "EUR",
+        "currency_margin": "EUR",
+        "currency_profit": "EUR",
+        "description": "DAX index (cash based)",
+        "digits": "2",
+        "expiration_mode": "15",
+        "expiration_time": "0",
+        "filling_mode": "1",
+        "margin_initial": "0.0",
+        "name": "DE30",
+        "path": "CFD Cash\\Indexes\\DE30",
+        "point": "0.01",
+        "select": "True",
+        "session_close": "0.0",
+        "session_open": "0.0",
+        "spread": "0",
+        "spread_float": "True",
+        "swap_long": "-331.05",
+        "swap_mode": "1",
+        "swap_rollover3days": "5",
+        "swap_short": "-137.45",
+        "trade_calc_mode": "2",
+        "trade_contract_size": "10.0",
+        "trade_exemode": "2",
+        "trade_freeze_level": "0",
+        "trade_mode": "4",
+        "trade_stops_level": "0",
+        "trade_tick_size": "0.01",
+        "trade_tick_value": "0.11621100000000001",
+        "visible": "True",
+        "volume_max": "500.0",
+        "volume_min": "0.01",
+        "volume_step": "0.01"
+      },
+      "tick_fields": {
+        "available": true,
+        "both_sides_populated_count": 10000,
+        "both_sides_populated_fraction": 1.0,
+        "count": 10000,
+        "crossed_or_locked_count": 0,
+        "dtype_names": [
+          "time",
+          "bid",
+          "ask",
+          "last",
+          "volume",
+          "time_msc",
+          "flags",
+          "volume_real"
+        ],
+        "elapsed_seconds": 0.020136,
+        "has_time_msc": true,
+        "sample": {
+          "ask": "25986.3",
+          "bid": "25983.7",
+          "flags": "230",
+          "last": "0.0",
+          "time": "1788270889",
+          "time_msc": "1788270889367",
+          "volume": "0",
+          "volume_real": "0.0"
+        }
+      },
+      "tick_history": {
+        "earliest": "2023-06-09T01:00:02+00:00",
+        "earliest_time_msc": 1686272402120,
+        "elapsed_seconds": 88.615794,
+        "method": "copy_ticks_from(requested_from, count=1)",
+        "requested_from": "2000-01-01T00:00:00+00:00"
+      }
+    },
+    "UK100": {
+      "broker_symbol": "UK100",
+      "m1_bar_history": {
+        "conclusive_broker_depth": false,
+        "earliest_visible": null,
+        "elapsed_seconds": 0.000111,
+        "error": {
+          "code": -1,
+          "message": "Terminal: Call failed"
+        },
+        "requested_at": "2000-01-01T00:00:00+00:00",
+        "terminal_maxbars": 100000
+      },
+      "selected": true,
+      "server_trading_day_offset": {
+        "measured": false,
+        "reason": "MT5 tick/bar epoch timestamps are UTC and cannot reveal the broker session offset."
+      },
+      "specification": {
+        "available": true,
+        "currency_base": "GBP",
+        "currency_margin": "GBP",
+        "currency_profit": "GBP",
+        "description": "FTSE 100 Index (cash based)",
+        "digits": "2",
+        "expiration_mode": "15",
+        "expiration_time": "0",
+        "filling_mode": "1",
+        "margin_initial": "0.0",
+        "name": "UK100",
+        "path": "CFD Cash\\Indexes\\UK100",
+        "point": "0.01",
+        "select": "True",
+        "session_close": "10832.05",
+        "session_open": "10836.55",
+        "spread": "220",
+        "spread_float": "True",
+        "swap_long": "-407.6",
+        "swap_mode": "1",
+        "swap_rollover3days": "5",
+        "swap_short": "-43.31",
+        "trade_calc_mode": "2",
+        "trade_contract_size": "10.0",
+        "trade_exemode": "2",
+        "trade_freeze_level": "0",
+        "trade_mode": "4",
+        "trade_stops_level": "0",
+        "trade_tick_size": "0.01",
+        "trade_tick_value": "0.13534200000000002",
+        "visible": "True",
+        "volume_max": "500.0",
+        "volume_min": "0.01",
+        "volume_step": "0.01"
+      },
+      "tick_fields": {
+        "available": true,
+        "both_sides_populated_count": 10000,
+        "both_sides_populated_fraction": 1.0,
+        "count": 10000,
+        "crossed_or_locked_count": 0,
+        "dtype_names": [
+          "time",
+          "bid",
+          "ask",
+          "last",
+          "volume",
+          "time_msc",
+          "flags",
+          "volume_real"
+        ],
+        "elapsed_seconds": 0.013823,
+        "has_time_msc": true,
+        "sample": {
+          "ask": "10742.45",
+          "bid": "10740.25",
+          "flags": "96",
+          "last": "0.0",
+          "time": "1788272094",
+          "time_msc": "1788272094487",
+          "volume": "0",
+          "volume_real": "0.0"
+        }
+      },
+      "tick_history": {
+        "attempts": [
+          {
+            "attempt": 1,
+            "count": 1,
+            "elapsed_seconds": 0.172566
+          }
+        ],
+        "earliest": "2020-11-30T09:49:46+00:00",
+        "earliest_time_msc": 1606729786724,
+        "method": "copy_ticks_from(requested_from, count=1)",
+        "requested_from": "2000-01-01T00:00:00+00:00"
+      }
+    },
+    "US100": {
+      "broker_symbol": "US100",
+      "m1_bar_history": {
+        "conclusive_broker_depth": false,
+        "earliest_visible": "2026-05-26T18:59:00+00:00",
+        "elapsed_seconds": 1.618916,
+        "method": "copy_rates_from(old_date, count=1)",
+        "note": "chart-limited observation; set Max. bars in chart to Unlimited and re-probe for broker depth",
+        "requested_at": "2000-01-01T00:00:00+00:00",
+        "returned_after_requested_date": true,
+        "terminal_maxbars": 100000
+      },
+      "selected": true,
+      "server_trading_day_offset": {
+        "measured": false,
+        "reason": "MT5 tick/bar epoch timestamps are UTC and cannot reveal the broker session offset."
+      },
+      "specification": {
+        "available": true,
+        "currency_base": "USD",
+        "currency_margin": "USD",
+        "currency_profit": "USD",
+        "description": "Nasdaq index (cash based)",
+        "digits": "2",
+        "expiration_mode": "15",
+        "expiration_time": "0",
+        "filling_mode": "1",
+        "margin_initial": "0.0",
+        "name": "US100",
+        "path": "CFD Cash\\Indexes\\US100",
+        "point": "0.01",
+        "select": "True",
+        "session_close": "0.0",
+        "session_open": "0.0",
+        "spread": "0",
+        "spread_float": "True",
+        "swap_long": "-117.2",
+        "swap_mode": "1",
+        "swap_rollover3days": "5",
+        "swap_short": "-25.3",
+        "trade_calc_mode": "2",
+        "trade_contract_size": "10.0",
+        "trade_exemode": "2",
+        "trade_freeze_level": "0",
+        "trade_mode": "4",
+        "trade_stops_level": "0",
+        "trade_tick_size": "0.01",
+        "trade_tick_value": "0.1",
+        "visible": "True",
+        "volume_max": "500.0",
+        "volume_min": "0.01",
+        "volume_step": "0.01"
+      },
+      "tick_fields": {
+        "available": true,
+        "both_sides_populated_count": 10000,
+        "both_sides_populated_fraction": 1.0,
+        "count": 10000,
+        "crossed_or_locked_count": 0,
+        "dtype_names": [
+          "time",
+          "bid",
+          "ask",
+          "last",
+          "volume",
+          "time_msc",
+          "flags",
+          "volume_real"
+        ],
+        "elapsed_seconds": 0.076244,
+        "has_time_msc": true,
+        "sample": {
+          "ask": "29203.0",
+          "bid": "29200.7",
+          "flags": "96",
+          "last": "0.0",
+          "time": "1788264077",
+          "time_msc": "1788264077186",
+          "volume": "0",
+          "volume_real": "0.0"
+        }
+      },
+      "tick_history": {
+        "earliest": "2026-03-31T01:00:01+00:00",
+        "earliest_time_msc": 1774918801791,
+        "elapsed_seconds": 61.513214,
+        "method": "copy_ticks_from(requested_from, count=1)",
+        "requested_from": "2000-01-01T00:00:00+00:00"
+      }
+    },
+    "US30": {
+      "broker_symbol": "US30",
+      "m1_bar_history": {
+        "conclusive_broker_depth": false,
+        "earliest_visible": "2026-05-26T18:49:00+00:00",
+        "elapsed_seconds": 1.533792,
+        "method": "copy_rates_from(old_date, count=1)",
+        "note": "chart-limited observation; set Max. bars in chart to Unlimited and re-probe for broker depth",
+        "requested_at": "2000-01-01T00:00:00+00:00",
+        "returned_after_requested_date": true,
+        "terminal_maxbars": 100000
+      },
+      "selected": true,
+      "server_trading_day_offset": {
+        "measured": false,
+        "reason": "MT5 tick/bar epoch timestamps are UTC and cannot reveal the broker session offset."
+      },
+      "specification": {
+        "available": true,
+        "currency_base": "USD",
+        "currency_margin": "USD",
+        "currency_profit": "USD",
+        "description": "Mini-sized DJIA index (cash based)",
+        "digits": "2",
+        "expiration_mode": "15",
+        "expiration_time": "0",
+        "filling_mode": "1",
+        "margin_initial": "0.0",
+        "name": "US30",
+        "path": "CFD Cash\\Indexes\\US30",
+        "point": "0.01",
+        "select": "True",
+        "session_close": "0.0",
+        "session_open": "0.0",
+        "spread": "0",
+        "spread_float": "True",
+        "swap_long": "-534.15",
+        "swap_mode": "1",
+        "swap_rollover3days": "5",
+        "swap_short": "-237.2",
+        "trade_calc_mode": "2",
+        "trade_contract_size": "10.0",
+        "trade_exemode": "2",
+        "trade_freeze_level": "0",
+        "trade_mode": "4",
+        "trade_stops_level": "0",
+        "trade_tick_size": "0.01",
+        "trade_tick_value": "0.1",
+        "visible": "True",
+        "volume_max": "500.0",
+        "volume_min": "0.01",
+        "volume_step": "0.01"
+      },
+      "tick_fields": {
+        "available": true,
+        "both_sides_populated_count": 10000,
+        "both_sides_populated_fraction": 1.0,
+        "count": 10000,
+        "crossed_or_locked_count": 0,
+        "dtype_names": [
+          "time",
+          "bid",
+          "ask",
+          "last",
+          "volume",
+          "time_msc",
+          "flags",
+          "volume_real"
+        ],
+        "elapsed_seconds": 0.023903,
+        "has_time_msc": true,
+        "sample": {
+          "ask": "52874.6",
+          "bid": "52869.9",
+          "flags": "230",
+          "last": "0.0",
+          "time": "1788265952",
+          "time_msc": "1788265952842",
+          "volume": "0",
+          "volume_real": "0.0"
+        }
+      },
+      "tick_history": {
+        "earliest": "2025-04-15T01:00:01+00:00",
+        "earliest_time_msc": 1744678801252,
+        "elapsed_seconds": 93.649561,
+        "method": "copy_ticks_from(requested_from, count=1)",
+        "requested_from": "2000-01-01T00:00:00+00:00"
+      }
+    },
+    "US500": {
+      "broker_symbol": "US500",
+      "m1_bar_history": {
+        "conclusive_broker_depth": false,
+        "earliest_visible": "2026-05-26T18:38:00+00:00",
+        "elapsed_seconds": 3.493353,
+        "method": "copy_rates_from(old_date, count=1)",
+        "note": "chart-limited observation; set Max. bars in chart to Unlimited and re-probe for broker depth",
+        "requested_at": "2000-01-01T00:00:00+00:00",
+        "returned_after_requested_date": true,
+        "terminal_maxbars": 100000
+      },
+      "selected": true,
+      "server_trading_day_offset": {
+        "measured": false,
+        "reason": "MT5 tick/bar epoch timestamps are UTC and cannot reveal the broker session offset."
+      },
+      "specification": {
+        "available": true,
+        "currency_base": "USD",
+        "currency_margin": "USD",
+        "currency_profit": "USD",
+        "description": "E-mini SP 500 index (cash based)",
+        "digits": "2",
+        "expiration_mode": "15",
+        "expiration_time": "0",
+        "filling_mode": "1",
+        "margin_initial": "0.0",
+        "name": "US500",
+        "path": "CFD Cash\\Indexes\\US500",
+        "point": "0.01",
+        "select": "True",
+        "session_close": "0.0",
+        "session_open": "0.0",
+        "spread": "0",
+        "spread_float": "True",
+        "swap_long": "-95.6",
+        "swap_mode": "1",
+        "swap_rollover3days": "5",
+        "swap_short": "-2.5",
+        "trade_calc_mode": "2",
+        "trade_contract_size": "10.0",
+        "trade_exemode": "2",
+        "trade_freeze_level": "0",
+        "trade_mode": "4",
+        "trade_stops_level": "0",
+        "trade_tick_size": "0.01",
+        "trade_tick_value": "0.1",
+        "visible": "True",
+        "volume_max": "500.0",
+        "volume_min": "0.01",
+        "volume_step": "0.01"
+      },
+      "tick_fields": {
+        "available": true,
+        "both_sides_populated_count": 10000,
+        "both_sides_populated_fraction": 1.0,
+        "count": 10000,
+        "crossed_or_locked_count": 0,
+        "dtype_names": [
+          "time",
+          "bid",
+          "ask",
+          "last",
+          "volume",
+          "time_msc",
+          "flags",
+          "volume_real"
+        ],
+        "elapsed_seconds": 0.020694,
+        "has_time_msc": true,
+        "sample": {
+          "ask": "7650.61",
+          "bid": "7650.06",
+          "flags": "96",
+          "last": "0.0",
+          "time": "1788266164",
+          "time_msc": "1788266164141",
+          "volume": "0",
+          "volume_real": "0.0"
+        }
+      },
+      "tick_history": {
+        "earliest": "2026-01-29T01:00:00+00:00",
+        "earliest_time_msc": 1769648400462,
+        "elapsed_seconds": 44.176777,
+        "method": "copy_ticks_from(requested_from, count=1)",
+        "requested_from": "2000-01-01T00:00:00+00:00"
+      }
+    }
+  },
+  "limitations": [
+    "MT5 tick epochs are UTC; broker trading-day offset is not inferable from quote timestamps.",
+    "This probe measures retrievable tick/M1 depth and recent bid/ask population, not demo/live identity.",
+    "M1 history is constrained by the terminal's finite Max. bars in chart setting and is not conclusive broker depth."
+  ],
+  "package_version": "5.0.6162",
+  "probe_version": "safe-runner-v1",
+  "probed_at_utc": "2026-09-04T11:26:51.014332+00:00",
+  "resumed_at_utc": [
+    "2026-09-04T11:39:09.526874+00:00"
+  ],
+  "status": "complete",
+  "symbols": {
+    "candidates": {
+      "DE30": [
+        "DE30"
+      ],
+      "EURUSD": [
+        "EURUSD",
+        "EURUSDw"
+      ],
+      "GBPUSD": [
+        "GBPUSD",
+        "GBPUSDw"
+      ],
+      "GER40": [],
+      "UK100": [
+        "UK100"
+      ],
+      "US100": [
+        "US100"
+      ],
+      "US30": [
+        "US30"
+      ],
+      "US500": [
+        "US500"
+      ]
+    },
+    "logical_to_broker": {
+      "EURUSD": "EURUSD",
+      "GBPUSD": "GBPUSD",
+      "GER40": "DE30",
+      "UK100": "UK100",
+      "US100": "US100",
+      "US30": "US30",
+      "US500": "US500"
+    },
+    "total": 585
+  },
+  "terminal": {
+    "build": 6140,
+    "company": "MetaQuotes Ltd.",
+    "connected": true,
+    "maxbars": 100000,
+    "name": "MetaTrader 5",
+    "path": "C:\\Program Files\\MetaTrader 5",
+    "trade_allowed": false
+  }
+}

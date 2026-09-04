@@ -1,7 +1,12 @@
 # ADR-0007: Data source selection
 
-Status: not started — blocked on Gate-0 sign-off. The Principal's practical constraints are recorded
-below and are **not** open questions; what remains is measurement and licence confirmation.
+Status: in progress — the broker depth probe is complete and its results are recorded under
+**Measured facts** below. Two items remain open: the M1/D1 pass (blocked on the terminal's
+`Max. bars in chart` cap) and the data-licence answer.
+
+Probe report: `docs/reports/fbs-depth-probe.json`, SHA-256
+`ed169302c39b68f57b51087b7e2af60fbdfd8e3bada94f4077376bf78de3ba83`, run against `FBS-Demo`,
+MetaTrader 5 build 6140.
 
 ## Context
 
@@ -23,6 +28,95 @@ leg, while a GBP-denominated or EUR-denominated index CFD does — but the **pro
 per-broker per-symbol property** and MUST be read from the broker's own symbol specification, never
 inferred from the underlying's denomination `[VERIFY]`. `SYMBOL_CURRENCY_MARGIN` may differ from
 `SYMBOL_CURRENCY_PROFIT`, which can introduce a third series.
+
+## Measured facts
+
+Measured 2026-09-04 on the FBS demo server. These supersede the corresponding `[VERIFY]` items;
+anything still marked `[VERIFY]` below was **not** settled by the probe.
+
+### Retrievable tick depth
+
+| Logical | Broker symbol | Earliest tick | Span |
+|---|---|---|---|
+| GBP/USD | `GBPUSD` | 2011-12-19 | ~14.7 yr |
+| EUR/USD | `EURUSD` | 2011-12-19 | ~14.7 yr |
+| UK100 | `UK100` | 2020-11-30 | ~5.8 yr |
+| GER40 | `DE30` | 2023-06-09 | ~3.2 yr |
+| US30 | `US30` | 2025-04-15 | ~1.4 yr |
+| US500 | `US500` | 2026-01-29 | ~0.6 yr |
+| US100 | `US100` | 2026-03-31 | ~0.4 yr |
+
+**The FX result changes this ADR's shape.** SPEC §13 asked for ≥ 8 years of GBP/USD and EUR/USD
+ticks; the broker alone supplies ~14.7. So the deep-history requirement is met by **the broker we
+would actually trade with**, which is what §4.1 *prefers* for calibration and what §6.4 *requires*
+before Gate 3 — one source satisfying both, instead of a third-party archive plus a separate
+calibration pass. A third-party archive is consequently **not on the critical path**; it becomes a
+candidate second source for §4.4 #7 cross-source agreement, nothing more.
+
+**The index result reinforces `data_only` on measured grounds.** Only UK100 clears §13's ≥ 5-year
+target, and it does so on the traded venue. More decisively, SPEC §2.1 requires backtests to include
+the 2016 Brexit vote, the 2016-10-07 flash crash, the 2020 COVID crunch and the 2022 gilt crisis:
+FX history covers **all four**, and **no index covers any of them**. The earlier argument for
+descoping — that research and execution would sit on two different brokers' CFDs — no longer
+applies, since index history would now come from the execution venue itself. The argument that
+stands is depth, and it is now a number rather than an assumption.
+
+### Instrument specifications
+
+- **Cash CFDs confirmed:** every index has `expiration_time = 0` and `trade_calc_mode = 2`. No
+  expiry, no rollover logic — matching the Principal's v1 instrument-type decision.
+- **Pip arithmetic confirms SPEC §2.1's hand-calculated table exactly.** `GBPUSD` has
+  `trade_contract_size = 100000`, `point = 1e-05`, `digits = 5`, `trade_tick_value = 1.0`. One pip
+  (0.0001) on a standard lot is therefore USD 10.00, as §2.1 states. §10.2's financial-correctness
+  test now has measured broker data to assert against.
+- **Triple-swap day differs by asset class, and this is a real trap.** `swap_rollover3days` is **3
+  (Wednesday) for FX** and **5 (Friday) for every index CFD**. §2.1 states the Wednesday convention
+  with a `[VERIFY]`; it holds for FX only. A cost model applying one rule to both would mis-accrue
+  index financing on two days of every week.
+- **`trade_tick_value` is a live, FX-rate-derived number, not a constant.** `UK100` reports
+  `0.135342` and `DE30` `0.116211` — 0.1 GBP and 0.1 EUR converted to USD at the prevailing rate. It
+  therefore **cannot be cached in `configs/instruments.yaml`**, and the §2.3 startup verification
+  must not equality-compare it; it is a live-read field per §2.4. Only the invariant inputs
+  (contract size, point, digits, tick size) are comparable.
+- **`currency_margin` differs from `currency_profit`:** `GBPUSD` margins in GBP and profits in USD.
+  Against a USD account that is a third conversion series, exactly as flagged. Index margin
+  currencies follow their profit currencies (GBP, EUR, USD).
+- **Tick fields:** `time_msc` is present, settling that `[VERIFY]`. FX ticks carry `last = 0`,
+  `volume = 0`, `volume_real = 0`, confirming there is no traded volume and that
+  `VolumeKind.TICK_COUNT` is the correct label. A 10,000-tick recent sample was 100 % two-sided with
+  zero crossed or locked quotes — recent only; historical density and two-sidedness back to 2011 are
+  still `[VERIFY]`.
+- **Suffixed variants exist:** `GBPUSDw` and `EURUSDw` alongside the unsuffixed symbols, out of 585
+  total. The probe mapped the logical names to the **unsuffixed** symbols. That mapping is now an
+  explicit decision to record, and the variants' depth and specifications are unmeasured `[VERIFY]`.
+
+### Account facts
+
+- **The account is HEDGING, not netting** (`margin_mode = 2`). This bears directly on §8.3: under
+  hedging the broker holds many positions per symbol, each with its own ticket and its own SL/TP, so
+  a per-position native stop is straightforwardly achievable. The cost is that §8.2's target-position
+  model must be imposed in software — never open an opposing ticket, always close by explicit
+  position ticket to reach target — and NN-9 reconciliation becomes a set comparison over tickets
+  rather than a scalar. Whether FBS offers a netting account type at all is `[VERIFY]`, and which
+  mode to require is a P4 broker-ADR decision.
+- Account currency USD, `FBS Markets Inc.`, server `FBS-Demo`, demo confirmed.
+- `trade_allowed = False` — algo trading is disabled in the terminal. Irrelevant to a read-only
+  probe; it blocks any order path and must be enabled before P4 contract tests.
+
+### Still open
+
+- **M1/D1 depth is inconclusive.** `copy_rates_range` from 2000 failed (`-1 Terminal: Call failed`)
+  against `maxbars = 100000`. Re-run with `Max. bars in chart` set to Unlimited.
+- **The broker's trading-day boundary is unmeasured, and cannot be measured the way the probe first
+  tried.** MT5 tick and bar epochs are UTC, so comparing a quote's timestamp against our own clock
+  reveals nothing about the server's session offset. The observable route is **D1 bar open times**,
+  which are UTC epochs and therefore expose the boundary directly — so the re-run must cover D1, not
+  only M1. This is the input SPEC §4.3 needs for a broker-priced instrument's daily bars, and §6.3
+  needs for the financing accrual boundary.
+- **Session hours are unmeasured.** `SYMBOL_SESSION_OPEN` / `SYMBOL_SESSION_CLOSE` are session
+  open/close **prices**, not times (`GBPUSD` reports 1.35246 / 1.35224), so they do not answer the
+  question. Session times require the session-quote/session-trade calls.
+- The data-licence answer for any third-party second source.
 
 ## Decision (to be completed)
 
