@@ -40,12 +40,12 @@ None — Gate 0 is the first gate.
   answered and adopted in ADR-0004 (classes A–E).
 - [x] CI runs on a committed git SHA and its immutable URL is linked above — **cleared**: run
   `33852037018` passed on `4de5f7a540ed216b3568141bd83392af3189c3cf`.
-- [ ] Enforce the §12.3 `master` ruleset. GitHub rejected the private-repository ruleset request on
-  2026-09-04 with HTTP 403: “Upgrade to GitHub Pro or make this repository public to enable this
-  feature.” Remediation: the Principal upgrades the account to Pro, then enables PR-only squash
-  merges, strict `quality` and `secrets` checks, and deletion/non-fast-forward protection with no
-  configured bypass. Making proprietary trading-system code public is explicitly not a workaround;
-  voluntarily using a checked PR until upgrade does not satisfy the repository-setting requirement.
+- [x] Enforce the §12.3 `master` ruleset — **cleared** on 2026-09-04. At the Principal's direction,
+  repository visibility is temporarily public and active ruleset `master-release-gate` (GitHub ID
+  `22258574`) requires PR-only squash merges, strict `quality` and `secrets` checks, resolved review
+  threads, and deletion/non-fast-forward protection with no configured bypass actors. Returning the
+  repository to private before upgrading to GitHub Pro would remove this enforcement and reopen the
+  blocker.
 - [ ] Independent human reviewer records sign-off.
 - [x] Principal records Gate-0 sign-off — **cleared**: Isaac Gumbi approved on 2026-09-04.
 
