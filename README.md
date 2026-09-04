@@ -11,11 +11,11 @@ Gate 0 is **not approved**. The specification is frozen at **v1.0** (SHA-256
 preserved unmodified at `docs/SPEC-supplied-2026-09-03.md`), and the eight Phase-0 interpretation
 questions are answered and adopted. Isaac Gumbi recorded Principal approval on 2026-09-04, and
 [CI run 33852037018](https://github.com/isaacgu/tradebot/actions/runs/33852037018) passed both
-required jobs on committed candidate `4de5f7a540ed216b3568141bd83392af3189c3cf`. Gate 0 still
-requires an independent human review and enforced private-branch protection; GitHub rejected the
-required ruleset because the account needs Pro, and the repository will not be made public as a
-workaround. The implementation is therefore a reviewable Phase-0 candidate, not a certified
-foundation and not authorization to begin Phase 1. See the
+required jobs on committed candidate `4de5f7a540ed216b3568141bd83392af3189c3cf`. At the Principal's
+direction, the repository is temporarily public so GitHub can enforce the `master-release-gate`
+ruleset without a Pro subscription. Gate 0 still requires an independent human review. The
+implementation is therefore a reviewable Phase-0 candidate, not a certified foundation and not
+authorization to begin Phase 1. See the
 [Gate-0 evidence pack](docs/reports/gate0_evidence.md) for the row-by-row status.
 
 ## Clean-machine setup
