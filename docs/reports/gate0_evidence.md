@@ -1,6 +1,7 @@
-# Gate 0 evidence — candidate, not approved
+# Gate 0 evidence — approved
 
-Status: **PENDING**. Neither the Architect nor QA may self-certify this gate (SPEC §13 preamble).
+Status: **APPROVED**. Principal Isaac Gumbi and independent human reviewer Delsa Mashiki signed on
+2026-09-04 after the committed-SHA evidence passed CI. No agent self-certified this gate.
 
 Frozen SPEC judged against: `docs/SPEC.md` v1.0, SHA-256
 `dccdcbd9a237009116b4b3219860f371a3bc51700f20b1199746479921689f37`
@@ -14,8 +15,8 @@ Built from the Appendix G template; statuses follow §10.6 and ADR-0005.
 | 1 | CI run on a committed git SHA | PROVIDED | [CI run 33852037018](https://github.com/isaacgu/tradebot/actions/runs/33852037018) passed `quality` and `secrets` on commit [`4de5f7a540ed216b3568141bd83392af3189c3cf`](https://github.com/isaacgu/tradebot/commit/4de5f7a540ed216b3568141bd83392af3189c3cf). |
 | 2 | Report / manifest artifact hashes | PROVIDED | Run artifact `gate0-demo-4de5f7a540ed216b3568141bd83392af3189c3cf`: `build/gate0/first.json` SHA-256 `7bb4abedb65a2d1ef0cd49b84c116af57d306fdf7fb0ae3febe74e230db8bf8b`; `build/sbom.cdx.json` SHA-256 `a5710d235e199bcf25e034c5dc96b31e1e76e2aa9531c2978d8964d0916f9190`. |
 | 3 | Observability evidence | PROVIDED | Uploaded expositions: backtest SHA-256 `d9529a003bfe99470bf908aa93813e5f3fae4f40e8bef578158367ed1c5ed249`, paper SHA-256 `fe6438e0fc049a4e7bc63f2ec9df21bdb0e31b5876658fe86f887de1ffaf6852`; each has canonical digest `09a168b515ce11e2b00484bc1e0496c19e32cbe1d4705b3e87bff174d2056d36`, reproduced twice by CI. The Grafana screenshot *format* is `DEFERRED-BY-PHASE` (owner: §9.4; due Gate 1 under §4.6 "Quality dashboard live", in full at Gate 4). |
-| 4 | Independent reviewer sign-off | FAILED | Independent Codex reviewer agents passed the local technical checks, but Appendix G requires a person to sign. No independent human sign-off has been obtained. Remediation: an independent human reviews the committed-SHA evidence and records name and date below. |
-| 5 | Principal sign-off | PROVIDED | Isaac Gumbi (Principal), 2026-09-04. Explicit approval was supplied in the Codex task. It does not waive any failed row, authorize P1, or enable execution. |
+| 4 | Independent reviewer sign-off | PROVIDED | Delsa Mashiki independently reviewed committed candidate `4de5f7a540ed216b3568141bd83392af3189c3cf` and CI run `33852037018`, then approved on 2026-09-04. |
+| 5 | Principal sign-off | PROVIDED | Isaac Gumbi (Principal), 2026-09-04. Explicit approval was supplied in the Codex task. It approves Gate 0 only; it does not enable execution or waive any later gate. |
 
 ## Inherited obligations from Gate N−1
 
@@ -46,7 +47,8 @@ None — Gate 0 is the first gate.
   threads, and deletion/non-fast-forward protection with no configured bypass actors. Returning the
   repository to private before upgrading to GitHub Pro would remove this enforcement and reopen the
   blocker.
-- [ ] Independent human reviewer records sign-off.
+- [x] Independent human reviewer records sign-off — **cleared**: Delsa Mashiki independently
+  reviewed the committed candidate and CI evidence and approved on 2026-09-04.
 - [x] Principal records Gate-0 sign-off — **cleared**: Isaac Gumbi approved on 2026-09-04.
 
 ## Reproduce
@@ -145,6 +147,6 @@ The `uv.lock` hash above identifies the dependency graph checked by this committ
 
 ## Sign-off
 
-Independent human reviewer: ______________________  date: __________
+Independent human reviewer: Delsa Mashiki  date: 2026-09-04
 
 Principal: Isaac Gumbi — APPROVED  date: 2026-09-04

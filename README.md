@@ -6,16 +6,16 @@ connect to a broker, calculate PnL, or provide evidence of trading performance.
 
 ## Current gate status
 
-Gate 0 is **not approved**. The specification is frozen at **v1.0** (SHA-256
+Gate 0 is **APPROVED**. The specification is frozen at **v1.0** (SHA-256
 `dccdcbd9…1689f37`, errata enumerated in [ADR-0004](docs/adr/0004-freeze-errata.md), supplied draft
 preserved unmodified at `docs/SPEC-supplied-2026-09-03.md`), and the eight Phase-0 interpretation
 questions are answered and adopted. Isaac Gumbi recorded Principal approval on 2026-09-04, and
 [CI run 33852037018](https://github.com/isaacgu/tradebot/actions/runs/33852037018) passed both
 required jobs on committed candidate `4de5f7a540ed216b3568141bd83392af3189c3cf`. At the Principal's
 direction, the repository is temporarily public so GitHub can enforce the `master-release-gate`
-ruleset without a Pro subscription. Gate 0 still requires an independent human review. The
-implementation is therefore a reviewable Phase-0 candidate, not a certified foundation and not
-authorization to begin Phase 1. See the
+ruleset without a Pro subscription. Delsa Mashiki completed the independent human review and
+approved on 2026-09-04. All five Gate-0 evidence categories are now `PROVIDED`; the P0 foundation is
+certified. This approval does not start Phase 1 or enable trading. See the
 [Gate-0 evidence pack](docs/reports/gate0_evidence.md) for the row-by-row status.
 
 ## Clean-machine setup

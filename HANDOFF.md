@@ -53,11 +53,12 @@ entry requirement; branch protection on `master`.
 
 ## What the next role needs to know
 
-The spec is frozen, Isaac Gumbi recorded Principal approval on 2026-09-04, committed-SHA CI is
-green, and the §12.3 `master-release-gate` ruleset is active. The Principal authorised temporary
-public visibility to make GitHub enforcement available without a Pro subscription. **The Data
-Engineer must still not begin P1** until an independent human reviewer signs the evidence pack.
-Every required evidence category must read `PROVIDED`.
+Gate 0 is approved. The spec is frozen, Isaac Gumbi recorded Principal approval on 2026-09-04,
+committed-SHA CI is green, and the §12.3 `master-release-gate` ruleset is active. The Principal
+authorised temporary public visibility to make GitHub enforcement available without a Pro
+subscription. Delsa Mashiki independently reviewed the committed candidate and CI evidence and
+approved on 2026-09-04. Every required evidence category reads `PROVIDED`. Phase 1 has not started;
+begin it only under a separate assignment.
 
 **Read ADR-0006 first; it blocks the first adapter.** When P1 begins: preserve both `ts_event` and
 `ts_recv`, add `available_at` and never normalise the raw local stamp, publish in
