@@ -11,9 +11,9 @@ Built from the Appendix G template; statuses follow §10.6 and ADR-0005.
 
 | # | Category | Status | Content |
 |---|---|---|---|
-| 1 | CI run on a committed git SHA | FAILED | No successful committed-SHA CI run is linked in this pack. Remediation: publish the candidate, protect `master` per §12.3, then link the immutable run URL and SHA here. |
-| 2 | Report / manifest artifact hashes | FAILED | Local hashes reproduce bit-for-bit (below) but were generated on an uncommitted tree, so they are not gate evidence. Remediation: regenerate on the committed SHA via `make evidence-hashes`. |
-| 3 | Observability evidence | FAILED | The canonical Prometheus exposition is now emitted per mode by `make demo`, with a reproducible digest, and CI compares the two runs' digests. Digests below. This row flips to `PROVIDED` as soon as it is produced on a committed SHA. The Grafana screenshot *format* is `DEFERRED-BY-PHASE` (owner: §9.4; due Gate 1 under §4.6 "Quality dashboard live", in full at Gate 4). |
+| 1 | CI run on a committed git SHA | PROVIDED | [CI run 33852037018](https://github.com/isaacgu/tradebot/actions/runs/33852037018) passed `quality` and `secrets` on commit [`4de5f7a540ed216b3568141bd83392af3189c3cf`](https://github.com/isaacgu/tradebot/commit/4de5f7a540ed216b3568141bd83392af3189c3cf). |
+| 2 | Report / manifest artifact hashes | PROVIDED | Run artifact `gate0-demo-4de5f7a540ed216b3568141bd83392af3189c3cf`: `build/gate0/first.json` SHA-256 `7bb4abedb65a2d1ef0cd49b84c116af57d306fdf7fb0ae3febe74e230db8bf8b`; `build/sbom.cdx.json` SHA-256 `a5710d235e199bcf25e034c5dc96b31e1e76e2aa9531c2978d8964d0916f9190`. |
+| 3 | Observability evidence | PROVIDED | Uploaded expositions: backtest SHA-256 `d9529a003bfe99470bf908aa93813e5f3fae4f40e8bef578158367ed1c5ed249`, paper SHA-256 `fe6438e0fc049a4e7bc63f2ec9df21bdb0e31b5876658fe86f887de1ffaf6852`; each has canonical digest `09a168b515ce11e2b00484bc1e0496c19e32cbe1d4705b3e87bff174d2056d36`, reproduced twice by CI. The Grafana screenshot *format* is `DEFERRED-BY-PHASE` (owner: §9.4; due Gate 1 under §4.6 "Quality dashboard live", in full at Gate 4). |
 | 4 | Independent reviewer sign-off | FAILED | Independent Codex reviewer agents passed the local technical checks, but Appendix G requires a person to sign. No independent human sign-off has been obtained. Remediation: an independent human reviews the committed-SHA evidence and records name and date below. |
 | 5 | Principal sign-off | PROVIDED | Isaac Gumbi (Principal), 2026-09-04. Explicit approval was supplied in the Codex task. It does not waive any failed row, authorize P1, or enable execution. |
 
@@ -38,7 +38,14 @@ None — Gate 0 is the first gate.
   screenshot is silently marked N/A.
 - [x] Principal confirms the P0 interpretations listed in `HANDOFF.md` — **cleared**: all eight
   answered and adopted in ADR-0004 (classes A–E).
-- [ ] CI runs on a committed git SHA and its immutable URL is linked above.
+- [x] CI runs on a committed git SHA and its immutable URL is linked above — **cleared**: run
+  `33852037018` passed on `4de5f7a540ed216b3568141bd83392af3189c3cf`.
+- [ ] Enforce the §12.3 `master` ruleset. GitHub rejected the private-repository ruleset request on
+  2026-09-04 with HTTP 403: “Upgrade to GitHub Pro or make this repository public to enable this
+  feature.” Remediation: the Principal upgrades the account to Pro, then enables PR-only squash
+  merges, strict `quality` and `secrets` checks, and deletion/non-fast-forward protection with no
+  configured bypass. Making proprietary trading-system code public is explicitly not a workaround;
+  voluntarily using a checked PR until upgrade does not satisfy the repository-setting requirement.
 - [ ] Independent human reviewer records sign-off.
 - [x] Principal records Gate-0 sign-off — **cleared**: Isaac Gumbi approved on 2026-09-04.
 
@@ -81,17 +88,19 @@ exit zero must have every bar already closed — and it would break NN-10, since
 `ts_event.isoformat()`. The correct closure is a bus-over-`WallClock` test with injected time
 sources, owed at P1.
 
-## Local candidate evidence
+## Committed-SHA CI evidence
 
-Final local candidate run on 2026-09-04 (useful for review, invalid as formal Gate-0 evidence until
-repeated by CI on a committed SHA):
+Authoritative candidate run on 2026-09-04:
 
+- CI run: `https://github.com/isaacgu/tradebot/actions/runs/33852037018`
 - Python version: `3.12.14`
 - uv version: `0.12.9`
-- git SHA: `UNCOMMITTED` (intentionally fails the committed-evidence requirement)
+- git SHA: `4de5f7a540ed216b3568141bd83392af3189c3cf`
 - `docs/SPEC.md` (frozen v1.0) SHA-256: `dccdcbd9a237009116b4b3219860f371a3bc51700f20b1199746479921689f37`
 - `docs/SPEC-supplied-2026-09-03.md` SHA-256: `2335e37dff7e3e0e7f7b88cf3974d9af5d953c404a32d95703bae55bed7e1fbc`
-- demo manifest SHA-256 (schema v2): `ea35658d5de63a2b31f48f1b5e8b410c792768b82856b834bed29554486919d4`
+- `uv.lock` SHA-256: `aad538b2212466bdd90693ed40dbc7aa5049f05b89d62550a72bb7835901eb9f`
+- demo manifest SHA-256 (schema v2): `7bb4abedb65a2d1ef0cd49b84c116af57d306fdf7fb0ae3febe74e230db8bf8b`
+- CycloneDX SBOM SHA-256: `a5710d235e199bcf25e034c5dc96b31e1e76e2aa9531c2978d8964d0916f9190`
 - backtest logical trace SHA-256: `4dd0c11b4c9134f03c8a05e1901fb8b376506096a184feebd750e52d0bdbebdc`
 - paper logical trace SHA-256: `4dd0c11b4c9134f03c8a05e1901fb8b376506096a184feebd750e52d0bdbebdc`
 - backtest canonical metrics SHA-256: `09a168b515ce11e2b00484bc1e0496c19e32cbe1d4705b3e87bff174d2056d36`
@@ -112,8 +121,8 @@ part of the `code_parity` predicate. The raw `.prom` files differ between runs �
 wall-clock time into `*_created` — which is precisely why the canonical record is the hashed artifact
 and the raw exposition is upload-only.
 
-`uv.lock` is hashed by `make evidence-hashes` at the time of the run; it is not restated here,
-because a hand-copied lockfile hash drifts silently from the file it claims to describe.
+The `uv.lock` hash above identifies the dependency graph checked by this committed-SHA run;
+`make evidence-hashes` recomputes it rather than trusting the hand-copied value.
 
 ## Known limitations carried into P1
 

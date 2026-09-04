@@ -48,13 +48,16 @@ entry requirement; branch protection on `master`.
 - Design: `docs/adr/0001-platform-and-p0-stack.md`, ADR-0002, ADR-0003.
 - Interface resolution: `docs/interfaces.md`.
 - Gate candidate: `docs/reports/gate0_evidence.md`.
-- Local and CI hashes are populated only after final verification on committed code.
+- Committed-SHA CI evidence: run `33852037018`, candidate
+  `4de5f7a540ed216b3568141bd83392af3189c3cf`; details and hashes are in the gate pack.
 
 ## What the next role needs to know
 
-The spec is frozen, and Isaac Gumbi recorded Principal approval on 2026-09-04. **The Data Engineer
-must still not begin P1** until a green CI run on the committed candidate SHA is attached and an
-independent human reviewer signs the evidence pack. Every required category must read `PROVIDED`.
+The spec is frozen, Isaac Gumbi recorded Principal approval on 2026-09-04, and committed-SHA CI is
+green. **The Data Engineer must still not begin P1** until an independent human reviewer signs the
+evidence pack and `master` has the §12.3 private-repository enforcement. GitHub rejected the
+required ruleset with HTTP 403 because the account needs Pro; making the trading-system repository
+public is not an acceptable workaround. Every required evidence category must read `PROVIDED`.
 
 **Read ADR-0006 first; it blocks the first adapter.** When P1 begins: preserve both `ts_event` and
 `ts_recv`, add `available_at` and never normalise the raw local stamp, publish in
