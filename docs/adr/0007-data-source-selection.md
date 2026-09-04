@@ -119,7 +119,7 @@ stands is depth, and it is now a number rather than an assumption.
 - **The broker's trading-day boundary is unmeasured**, and cannot be measured the way the probe
   first tried: MT5 tick and bar epochs are UTC, so comparing a quote's timestamp against our own
   clock reveals nothing about the server's session offset. The observable route is **D1 bar OPEN
-  instants**, which `scripts/fbs_depth_probe.py` (`boundary-pass-v2`) now measures. This is the input
+  instants**, which `scripts/fbs_depth_probe.py` (`boundary-pass-v5`) now measures. This is the input
   SPEC §4.3 needs for a broker-priced instrument's daily bars, and §6.3 needs for the financing
   accrual boundary.
 
@@ -147,6 +147,13 @@ stands is depth, and it is now a number rather than an assumption.
   | EURUSD | offset 0, 12/12, unique | Same |
   | All five indices | offsets 0 **and** +1 both 12/12 | **Unresolved** — the same first tick arrived at 01:00:01 for both candidates |
 
+  The scoring rule has since been tightened and both rows above still stand under it. A resolved
+  verdict now additionally requires at least `MIN_ANCHOR_SAMPLES = 8` **usable** samples and a strict
+  majority (`matches × 2 > usable_samples`). A bar is usable only after every candidate query has
+  completed and at least one candidate owns a non-shared first tick; discarded shared ticks and
+  incomplete queries no longer inflate the denominator. The FX rows clear both bars (12 of 12); the
+  index rows were already unresolved on the tie. A tie is still never broken by candidate order.
+
   **The FX conclusion, and it is a firm one.** The four-year histogram is `00:00 UTC`, i.e.
   19:00/20:00 New York, which is **not** the 17:00 New York internal FX day SPEC §3.4 mandates. The
   broker's daily bars are therefore a different object from ours. They remain **validation references
@@ -155,14 +162,69 @@ stands is depth, and it is now a number rather than an assumption.
   reconciliation rule joining on the UTC close instant — never the label date — is mandatory here.
 
   **Every mapped symbol reported Bid chart mode**, so the anchor's bid comparison is sound today. The
-  probe now records `chart_mode` per symbol so that remains evidence rather than an assumption.
+  probe records and enforces `chart_mode`: any symbol not declared Bid-built receives an unsupported,
+  unresolved anchor rather than a Bid-based verdict.
 
   The session-week and DST-window logic is **production code** (SPEC §4.4 check 10(c)), not probe
-  scaffolding: it lives in `src/tradebot/data/session_weeks.py` with 19 repository tests, and the
-  probe imports it so there is one implementation. Two bugs found in the first pass are fixed there:
-  a wholly missing interior week was invisible because only observed week keys were counted, and the
-  DST windows began at the transition Sunday's own ISO week — but that Sunday *closes* the preceding
-  week, so under close-labelling the window must start on the following Monday.
+  scaffolding: it lives in `src/tradebot/data/session_weeks.py`, the boundary analysis lives in
+  `src/tradebot/data/boundary_probe.py`, and the probe imports both so there is one implementation
+  under mypy and CI. Two bugs found in the first pass are fixed there: a wholly missing interior week
+  was invisible because only observed week keys were counted, and the DST windows began at the
+  transition Sunday's own ISO week — but that Sunday *closes* the preceding week, so under
+  close-labelling the window must start on the following Monday.
+
+  **Neither verdict may report a pass, and both now say so in their own status.** The two questions
+  are distinct — the weekly audit asks whether sessions are missing, check 10(c) asks whether the
+  boundary is ours — so they carry separate statuses, and the evidence for each is asymmetric:
+
+  - **Excess is structural and unconditional.** A holiday can only *remove* a session, never add one,
+    so a close-labelled week holding more than five sessions is a defect no calendar and no sample
+    size can legalise. It is reported before anything else, and an expected count above five is
+    rejected as an invalid calendar rather than used to legalise a sixth session.
+  - **Shortfall is calendar-dependent.** A four-session week is a dropped session or a public
+    holiday, and nothing in the data distinguishes them. Without SPEC §2.4's expected-liquidity
+    calendar the audit returns `INDETERMINATE` — it does **not** fail open, and an empty or
+    too-short sample is `INDETERMINATE` too rather than silently clean.
+  - **Misalignment evidence needs no coverage; a clean verdict needs both seasons.** One stub bar
+    inside a mismatch window is direct evidence of a foreign boundary, so `MISALIGNED` is returned
+    even from partial coverage of that window. The converse does not hold: quiet weeks in one season
+    say nothing about the other, so `ALIGNED` requires full coverage of a spring **and** an autumn
+    window plus a supplied calendar. A sample that is quiet across both seasons but has no calendar
+    is `PROVISIONALLY_ALIGNED` — consistent with alignment, explicitly not gate-grade.
+  - **Evidence collection is separate from verdict precedence.** Duplicate, structural excess,
+    calendar excess and shortfall, uncovered weeks and ambiguous closes are all collected before a
+    status is selected. An unrelated six-bar week can therefore never hide a mismatch-window
+    shortfall. `ALIGNED` additionally requires the underlying weekly audit to be `PASSED`; a failed
+    audit outside the mismatch windows makes the fingerprint `INDETERMINATE`, never clean.
+
+  The first D1 pass therefore reads `MISALIGNED` on the `2024-W43` six-session week, which is a
+  finding, not a pass, and the audit alongside it reads `INDETERMINATE` because this probe supplies
+  no calendar. **§2.4's expected-liquidity calendar is the remaining blocker on a gate-grade 10(c)
+  verdict** and is an open P1 deliverable.
+
+  Session-week keying no longer invents a close. An earlier version labelled each week by
+  `open + 24h`, then another silently substituted `open + 25h` across a market gap. Consecutive opens
+  no more than 25 hours apart still provide an exact close. Across a longer gap, `session_closes`
+  retains the honest `[open + 23h, open + 25h]` interval and assigns a week only when both ends prove
+  the same close-labelled ISO week; otherwise the audit reports the close and candidate weeks as
+  ambiguous. Explicit final closes must be UTC, strictly after the open and within 25 hours.
+
+  Probe-mechanics limits were also load-bearing enough to fix in the tested module. Bar-window
+  planning applies a **calendar ceiling as well as** the `maxbars` bar-count cap — ~20 days for M1,
+  one year for D1 — because a request for 365 days of M1 data is ~525,600 bars against a 100,000-bar
+  cap and the terminal simply stops answering. The 240-step safety cap covers only ~13.1 of a
+  requested 20 M1 years, so every result now exposes requested, planned and walked spans plus
+  `plan_truncated`; it never calls that cap an exhausted full-depth walk.
+
+  Every MT5 function call is bounded by the 90-second call limit, a five-minute symbol deadline and a
+  30-minute run deadline. The result and `last_error()` snapshot are captured together on the worker
+  thread. A blocking C call cannot be cancelled, so the **first timeout poisons the session**: the
+  probe makes no later MT5 call, does not call `shutdown()`, atomically writes and fsyncs a `PARTIAL`
+  sidecar, then exits non-zero with `os._exit()`. A partial or otherwise incomplete run never replaces
+  the requested canonical evidence file. Connected/demo/FBS identity is required before measurement,
+  and a safe complete run shuts down normally. **A timeout remains absent evidence, not a negative
+  result.** End-to-end stub tests pin the poisoned-session, canonical-preservation, chart-mode and
+  identity paths in addition to report shape.
 - **Session hours are unmeasured.** `SYMBOL_SESSION_OPEN` / `SYMBOL_SESSION_CLOSE` are session
   open/close **prices**, not times (`GBPUSD` reports 1.35246 / 1.35224), so they do not answer the
   question. Session times require the session-quote/session-trade calls.
