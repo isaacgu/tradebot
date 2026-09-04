@@ -95,6 +95,7 @@ def test_tick_validates_exact_prices_and_quote_order() -> None:
         instrument="GBP_USD",
         ts_event=_utc(),
         ts_recv=_utc(),
+        available_at=_utc(),
         bid=Decimal("1.29000"),
         ask=Decimal("1.29010"),
         bid_size=10,
@@ -107,6 +108,7 @@ def test_tick_validates_exact_prices_and_quote_order() -> None:
             instrument="GBP_USD",
             ts_event=_utc(),
             ts_recv=_utc(),
+            available_at=_utc(),
             bid=Decimal("1.29010"),
             ask=Decimal("1.29010"),
         )
@@ -115,6 +117,7 @@ def test_tick_validates_exact_prices_and_quote_order() -> None:
             instrument="GBP_USD",
             ts_event=_utc(),
             ts_recv=_utc(),
+            available_at=_utc(),
             bid=Decimal("1.29000"),
             ask=Decimal("1.29010"),
             bid_size=-1,
@@ -124,6 +127,7 @@ def test_tick_validates_exact_prices_and_quote_order() -> None:
             instrument="GBP_USD",
             ts_event=_utc(),
             ts_recv=_utc(),
+            available_at=_utc(),
             bid=Decimal("1.29000"),
             ask=Decimal("1.29010"),
             ask_size=-1,
@@ -133,6 +137,7 @@ def test_tick_validates_exact_prices_and_quote_order() -> None:
             instrument="GBP_USD",
             ts_event=_utc(),
             ts_recv=_utc(),
+            available_at=_utc(),
             bid=1.29,  # type: ignore[arg-type]
             ask=Decimal("1.29010"),
         )
@@ -349,6 +354,7 @@ def test_fill_is_attributed_and_exact() -> None:
         git_sha="deadbeef",
         ts_event=_utc(),
         ts_recv=_utc(),
+        available_at=_utc(),
     )
     assert fill.qty * fill.price == Decimal("1290.10000")
     with pytest.raises(InvalidEventError, match="qty"):
@@ -365,6 +371,7 @@ def test_fill_is_attributed_and_exact() -> None:
             git_sha="deadbeef",
             ts_event=_utc(),
             ts_recv=_utc(),
+            available_at=_utc(),
         )
 
 
@@ -382,6 +389,7 @@ def test_fill_rejects_raw_enum_and_nonpositive_price() -> None:
         "git_sha": "deadbeef",
         "ts_event": _utc(),
         "ts_recv": _utc(),
+        "available_at": _utc(),
     }
     with pytest.raises(TypeError, match="side must be Side"):
         Fill(**(fields | {"side": "BUY"}))  # type: ignore[arg-type]
@@ -401,6 +409,7 @@ def test_tick_sizes_must_be_exact_integers(field: str, value: object) -> None:
         "instrument": "GBP_USD",
         "ts_event": _utc(),
         "ts_recv": _utc(),
+        "available_at": _utc(),
         "bid": Decimal("1.29"),
         "ask": Decimal("1.30"),
         field: value,
@@ -475,15 +484,8 @@ def test_collection_fields_require_deeply_immutable_tuples() -> None:
         Forecast(**(forecast_fields | {"meta": (("regime", 1),)}))  # type: ignore[arg-type]
 
 
-def test_event_rejects_receipt_time_before_market_time() -> None:
-    with pytest.raises(InvalidEventError, match="ts_recv"):
-        Tick(
-            instrument="GBP_USD",
-            ts_event=_utc(12),
-            ts_recv=_utc(11),
-            bid=Decimal("1.29"),
-            ask=Decimal("1.30"),
-        )
+def test_platform_events_reject_receipt_time_before_market_time() -> None:
+    """Bar and Forecast carry two stamps that are BOTH ours, so the order is our bug."""
     with pytest.raises(InvalidEventError, match="ts_recv"):
         Bar(
             instrument="GBP_USD",
@@ -506,21 +508,91 @@ def test_event_rejects_receipt_time_before_market_time() -> None:
             ts_recv=_utc(11),
             value=1.0,
         )
-    with pytest.raises(InvalidEventError, match="ts_recv"):
-        Fill(
-            broker_fill_id="fill-1",
-            client_order_id="order-1",
+
+
+def test_externally_clocked_events_admit_measured_cross_clock_skew() -> None:
+    """ADR-0006: a venue stamp ahead of our receipt stamp is skew, not corruption.
+
+    ts_event is on the venue's clock and ts_recv on ours; an ordering between two
+    uncontrolled clocks can only be measured. Rejecting it would halt a healthy
+    feed and, for a Fill, refuse to record an execution that already happened.
+    """
+    tick = Tick(
+        instrument="GBP_USD",
+        ts_event=_utc(12),
+        ts_recv=_utc(11),
+        available_at=_utc(12),
+        bid=Decimal("1.29"),
+        ask=Decimal("1.30"),
+        quality_flags=("CLOCK_SKEW",),
+    )
+    assert tick.skew_lb.total_seconds() == 3600
+    assert tick.available_at == _utc(12)
+
+    fill = Fill(
+        broker_fill_id="fill-1",
+        client_order_id="order-1",
+        instrument="GBP_USD",
+        side=Side.BUY,
+        qty=Decimal("1000"),
+        price=Decimal("1.29"),
+        strategy_id="hello",
+        run_id="run-1",
+        config_hash="abc",
+        git_sha="deadbeef",
+        ts_event=_utc(12),
+        ts_recv=_utc(11),
+        available_at=_utc(12),
+    )
+    assert fill.skew_lb.total_seconds() == 3600
+
+
+def test_externally_clocked_events_require_a_dominating_availability_key() -> None:
+    """The key is the invariant the platform CAN check, so it is checked strictly."""
+    with pytest.raises(InvalidEventError, match="available_at"):
+        Tick(
             instrument="GBP_USD",
-            side=Side.BUY,
-            qty=Decimal("1000"),
-            price=Decimal("1.29"),
-            strategy_id="hello",
-            run_id="run-1",
-            config_hash="abc",
-            git_sha="deadbeef",
             ts_event=_utc(12),
             ts_recv=_utc(11),
+            available_at=_utc(11),
+            bid=Decimal("1.29"),
+            ask=Decimal("1.30"),
         )
+    with pytest.raises(InvalidEventError, match="available_at"):
+        Tick(
+            instrument="GBP_USD",
+            ts_event=_utc(11),
+            ts_recv=_utc(12),
+            available_at=_utc(11),
+            bid=Decimal("1.29"),
+            ask=Decimal("1.30"),
+        )
+
+
+def test_platform_events_derive_their_availability_key_from_receipt_time() -> None:
+    bar = Bar(
+        instrument="GBP_USD",
+        ts_open=_utc(10),
+        ts_event=_utc(11),
+        ts_recv=_utc(12),
+        open=Decimal("1.29"),
+        high=Decimal("1.30"),
+        low=Decimal("1.28"),
+        close=Decimal("1.29"),
+        volume=None,
+        spread_mean=None,
+        n_ticks=None,
+    )
+    assert bar.available_at == bar.ts_recv == _utc(12)
+
+    forecast = Forecast(
+        strategy_id="hello",
+        instrument="GBP_USD",
+        ts_event=_utc(11),
+        ts_recv=_utc(12),
+        value=1.0,
+    )
+    assert forecast.available_at == forecast.ts_recv == _utc(12)
 
 
 def test_prices_must_be_positive() -> None:
@@ -529,6 +601,7 @@ def test_prices_must_be_positive() -> None:
             instrument="GBP_USD",
             ts_event=_utc(),
             ts_recv=_utc(),
+            available_at=_utc(),
             bid=Decimal("0"),
             ask=Decimal("1.30"),
         )

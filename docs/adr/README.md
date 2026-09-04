@@ -11,7 +11,7 @@ records it here in the same change.
 | 0003 | Clock, timezone, and FX boundary rules | P0 | accepted |
 | 0004 | Errata adopted at specification freeze | P0 | accepted |
 | 0005 | Gate evidence categories and deferral policy | P0 (doc); enforcement deferred to P1 | accepted |
-| 0006 | Feed adapter timestamp, availability and skew boundary | P1 — **blocks the first adapter** | proposed |
+| 0006 | Feed adapter timestamp, availability and skew boundary | P1 | accepted — partially implemented; see its Implementation status |
 | 0007 | Data source selection | P1 | not started |
 
 **Next free number: 0008.**

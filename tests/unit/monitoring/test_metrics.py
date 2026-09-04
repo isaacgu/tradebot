@@ -17,6 +17,10 @@ class ProbeEvent:
     ts_recv: datetime
     name: str
 
+    @property
+    def available_at(self) -> datetime:
+        return max(self.ts_event, self.ts_recv)
+
 
 def test_metrics_expose_processed_rejected_and_failed_events() -> None:
     now = datetime(2025, 3, 17, 12, tzinfo=UTC)
