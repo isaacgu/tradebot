@@ -1,0 +1,10 @@
+# P0 forecast-wiring smoke test only; it is not backtest performance evidence.
+environment: backtest
+run_id: gate0-backtest
+instrument: SYNTH_GBP_USD
+execution_enabled: false
+logging:
+  level: INFO
+  json: true
+metrics:
+  enabled: true

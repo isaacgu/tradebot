@@ -1,0 +1,4 @@
+# Phase-1 placeholder only. No data-quality pipeline or thresholds are operational in Phase 0.
+schema_version: 1
+status: deferred
+checks: {}

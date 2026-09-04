@@ -1,0 +1,10 @@
+# Deliberately non-executable until every preceding phase gate has Principal sign-off.
+environment: live
+run_id: live-disabled
+instrument: SYNTH_GBP_USD
+execution_enabled: false
+logging:
+  level: INFO
+  json: true
+metrics:
+  enabled: true

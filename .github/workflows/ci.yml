@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master, main]
+  schedule:
+    - cron: "17 4 * * 1" # Weekly dependency/security audit; minute offset avoids peak load.
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      GIT_SHA: ${{ github.sha }}
+      PYTHONTZPATH: "" # Force the dependency-locked tzdata wheel, not mutable host zone files.
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: 0.12.9
+          enable-cache: true
+
+      - name: Install Python and locked dependencies
+        run: |
+          uv python install 3.12.14
+          uv lock --check
+          uv sync --locked --extra dev
+
+      - name: Static checks and tests
+        run: uv run --no-sync make lint typecheck test security
+
+      - name: Generate CycloneDX SBOM
+        run: |
+          mkdir -p build
+          uv run --no-sync pip-audit --format cyclonedx-json --output build/sbom.cdx.json
+
+      - name: Host-timezone replay checks
+        run: |
+          for zone in UTC Africa/Johannesburg America/New_York; do
+            TZ="$zone" uv run --no-sync pytest --no-cov -q tests/replay tests/unit/core/test_time_rules.py
+          done
+
+      - name: Reproducible Gate-0 demo
+        run: |
+          uv run --no-sync python -m tradebot.demo --output build/gate0/first.json
+          uv run --no-sync python -m tradebot.demo --output build/gate0/second.json
+          cmp build/gate0/first.json build/gate0/second.json
+          # Determinism of the observability evidence is proven, not asserted. The raw
+          # .prom carries a wall-clock _created stamp and is deliberately NOT compared;
+          # the canonical digests are (SPEC 10.6, ADR-0005). Compare the digest field
+          # only — each sidecar names its own file, so the lines differ by construction.
+          for mode in backtest paper; do
+            first=$(cut -d' ' -f1 "build/gate0/first.metrics-${mode}.canonical.sha256")
+            second=$(cut -d' ' -f1 "build/gate0/second.metrics-${mode}.canonical.sha256")
+            if [ "$first" != "$second" ]; then
+              echo "canonical metrics digest for ${mode} is not reproducible" >&2
+              exit 1
+            fi
+          done
+
+      - name: Upload Gate-0 evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: gate0-demo-${{ github.sha }}
+          path: |
+            build/gate0/first.json
+            build/gate0/first.json.sha256
+            build/gate0/first.metrics-backtest.prom
+            build/gate0/first.metrics-backtest.canonical.sha256
+            build/gate0/first.metrics-paper.prom
+            build/gate0/first.metrics-paper.canonical.sha256
+            build/sbom.cdx.json
+          if-no-files-found: error
+
+  secrets:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out full history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Install checksum-pinned Gitleaks
+        env:
+          GITLEAKS_VERSION: 8.30.1
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          archive="/tmp/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl --fail --location --silent --show-error \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            --output "$archive"
+          echo "${GITLEAKS_SHA256}  ${archive}" | sha256sum --check --strict
+          tar --extract --gzip --file "$archive" --directory /tmp gitleaks
+          /tmp/gitleaks version
+
+      - name: Scan full Git history for secrets
+        run: /tmp/gitleaks git --redact --no-banner .

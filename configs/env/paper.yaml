@@ -1,0 +1,10 @@
+# P0 live-shaped forecast wiring only; no PaperBroker, orders, or execution.
+environment: paper
+run_id: gate0-paper
+instrument: SYNTH_GBP_USD
+execution_enabled: false
+logging:
+  level: INFO
+  json: true
+metrics:
+  enabled: true

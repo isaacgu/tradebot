@@ -1,0 +1,9 @@
+# Keep source, configuration, and documentation deterministic across Windows and CI.
+* text=auto eol=lf
+
+# Frozen specification text is always checked out with its recorded line endings.
+docs/SPEC.md text eol=lf
+
+# This provenance copy preserves the user's supplied CRLF bytes exactly. Treat it as
+# an opaque source artifact so Git and core.autocrlf never rewrite its identity.
+docs/SPEC-supplied-*.md -text -eol whitespace=-trailing-space

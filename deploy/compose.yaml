@@ -1,0 +1,4 @@
+# Deployment topology is deferred to Phase 4/5. An empty service map is intentionally
+# non-operational and must not be interpreted as a deployable stack.
+name: tradebot-deferred
+services: {}

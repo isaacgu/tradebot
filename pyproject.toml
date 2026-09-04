@@ -1,0 +1,81 @@
+[build-system]
+requires = ["uv_build==0.12.9"]
+build-backend = "uv_build"
+
+[project]
+name = "tradebot"
+version = "0.1.0"
+description = "Foundations for a bias-controlled systematic trading platform."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = { text = "Proprietary" }
+authors = [{ name = "Isaac" }]
+dependencies = [
+  "prometheus-client>=0.21,<1",
+  "pydantic>=2.10,<3",
+  "PyYAML>=6.0,<7",
+  "structlog>=24.4,<26",
+  "tzdata>=2025.2,<2027",
+]
+
+[project.optional-dependencies]
+dev = [
+  "bandit>=1.8,<2",
+  "mypy>=1.14,<2",
+  "pip-audit>=2.8,<3",
+  "pytest>=9.1.1,<10",
+  "pytest-asyncio>=1.4,<2",
+  "pytest-cov>=6,<7",
+  "ruff>=0.9,<1",
+  "types-PyYAML>=6.0,<7",
+]
+
+[project.scripts]
+tradebot-demo = "tradebot.demo:main"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+# Ruff 0.16 formats fenced Python in Markdown; reformatting either file would rewrite the
+# non-normative 3.6 sketch and change a hash recorded as gate evidence.
+extend-exclude = ["docs/SPEC.md", "docs/SPEC-supplied-2026-09-03.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "S", "ASYNC", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src", "tests"]
+warn_unreachable = true
+
+[tool.pytest.ini_options]
+addopts = "--strict-config --strict-markers --cov=tradebot --cov-branch --cov-report=term-missing --cov-fail-under=80"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+asyncio_default_test_loop_scope = "function"
+
+[tool.coverage.run]
+source = ["tradebot"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_also = [
+  "if TYPE_CHECKING:",
+  "if __name__ == .__main__.:",
+  '\.\.\.',
+]
+
+[tool.bandit]
+exclude_dirs = ["tests"]
+
+[tool.uv]
+required-version = "==0.12.9"
+build-constraint-dependencies = ["uv_build==0.12.9"]
