@@ -8,27 +8,42 @@
     "margin_mode_is_netting": false,
     "server": "FBS-Demo"
   },
-  "completed_at_utc": "2026-09-04T11:39:09.881249+00:00",
+  "completed_at_utc": "2026-09-04T16:59:49.089603+00:00",
   "depth": {
     "EURUSD": {
       "broker_symbol": "EURUSD",
-      "m1_bar_history": {
-        "conclusive_broker_depth": false,
-        "earliest_visible": "2026-05-29T17:09:00+00:00",
-        "elapsed_seconds": 0.121898,
-        "method": "copy_rates_from(old_date, count=1)",
-        "note": "chart-limited observation; set Max. bars in chart to Unlimited and re-probe for broker depth",
-        "requested_at": "2000-01-01T00:00:00+00:00",
-        "returned_after_requested_date": true,
-        "terminal_maxbars": 100000
+      "d1_bar_reach": {
+        "expected_bars_per_window": 365,
+        "is_broker_depth": false,
+        "plan_truncated": false,
+        "planned_span_days": 7300.0,
+        "requested_span_days": 7300.0,
+        "stopped_because": "walk exhausted the planned windows",
+        "terminal_visible_earliest": "2006-09-11T00:00:00+00:00",
+        "timeframe": "D1",
+        "total_out_of_range": 0,
+        "walked_span_days": 7300.0,
+        "window_days": 365.0,
+        "windows_walked": 20
+      },
+      "m1_bar_reach": {
+        "expected_bars_per_window": 28800,
+        "is_broker_depth": false,
+        "plan_truncated": true,
+        "planned_span_days": 4800.0,
+        "requested_span_days": 7300.0,
+        "stopped_because": "window returned only 1 out-of-range bar(s)",
+        "terminal_visible_earliest": "2026-05-29T22:24:00+00:00",
+        "timeframe": "M1",
+        "total_out_of_range": 1,
+        "walked_span_days": 120.0,
+        "window_days": 20.0,
+        "windows_walked": 6
       },
       "selected": true,
-      "server_trading_day_offset": {
-        "measured": false,
-        "reason": "MT5 tick/bar epoch timestamps are UTC and cannot reveal the broker session offset."
-      },
       "specification": {
         "available": true,
+        "chart_mode": "0",
         "currency_base": "EUR",
         "currency_margin": "EUR",
         "currency_profit": "USD",
@@ -41,7 +56,6 @@
         "name": "EURUSD",
         "path": "Forex\\Main\\EURUSD",
         "point": "1e-05",
-        "select": "True",
         "session_close": "1.16249",
         "session_open": "1.16261",
         "spread": "9",
@@ -58,7 +72,6 @@
         "trade_stops_level": "0",
         "trade_tick_size": "1e-05",
         "trade_tick_value": "1.0",
-        "visible": "True",
         "volume_max": "500.0",
         "volume_min": "0.01",
         "volume_step": "0.01"
@@ -79,53 +92,277 @@
           "flags",
           "volume_real"
         ],
-        "elapsed_seconds": 0.017636,
         "has_time_msc": true,
+        "note": "recent sample only; historical density is not established",
         "sample": {
-          "ask": "1.1599",
-          "bid": "1.15981",
+          "ask": "1.159",
+          "bid": "1.15892",
           "flags": "226",
           "last": "0.0",
-          "time": "1788266405",
-          "time_msc": "1788266405904",
+          "time": "1788147219",
+          "time_msc": "1788147219974",
           "volume": "0",
           "volume_real": "0.0"
         }
       },
       "tick_history": {
-        "attempts": [
-          {
-            "attempt": 1,
-            "count": 1,
-            "elapsed_seconds": 0.0092
-          }
-        ],
         "earliest": "2011-12-19T00:00:08+00:00",
         "earliest_time_msc": 1324252808000,
-        "method": "copy_ticks_from(requested_from, count=1)",
-        "requested_from": "2000-01-01T00:00:00+00:00"
+        "method": "copy_ticks_from(count=1)"
+      },
+      "trading_day_boundary": {
+        "bars": 1038,
+        "boundary_is_1700_new_york": false,
+        "dst_fingerprint_10c": {
+          "anomalous_weeks": {
+            "2024-W43": 6
+          },
+          "covered_windows": [
+            "2022-autumn",
+            "2023-spring",
+            "2023-autumn",
+            "2024-spring",
+            "2024-autumn",
+            "2025-spring",
+            "2025-autumn",
+            "2026-spring"
+          ],
+          "partially_covered_windows": [],
+          "reason": "1 mismatch-window week(s) deviate from the calendar or hold a structural stub bar; coverage is not required to believe evidence this direct",
+          "status": "MISALIGNED"
+        },
+        "dst_mismatch_windows": [
+          {
+            "first_full_session": "2022-10-31",
+            "fully_affected_weeks": [
+              "2022-W44"
+            ],
+            "fully_covered": true,
+            "label": "2022-autumn",
+            "observed": {
+              "2022-W43": 5,
+              "2022-W44": 5
+            },
+            "transition": "2022-10-30",
+            "transition_weeks": [
+              "2022-W43"
+            ]
+          },
+          {
+            "first_full_session": "2023-03-13",
+            "fully_affected_weeks": [
+              "2023-W11",
+              "2023-W12"
+            ],
+            "fully_covered": true,
+            "label": "2023-spring",
+            "observed": {
+              "2023-W10": 5,
+              "2023-W11": 5,
+              "2023-W12": 5
+            },
+            "transition": "2023-03-12",
+            "transition_weeks": [
+              "2023-W10"
+            ]
+          },
+          {
+            "first_full_session": "2023-10-30",
+            "fully_affected_weeks": [
+              "2023-W44"
+            ],
+            "fully_covered": true,
+            "label": "2023-autumn",
+            "observed": {
+              "2023-W43": 5,
+              "2023-W44": 5
+            },
+            "transition": "2023-10-29",
+            "transition_weeks": [
+              "2023-W43"
+            ]
+          },
+          {
+            "first_full_session": "2024-03-11",
+            "fully_affected_weeks": [
+              "2024-W11",
+              "2024-W12",
+              "2024-W13"
+            ],
+            "fully_covered": true,
+            "label": "2024-spring",
+            "observed": {
+              "2024-W10": 5,
+              "2024-W11": 5,
+              "2024-W12": 5,
+              "2024-W13": 5
+            },
+            "transition": "2024-03-10",
+            "transition_weeks": [
+              "2024-W10"
+            ]
+          },
+          {
+            "first_full_session": "2024-10-28",
+            "fully_affected_weeks": [
+              "2024-W44"
+            ],
+            "fully_covered": true,
+            "label": "2024-autumn",
+            "observed": {
+              "2024-W43": 6,
+              "2024-W44": 5
+            },
+            "transition": "2024-10-27",
+            "transition_weeks": [
+              "2024-W43"
+            ]
+          },
+          {
+            "first_full_session": "2025-03-10",
+            "fully_affected_weeks": [
+              "2025-W11",
+              "2025-W12",
+              "2025-W13"
+            ],
+            "fully_covered": true,
+            "label": "2025-spring",
+            "observed": {
+              "2025-W10": 5,
+              "2025-W11": 5,
+              "2025-W12": 5,
+              "2025-W13": 5
+            },
+            "transition": "2025-03-09",
+            "transition_weeks": [
+              "2025-W10"
+            ]
+          },
+          {
+            "first_full_session": "2025-10-27",
+            "fully_affected_weeks": [
+              "2025-W44"
+            ],
+            "fully_covered": true,
+            "label": "2025-autumn",
+            "observed": {
+              "2025-W43": 5,
+              "2025-W44": 5
+            },
+            "transition": "2025-10-26",
+            "transition_weeks": [
+              "2025-W43"
+            ]
+          },
+          {
+            "first_full_session": "2026-03-09",
+            "fully_affected_weeks": [
+              "2026-W11",
+              "2026-W12",
+              "2026-W13"
+            ],
+            "fully_covered": true,
+            "label": "2026-spring",
+            "observed": {
+              "2026-W10": 5,
+              "2026-W11": 5,
+              "2026-W12": 5,
+              "2026-W13": 5
+            },
+            "transition": "2026-03-08",
+            "transition_weeks": [
+              "2026-W10"
+            ]
+          }
+        ],
+        "histogram_alone_is_ambiguous": true,
+        "measured": true,
+        "new_york_open_histogram": {
+          "19:00": 353,
+          "20:00": 685
+        },
+        "price_anchor": {
+          "candidates_sharing_a_tick": 8,
+          "epochs_are_true_utc": true,
+          "incomplete_observations": 0,
+          "incomplete_reasons": [],
+          "matches": {
+            "-1": 1,
+            "0": 10
+          },
+          "observations_checked": 12,
+          "offset_hours_matching_bar_open": 0,
+          "reason": "offset 0 uniquely reproduced 10/12 bar opens",
+          "resolved": true,
+          "samples_checked": 12,
+          "tied_offsets": []
+        },
+        "span": {
+          "first": "2022-09-06T00:00:00+00:00",
+          "last": "2026-09-04T00:00:00+00:00"
+        },
+        "utc_open_histogram": {
+          "00:00": 1038
+        },
+        "weekly_audit": {
+          "ambiguous_closes": [],
+          "ambiguous_weeks": [],
+          "calendar_supplied": false,
+          "duplicate_opens": [],
+          "interior_weeks": 207,
+          "missing_weeks": [],
+          "reason": "1 week(s) hold more than 5 sessions; a close-labelled week cannot, so this is a stub bar and no calendar or sample size can legalise it",
+          "status": "FAILED",
+          "uncovered_weeks": [],
+          "weeks_excess": {
+            "2024-W43": 6
+          },
+          "weeks_shortfall": {
+            "2022-W52": 4,
+            "2023-W52": 4,
+            "2024-W01": 4,
+            "2024-W52": 4,
+            "2025-W01": 4,
+            "2025-W52": 4,
+            "2026-W01": 4
+          }
+        }
       }
     },
     "GBPUSD": {
       "broker_symbol": "GBPUSD",
-      "m1_bar_history": {
-        "conclusive_broker_depth": false,
-        "earliest_visible": null,
-        "elapsed_seconds": 0.002884,
-        "error": {
-          "code": -1,
-          "message": "Terminal: Call failed"
-        },
-        "requested_at": "2000-01-01T00:00:00+00:00",
-        "terminal_maxbars": 100000
+      "d1_bar_reach": {
+        "expected_bars_per_window": 365,
+        "is_broker_depth": false,
+        "plan_truncated": false,
+        "planned_span_days": 7300.0,
+        "requested_span_days": 7300.0,
+        "stopped_because": "walk exhausted the planned windows",
+        "terminal_visible_earliest": "2006-09-11T00:00:00+00:00",
+        "timeframe": "D1",
+        "total_out_of_range": 0,
+        "walked_span_days": 7300.0,
+        "window_days": 365.0,
+        "windows_walked": 20
+      },
+      "m1_bar_reach": {
+        "expected_bars_per_window": 28800,
+        "is_broker_depth": false,
+        "plan_truncated": true,
+        "planned_span_days": 4800.0,
+        "requested_span_days": 7300.0,
+        "stopped_because": "window returned only 1 out-of-range bar(s)",
+        "terminal_visible_earliest": "2026-05-29T21:14:00+00:00",
+        "timeframe": "M1",
+        "total_out_of_range": 1,
+        "walked_span_days": 120.0,
+        "window_days": 20.0,
+        "windows_walked": 6
       },
       "selected": true,
-      "server_trading_day_offset": {
-        "measured": false,
-        "reason": "MT5 tick/bar epoch timestamps are UTC and cannot reveal the broker session offset."
-      },
       "specification": {
         "available": true,
+        "chart_mode": "0",
         "currency_base": "GBP",
         "currency_margin": "GBP",
         "currency_profit": "USD",
@@ -138,7 +375,6 @@
         "name": "GBPUSD",
         "path": "Forex\\Main\\GBPUSD",
         "point": "1e-05",
-        "select": "True",
         "session_close": "1.35224",
         "session_open": "1.35246",
         "spread": "11",
@@ -155,7 +391,6 @@
         "trade_stops_level": "0",
         "trade_tick_size": "1e-05",
         "trade_tick_value": "1.0",
-        "visible": "True",
         "volume_max": "500.0",
         "volume_min": "0.01",
         "volume_step": "0.01"
@@ -176,15 +411,15 @@
           "flags",
           "volume_real"
         ],
-        "elapsed_seconds": 0.069571,
         "has_time_msc": true,
+        "note": "recent sample only; historical density is not established",
         "sample": {
-          "ask": "1.3544",
-          "bid": "1.35429",
-          "flags": "96",
+          "ask": "1.35435",
+          "bid": "1.35423",
+          "flags": "100",
           "last": "0.0",
-          "time": "1788264596",
-          "time_msc": "1788264596038",
+          "time": "1788145833",
+          "time_msc": "1788145833411",
           "volume": "0",
           "volume_real": "0.0"
         }
@@ -192,30 +427,260 @@
       "tick_history": {
         "earliest": "2011-12-19T00:00:08+00:00",
         "earliest_time_msc": 1324252808000,
-        "elapsed_seconds": 0.029808,
-        "method": "copy_ticks_from(requested_from, count=1)",
-        "requested_from": "2000-01-01T00:00:00+00:00"
+        "method": "copy_ticks_from(count=1)"
+      },
+      "trading_day_boundary": {
+        "bars": 1038,
+        "boundary_is_1700_new_york": false,
+        "dst_fingerprint_10c": {
+          "anomalous_weeks": {
+            "2024-W43": 6
+          },
+          "covered_windows": [
+            "2022-autumn",
+            "2023-spring",
+            "2023-autumn",
+            "2024-spring",
+            "2024-autumn",
+            "2025-spring",
+            "2025-autumn",
+            "2026-spring"
+          ],
+          "partially_covered_windows": [],
+          "reason": "1 mismatch-window week(s) deviate from the calendar or hold a structural stub bar; coverage is not required to believe evidence this direct",
+          "status": "MISALIGNED"
+        },
+        "dst_mismatch_windows": [
+          {
+            "first_full_session": "2022-10-31",
+            "fully_affected_weeks": [
+              "2022-W44"
+            ],
+            "fully_covered": true,
+            "label": "2022-autumn",
+            "observed": {
+              "2022-W43": 5,
+              "2022-W44": 5
+            },
+            "transition": "2022-10-30",
+            "transition_weeks": [
+              "2022-W43"
+            ]
+          },
+          {
+            "first_full_session": "2023-03-13",
+            "fully_affected_weeks": [
+              "2023-W11",
+              "2023-W12"
+            ],
+            "fully_covered": true,
+            "label": "2023-spring",
+            "observed": {
+              "2023-W10": 5,
+              "2023-W11": 5,
+              "2023-W12": 5
+            },
+            "transition": "2023-03-12",
+            "transition_weeks": [
+              "2023-W10"
+            ]
+          },
+          {
+            "first_full_session": "2023-10-30",
+            "fully_affected_weeks": [
+              "2023-W44"
+            ],
+            "fully_covered": true,
+            "label": "2023-autumn",
+            "observed": {
+              "2023-W43": 5,
+              "2023-W44": 5
+            },
+            "transition": "2023-10-29",
+            "transition_weeks": [
+              "2023-W43"
+            ]
+          },
+          {
+            "first_full_session": "2024-03-11",
+            "fully_affected_weeks": [
+              "2024-W11",
+              "2024-W12",
+              "2024-W13"
+            ],
+            "fully_covered": true,
+            "label": "2024-spring",
+            "observed": {
+              "2024-W10": 5,
+              "2024-W11": 5,
+              "2024-W12": 5,
+              "2024-W13": 5
+            },
+            "transition": "2024-03-10",
+            "transition_weeks": [
+              "2024-W10"
+            ]
+          },
+          {
+            "first_full_session": "2024-10-28",
+            "fully_affected_weeks": [
+              "2024-W44"
+            ],
+            "fully_covered": true,
+            "label": "2024-autumn",
+            "observed": {
+              "2024-W43": 6,
+              "2024-W44": 5
+            },
+            "transition": "2024-10-27",
+            "transition_weeks": [
+              "2024-W43"
+            ]
+          },
+          {
+            "first_full_session": "2025-03-10",
+            "fully_affected_weeks": [
+              "2025-W11",
+              "2025-W12",
+              "2025-W13"
+            ],
+            "fully_covered": true,
+            "label": "2025-spring",
+            "observed": {
+              "2025-W10": 5,
+              "2025-W11": 5,
+              "2025-W12": 5,
+              "2025-W13": 5
+            },
+            "transition": "2025-03-09",
+            "transition_weeks": [
+              "2025-W10"
+            ]
+          },
+          {
+            "first_full_session": "2025-10-27",
+            "fully_affected_weeks": [
+              "2025-W44"
+            ],
+            "fully_covered": true,
+            "label": "2025-autumn",
+            "observed": {
+              "2025-W43": 5,
+              "2025-W44": 5
+            },
+            "transition": "2025-10-26",
+            "transition_weeks": [
+              "2025-W43"
+            ]
+          },
+          {
+            "first_full_session": "2026-03-09",
+            "fully_affected_weeks": [
+              "2026-W11",
+              "2026-W12",
+              "2026-W13"
+            ],
+            "fully_covered": true,
+            "label": "2026-spring",
+            "observed": {
+              "2026-W10": 5,
+              "2026-W11": 5,
+              "2026-W12": 5,
+              "2026-W13": 5
+            },
+            "transition": "2026-03-08",
+            "transition_weeks": [
+              "2026-W10"
+            ]
+          }
+        ],
+        "histogram_alone_is_ambiguous": true,
+        "measured": true,
+        "new_york_open_histogram": {
+          "19:00": 353,
+          "20:00": 685
+        },
+        "price_anchor": {
+          "candidates_sharing_a_tick": 8,
+          "epochs_are_true_utc": true,
+          "incomplete_observations": 0,
+          "incomplete_reasons": [],
+          "matches": {
+            "0": 10
+          },
+          "observations_checked": 12,
+          "offset_hours_matching_bar_open": 0,
+          "reason": "offset 0 uniquely reproduced 10/12 bar opens",
+          "resolved": true,
+          "samples_checked": 12,
+          "tied_offsets": []
+        },
+        "span": {
+          "first": "2022-09-06T00:00:00+00:00",
+          "last": "2026-09-04T00:00:00+00:00"
+        },
+        "utc_open_histogram": {
+          "00:00": 1038
+        },
+        "weekly_audit": {
+          "ambiguous_closes": [],
+          "ambiguous_weeks": [],
+          "calendar_supplied": false,
+          "duplicate_opens": [],
+          "interior_weeks": 207,
+          "missing_weeks": [],
+          "reason": "1 week(s) hold more than 5 sessions; a close-labelled week cannot, so this is a stub bar and no calendar or sample size can legalise it",
+          "status": "FAILED",
+          "uncovered_weeks": [],
+          "weeks_excess": {
+            "2024-W43": 6
+          },
+          "weeks_shortfall": {
+            "2022-W52": 4,
+            "2023-W52": 4,
+            "2024-W01": 4,
+            "2024-W52": 4,
+            "2025-W01": 4,
+            "2025-W52": 4,
+            "2026-W01": 4
+          }
+        }
       }
     },
     "GER40": {
       "broker_symbol": "DE30",
-      "m1_bar_history": {
-        "conclusive_broker_depth": false,
-        "earliest_visible": "2026-05-26T16:00:00+00:00",
-        "elapsed_seconds": 5.259286,
-        "method": "copy_rates_from(old_date, count=1)",
-        "note": "chart-limited observation; set Max. bars in chart to Unlimited and re-probe for broker depth",
-        "requested_at": "2000-01-01T00:00:00+00:00",
-        "returned_after_requested_date": true,
-        "terminal_maxbars": 100000
+      "d1_bar_reach": {
+        "expected_bars_per_window": 365,
+        "is_broker_depth": false,
+        "plan_truncated": false,
+        "planned_span_days": 7300.0,
+        "requested_span_days": 7300.0,
+        "stopped_because": "window returned only 1 out-of-range bar(s)",
+        "terminal_visible_earliest": "2013-05-30T00:00:00+00:00",
+        "timeframe": "D1",
+        "total_out_of_range": 1,
+        "walked_span_days": 5475.0,
+        "window_days": 365.0,
+        "windows_walked": 15
+      },
+      "m1_bar_reach": {
+        "expected_bars_per_window": 28800,
+        "is_broker_depth": false,
+        "plan_truncated": true,
+        "planned_span_days": 4800.0,
+        "requested_span_days": 7300.0,
+        "stopped_because": "window returned only 1 out-of-range bar(s)",
+        "terminal_visible_earliest": "2026-05-26T21:22:00+00:00",
+        "timeframe": "M1",
+        "total_out_of_range": 1,
+        "walked_span_days": 140.0,
+        "window_days": 20.0,
+        "windows_walked": 7
       },
       "selected": true,
-      "server_trading_day_offset": {
-        "measured": false,
-        "reason": "MT5 tick/bar epoch timestamps are UTC and cannot reveal the broker session offset."
-      },
       "specification": {
         "available": true,
+        "chart_mode": "0",
         "currency_base": "EUR",
         "currency_margin": "EUR",
         "currency_profit": "EUR",
@@ -228,10 +693,9 @@
         "name": "DE30",
         "path": "CFD Cash\\Indexes\\DE30",
         "point": "0.01",
-        "select": "True",
-        "session_close": "0.0",
-        "session_open": "0.0",
-        "spread": "0",
+        "session_close": "26029.43",
+        "session_open": "26035.0",
+        "spread": "260",
         "spread_float": "True",
         "swap_long": "-331.05",
         "swap_mode": "1",
@@ -244,8 +708,7 @@
         "trade_mode": "4",
         "trade_stops_level": "0",
         "trade_tick_size": "0.01",
-        "trade_tick_value": "0.11621100000000001",
-        "visible": "True",
+        "trade_tick_value": "0.116212",
         "volume_max": "500.0",
         "volume_min": "0.01",
         "volume_step": "0.01"
@@ -266,47 +729,284 @@
           "flags",
           "volume_real"
         ],
-        "elapsed_seconds": 0.020136,
         "has_time_msc": true,
+        "note": "recent sample only; historical density is not established",
         "sample": {
-          "ask": "25986.3",
-          "bid": "25983.7",
+          "ask": "26484.8",
+          "bid": "26477.2",
           "flags": "230",
           "last": "0.0",
-          "time": "1788270889",
-          "time_msc": "1788270889367",
+          "time": "1788152493",
+          "time_msc": "1788152493349",
           "volume": "0",
           "volume_real": "0.0"
         }
       },
       "tick_history": {
-        "earliest": "2023-06-09T01:00:02+00:00",
-        "earliest_time_msc": 1686272402120,
-        "elapsed_seconds": 88.615794,
-        "method": "copy_ticks_from(requested_from, count=1)",
-        "requested_from": "2000-01-01T00:00:00+00:00"
+        "earliest": "2021-03-05T02:29:59+00:00",
+        "earliest_time_msc": 1614911399917,
+        "method": "copy_ticks_from(count=1)"
+      },
+      "trading_day_boundary": {
+        "bars": 1018,
+        "boundary_is_1700_new_york": false,
+        "dst_fingerprint_10c": {
+          "anomalous_weeks": {
+            "2024-W13": 4
+          },
+          "covered_windows": [
+            "2022-autumn",
+            "2023-spring",
+            "2023-autumn",
+            "2024-spring",
+            "2024-autumn",
+            "2025-spring",
+            "2025-autumn",
+            "2026-spring"
+          ],
+          "partially_covered_windows": [],
+          "reason": "a covered window is short of five bars, which a holiday could explain; supply the expected-liquidity calendar to decide",
+          "status": "INDETERMINATE"
+        },
+        "dst_mismatch_windows": [
+          {
+            "first_full_session": "2022-10-31",
+            "fully_affected_weeks": [
+              "2022-W44"
+            ],
+            "fully_covered": true,
+            "label": "2022-autumn",
+            "observed": {
+              "2022-W43": 5,
+              "2022-W44": 5
+            },
+            "transition": "2022-10-30",
+            "transition_weeks": [
+              "2022-W43"
+            ]
+          },
+          {
+            "first_full_session": "2023-03-13",
+            "fully_affected_weeks": [
+              "2023-W11",
+              "2023-W12"
+            ],
+            "fully_covered": true,
+            "label": "2023-spring",
+            "observed": {
+              "2023-W10": 5,
+              "2023-W11": 5,
+              "2023-W12": 5
+            },
+            "transition": "2023-03-12",
+            "transition_weeks": [
+              "2023-W10"
+            ]
+          },
+          {
+            "first_full_session": "2023-10-30",
+            "fully_affected_weeks": [
+              "2023-W44"
+            ],
+            "fully_covered": true,
+            "label": "2023-autumn",
+            "observed": {
+              "2023-W43": 5,
+              "2023-W44": 5
+            },
+            "transition": "2023-10-29",
+            "transition_weeks": [
+              "2023-W43"
+            ]
+          },
+          {
+            "first_full_session": "2024-03-11",
+            "fully_affected_weeks": [
+              "2024-W11",
+              "2024-W12",
+              "2024-W13"
+            ],
+            "fully_covered": true,
+            "label": "2024-spring",
+            "observed": {
+              "2024-W10": 5,
+              "2024-W11": 5,
+              "2024-W12": 5,
+              "2024-W13": 4
+            },
+            "transition": "2024-03-10",
+            "transition_weeks": [
+              "2024-W10"
+            ]
+          },
+          {
+            "first_full_session": "2024-10-28",
+            "fully_affected_weeks": [
+              "2024-W44"
+            ],
+            "fully_covered": true,
+            "label": "2024-autumn",
+            "observed": {
+              "2024-W43": 5,
+              "2024-W44": 5
+            },
+            "transition": "2024-10-27",
+            "transition_weeks": [
+              "2024-W43"
+            ]
+          },
+          {
+            "first_full_session": "2025-03-10",
+            "fully_affected_weeks": [
+              "2025-W11",
+              "2025-W12",
+              "2025-W13"
+            ],
+            "fully_covered": true,
+            "label": "2025-spring",
+            "observed": {
+              "2025-W10": 5,
+              "2025-W11": 5,
+              "2025-W12": 5,
+              "2025-W13": 5
+            },
+            "transition": "2025-03-09",
+            "transition_weeks": [
+              "2025-W10"
+            ]
+          },
+          {
+            "first_full_session": "2025-10-27",
+            "fully_affected_weeks": [
+              "2025-W44"
+            ],
+            "fully_covered": true,
+            "label": "2025-autumn",
+            "observed": {
+              "2025-W43": 5,
+              "2025-W44": 5
+            },
+            "transition": "2025-10-26",
+            "transition_weeks": [
+              "2025-W43"
+            ]
+          },
+          {
+            "first_full_session": "2026-03-09",
+            "fully_affected_weeks": [
+              "2026-W11",
+              "2026-W12",
+              "2026-W13"
+            ],
+            "fully_covered": true,
+            "label": "2026-spring",
+            "observed": {
+              "2026-W10": 5,
+              "2026-W11": 5,
+              "2026-W12": 5,
+              "2026-W13": 5
+            },
+            "transition": "2026-03-08",
+            "transition_weeks": [
+              "2026-W10"
+            ]
+          }
+        ],
+        "histogram_alone_is_ambiguous": true,
+        "measured": true,
+        "new_york_open_histogram": {
+          "19:00": 346,
+          "20:00": 672
+        },
+        "price_anchor": {
+          "candidates_sharing_a_tick": 30,
+          "epochs_are_true_utc": null,
+          "incomplete_observations": 0,
+          "incomplete_reasons": [],
+          "matches": {},
+          "observations_checked": 12,
+          "offset_hours_matching_bar_open": null,
+          "reason": "no candidate offset reproduced a bar open price",
+          "resolved": false,
+          "samples_checked": 12,
+          "tied_offsets": []
+        },
+        "span": {
+          "first": "2022-09-06T00:00:00+00:00",
+          "last": "2026-09-04T00:00:00+00:00"
+        },
+        "utc_open_histogram": {
+          "00:00": 1018
+        },
+        "weekly_audit": {
+          "ambiguous_closes": [],
+          "ambiguous_weeks": [],
+          "calendar_supplied": false,
+          "duplicate_opens": [],
+          "interior_weeks": 207,
+          "missing_weeks": [],
+          "reason": "no expected-liquidity calendar (SPEC 2.4); a holiday-shortened week is indistinguishable from a dropped session",
+          "status": "INDETERMINATE",
+          "uncovered_weeks": [],
+          "weeks_excess": {},
+          "weeks_shortfall": {
+            "2022-W52": 4,
+            "2023-W14": 4,
+            "2023-W15": 4,
+            "2023-W18": 4,
+            "2023-W52": 3,
+            "2024-W01": 4,
+            "2024-W13": 4,
+            "2024-W14": 4,
+            "2024-W18": 4,
+            "2024-W52": 2,
+            "2025-W01": 3,
+            "2025-W16": 4,
+            "2025-W17": 4,
+            "2025-W18": 4,
+            "2025-W52": 2,
+            "2026-W01": 3,
+            "2026-W14": 4,
+            "2026-W15": 4,
+            "2026-W18": 4
+          }
+        }
       }
     },
     "UK100": {
       "broker_symbol": "UK100",
-      "m1_bar_history": {
-        "conclusive_broker_depth": false,
-        "earliest_visible": null,
-        "elapsed_seconds": 0.000111,
-        "error": {
-          "code": -1,
-          "message": "Terminal: Call failed"
-        },
-        "requested_at": "2000-01-01T00:00:00+00:00",
-        "terminal_maxbars": 100000
+      "d1_bar_reach": {
+        "expected_bars_per_window": 365,
+        "is_broker_depth": false,
+        "plan_truncated": false,
+        "planned_span_days": 7300.0,
+        "requested_span_days": 7300.0,
+        "stopped_because": "window returned only 1 out-of-range bar(s)",
+        "terminal_visible_earliest": "2013-06-02T00:00:00+00:00",
+        "timeframe": "D1",
+        "total_out_of_range": 1,
+        "walked_span_days": 5475.0,
+        "window_days": 365.0,
+        "windows_walked": 15
+      },
+      "m1_bar_reach": {
+        "expected_bars_per_window": 28800,
+        "is_broker_depth": false,
+        "plan_truncated": true,
+        "planned_span_days": 4800.0,
+        "requested_span_days": 7300.0,
+        "stopped_because": "window returned only 1 out-of-range bar(s)",
+        "terminal_visible_earliest": "2026-05-21T19:24:00+00:00",
+        "timeframe": "M1",
+        "total_out_of_range": 1,
+        "walked_span_days": 140.0,
+        "window_days": 20.0,
+        "windows_walked": 7
       },
       "selected": true,
-      "server_trading_day_offset": {
-        "measured": false,
-        "reason": "MT5 tick/bar epoch timestamps are UTC and cannot reveal the broker session offset."
-      },
       "specification": {
         "available": true,
+        "chart_mode": "0",
         "currency_base": "GBP",
         "currency_margin": "GBP",
         "currency_profit": "GBP",
@@ -319,7 +1019,6 @@
         "name": "UK100",
         "path": "CFD Cash\\Indexes\\UK100",
         "point": "0.01",
-        "select": "True",
         "session_close": "10832.05",
         "session_open": "10836.55",
         "spread": "220",
@@ -335,8 +1034,7 @@
         "trade_mode": "4",
         "trade_stops_level": "0",
         "trade_tick_size": "0.01",
-        "trade_tick_value": "0.13534200000000002",
-        "visible": "True",
+        "trade_tick_value": "0.135198",
         "volume_max": "500.0",
         "volume_min": "0.01",
         "volume_step": "0.01"
@@ -357,52 +1055,300 @@
           "flags",
           "volume_real"
         ],
-        "elapsed_seconds": 0.013823,
         "has_time_msc": true,
+        "note": "recent sample only; historical density is not established",
         "sample": {
-          "ask": "10742.45",
-          "bid": "10740.25",
-          "flags": "96",
+          "ask": "10788.45",
+          "bid": "10786.25",
+          "flags": "230",
           "last": "0.0",
-          "time": "1788272094",
-          "time_msc": "1788272094487",
+          "time": "1788258858",
+          "time_msc": "1788258858752",
           "volume": "0",
           "volume_real": "0.0"
         }
       },
       "tick_history": {
-        "attempts": [
-          {
-            "attempt": 1,
-            "count": 1,
-            "elapsed_seconds": 0.172566
-          }
-        ],
         "earliest": "2020-11-30T09:49:46+00:00",
         "earliest_time_msc": 1606729786724,
-        "method": "copy_ticks_from(requested_from, count=1)",
-        "requested_from": "2000-01-01T00:00:00+00:00"
+        "method": "copy_ticks_from(count=1)"
+      },
+      "trading_day_boundary": {
+        "bars": 1010,
+        "boundary_is_1700_new_york": false,
+        "dst_fingerprint_10c": {
+          "anomalous_weeks": {
+            "2024-W13": 4
+          },
+          "covered_windows": [
+            "2022-autumn",
+            "2023-spring",
+            "2023-autumn",
+            "2024-spring",
+            "2024-autumn",
+            "2025-spring",
+            "2025-autumn",
+            "2026-spring"
+          ],
+          "partially_covered_windows": [],
+          "reason": "a covered window is short of five bars, which a holiday could explain; supply the expected-liquidity calendar to decide",
+          "status": "INDETERMINATE"
+        },
+        "dst_mismatch_windows": [
+          {
+            "first_full_session": "2022-10-31",
+            "fully_affected_weeks": [
+              "2022-W44"
+            ],
+            "fully_covered": true,
+            "label": "2022-autumn",
+            "observed": {
+              "2022-W43": 5,
+              "2022-W44": 5
+            },
+            "transition": "2022-10-30",
+            "transition_weeks": [
+              "2022-W43"
+            ]
+          },
+          {
+            "first_full_session": "2023-03-13",
+            "fully_affected_weeks": [
+              "2023-W11",
+              "2023-W12"
+            ],
+            "fully_covered": true,
+            "label": "2023-spring",
+            "observed": {
+              "2023-W10": 5,
+              "2023-W11": 5,
+              "2023-W12": 5
+            },
+            "transition": "2023-03-12",
+            "transition_weeks": [
+              "2023-W10"
+            ]
+          },
+          {
+            "first_full_session": "2023-10-30",
+            "fully_affected_weeks": [
+              "2023-W44"
+            ],
+            "fully_covered": true,
+            "label": "2023-autumn",
+            "observed": {
+              "2023-W43": 5,
+              "2023-W44": 5
+            },
+            "transition": "2023-10-29",
+            "transition_weeks": [
+              "2023-W43"
+            ]
+          },
+          {
+            "first_full_session": "2024-03-11",
+            "fully_affected_weeks": [
+              "2024-W11",
+              "2024-W12",
+              "2024-W13"
+            ],
+            "fully_covered": true,
+            "label": "2024-spring",
+            "observed": {
+              "2024-W10": 5,
+              "2024-W11": 5,
+              "2024-W12": 5,
+              "2024-W13": 4
+            },
+            "transition": "2024-03-10",
+            "transition_weeks": [
+              "2024-W10"
+            ]
+          },
+          {
+            "first_full_session": "2024-10-28",
+            "fully_affected_weeks": [
+              "2024-W44"
+            ],
+            "fully_covered": true,
+            "label": "2024-autumn",
+            "observed": {
+              "2024-W43": 5,
+              "2024-W44": 5
+            },
+            "transition": "2024-10-27",
+            "transition_weeks": [
+              "2024-W43"
+            ]
+          },
+          {
+            "first_full_session": "2025-03-10",
+            "fully_affected_weeks": [
+              "2025-W11",
+              "2025-W12",
+              "2025-W13"
+            ],
+            "fully_covered": true,
+            "label": "2025-spring",
+            "observed": {
+              "2025-W10": 5,
+              "2025-W11": 5,
+              "2025-W12": 5,
+              "2025-W13": 5
+            },
+            "transition": "2025-03-09",
+            "transition_weeks": [
+              "2025-W10"
+            ]
+          },
+          {
+            "first_full_session": "2025-10-27",
+            "fully_affected_weeks": [
+              "2025-W44"
+            ],
+            "fully_covered": true,
+            "label": "2025-autumn",
+            "observed": {
+              "2025-W43": 5,
+              "2025-W44": 5
+            },
+            "transition": "2025-10-26",
+            "transition_weeks": [
+              "2025-W43"
+            ]
+          },
+          {
+            "first_full_session": "2026-03-09",
+            "fully_affected_weeks": [
+              "2026-W11",
+              "2026-W12",
+              "2026-W13"
+            ],
+            "fully_covered": true,
+            "label": "2026-spring",
+            "observed": {
+              "2026-W10": 5,
+              "2026-W11": 5,
+              "2026-W12": 5,
+              "2026-W13": 5
+            },
+            "transition": "2026-03-08",
+            "transition_weeks": [
+              "2026-W10"
+            ]
+          }
+        ],
+        "histogram_alone_is_ambiguous": true,
+        "measured": true,
+        "new_york_open_histogram": {
+          "19:00": 348,
+          "20:00": 662
+        },
+        "price_anchor": {
+          "candidates_sharing_a_tick": 32,
+          "epochs_are_true_utc": null,
+          "incomplete_observations": 0,
+          "incomplete_reasons": [],
+          "matches": {
+            "-3": 1,
+            "2": 1
+          },
+          "observations_checked": 12,
+          "offset_hours_matching_bar_open": null,
+          "reason": "offsets [-3, 2] tied at 1; a tie means the candidates are indistinguishable, not that the first one is right",
+          "resolved": false,
+          "samples_checked": 11,
+          "tied_offsets": [
+            -3,
+            2
+          ]
+        },
+        "span": {
+          "first": "2022-09-06T00:00:00+00:00",
+          "last": "2026-09-04T00:00:00+00:00"
+        },
+        "utc_open_histogram": {
+          "00:00": 1010
+        },
+        "weekly_audit": {
+          "ambiguous_closes": [],
+          "ambiguous_weeks": [],
+          "calendar_supplied": false,
+          "duplicate_opens": [],
+          "interior_weeks": 207,
+          "missing_weeks": [],
+          "reason": "no expected-liquidity calendar (SPEC 2.4); a holiday-shortened week is indistinguishable from a dropped session",
+          "status": "INDETERMINATE",
+          "uncovered_weeks": [],
+          "weeks_excess": {},
+          "weeks_shortfall": {
+            "2022-W38": 4,
+            "2022-W52": 3,
+            "2023-W01": 4,
+            "2023-W14": 4,
+            "2023-W15": 4,
+            "2023-W18": 4,
+            "2023-W19": 4,
+            "2023-W22": 4,
+            "2023-W35": 4,
+            "2023-W52": 3,
+            "2024-W01": 4,
+            "2024-W13": 4,
+            "2024-W14": 4,
+            "2024-W19": 4,
+            "2024-W22": 4,
+            "2024-W35": 4,
+            "2024-W52": 3,
+            "2025-W01": 4,
+            "2025-W16": 4,
+            "2025-W17": 4,
+            "2025-W19": 4,
+            "2025-W22": 4,
+            "2025-W35": 4,
+            "2025-W52": 3,
+            "2026-W01": 4,
+            "2026-W14": 4,
+            "2026-W15": 4,
+            "2026-W19": 4,
+            "2026-W22": 4
+          }
+        }
       }
     },
     "US100": {
       "broker_symbol": "US100",
-      "m1_bar_history": {
-        "conclusive_broker_depth": false,
-        "earliest_visible": "2026-05-26T18:59:00+00:00",
-        "elapsed_seconds": 1.618916,
-        "method": "copy_rates_from(old_date, count=1)",
-        "note": "chart-limited observation; set Max. bars in chart to Unlimited and re-probe for broker depth",
-        "requested_at": "2000-01-01T00:00:00+00:00",
-        "returned_after_requested_date": true,
-        "terminal_maxbars": 100000
+      "d1_bar_reach": {
+        "expected_bars_per_window": 365,
+        "is_broker_depth": false,
+        "plan_truncated": false,
+        "planned_span_days": 7300.0,
+        "requested_span_days": 7300.0,
+        "stopped_because": "window returned only 1 out-of-range bar(s)",
+        "terminal_visible_earliest": "2013-06-17T00:00:00+00:00",
+        "timeframe": "D1",
+        "total_out_of_range": 1,
+        "walked_span_days": 5475.0,
+        "window_days": 365.0,
+        "windows_walked": 15
+      },
+      "m1_bar_reach": {
+        "expected_bars_per_window": 28800,
+        "is_broker_depth": false,
+        "plan_truncated": true,
+        "planned_span_days": 4800.0,
+        "requested_span_days": 7300.0,
+        "stopped_because": "window returned only 1 out-of-range bar(s)",
+        "terminal_visible_earliest": "2026-05-27T01:21:00+00:00",
+        "timeframe": "M1",
+        "total_out_of_range": 1,
+        "walked_span_days": 140.0,
+        "window_days": 20.0,
+        "windows_walked": 7
       },
       "selected": true,
-      "server_trading_day_offset": {
-        "measured": false,
-        "reason": "MT5 tick/bar epoch timestamps are UTC and cannot reveal the broker session offset."
-      },
       "specification": {
         "available": true,
+        "chart_mode": "0",
         "currency_base": "USD",
         "currency_margin": "USD",
         "currency_profit": "USD",
@@ -415,10 +1361,9 @@
         "name": "US100",
         "path": "CFD Cash\\Indexes\\US100",
         "point": "0.01",
-        "select": "True",
-        "session_close": "0.0",
-        "session_open": "0.0",
-        "spread": "0",
+        "session_close": "29474.7",
+        "session_open": "29477.2",
+        "spread": "200",
         "spread_float": "True",
         "swap_long": "-117.2",
         "swap_mode": "1",
@@ -432,7 +1377,6 @@
         "trade_stops_level": "0",
         "trade_tick_size": "0.01",
         "trade_tick_value": "0.1",
-        "visible": "True",
         "volume_max": "500.0",
         "volume_min": "0.01",
         "volume_step": "0.01"
@@ -453,46 +1397,276 @@
           "flags",
           "volume_real"
         ],
-        "elapsed_seconds": 0.076244,
         "has_time_msc": true,
+        "note": "recent sample only; historical density is not established",
         "sample": {
-          "ask": "29203.0",
-          "bid": "29200.7",
-          "flags": "96",
+          "ask": "29402.75",
+          "bid": "29400.45",
+          "flags": "230",
           "last": "0.0",
-          "time": "1788264077",
-          "time_msc": "1788264077186",
+          "time": "1788141767",
+          "time_msc": "1788141767307",
           "volume": "0",
           "volume_real": "0.0"
         }
       },
       "tick_history": {
-        "earliest": "2026-03-31T01:00:01+00:00",
-        "earliest_time_msc": 1774918801791,
-        "elapsed_seconds": 61.513214,
-        "method": "copy_ticks_from(requested_from, count=1)",
-        "requested_from": "2000-01-01T00:00:00+00:00"
+        "earliest": "2025-10-13T01:00:58+00:00",
+        "earliest_time_msc": 1760317258792,
+        "method": "copy_ticks_from(count=1)"
+      },
+      "trading_day_boundary": {
+        "bars": 1033,
+        "boundary_is_1700_new_york": false,
+        "dst_fingerprint_10c": {
+          "anomalous_weeks": {
+            "2024-W13": 4
+          },
+          "covered_windows": [
+            "2022-autumn",
+            "2023-spring",
+            "2023-autumn",
+            "2024-spring",
+            "2024-autumn",
+            "2025-spring",
+            "2025-autumn",
+            "2026-spring"
+          ],
+          "partially_covered_windows": [],
+          "reason": "a covered window is short of five bars, which a holiday could explain; supply the expected-liquidity calendar to decide",
+          "status": "INDETERMINATE"
+        },
+        "dst_mismatch_windows": [
+          {
+            "first_full_session": "2022-10-31",
+            "fully_affected_weeks": [
+              "2022-W44"
+            ],
+            "fully_covered": true,
+            "label": "2022-autumn",
+            "observed": {
+              "2022-W43": 5,
+              "2022-W44": 5
+            },
+            "transition": "2022-10-30",
+            "transition_weeks": [
+              "2022-W43"
+            ]
+          },
+          {
+            "first_full_session": "2023-03-13",
+            "fully_affected_weeks": [
+              "2023-W11",
+              "2023-W12"
+            ],
+            "fully_covered": true,
+            "label": "2023-spring",
+            "observed": {
+              "2023-W10": 5,
+              "2023-W11": 5,
+              "2023-W12": 5
+            },
+            "transition": "2023-03-12",
+            "transition_weeks": [
+              "2023-W10"
+            ]
+          },
+          {
+            "first_full_session": "2023-10-30",
+            "fully_affected_weeks": [
+              "2023-W44"
+            ],
+            "fully_covered": true,
+            "label": "2023-autumn",
+            "observed": {
+              "2023-W43": 5,
+              "2023-W44": 5
+            },
+            "transition": "2023-10-29",
+            "transition_weeks": [
+              "2023-W43"
+            ]
+          },
+          {
+            "first_full_session": "2024-03-11",
+            "fully_affected_weeks": [
+              "2024-W11",
+              "2024-W12",
+              "2024-W13"
+            ],
+            "fully_covered": true,
+            "label": "2024-spring",
+            "observed": {
+              "2024-W10": 5,
+              "2024-W11": 5,
+              "2024-W12": 5,
+              "2024-W13": 4
+            },
+            "transition": "2024-03-10",
+            "transition_weeks": [
+              "2024-W10"
+            ]
+          },
+          {
+            "first_full_session": "2024-10-28",
+            "fully_affected_weeks": [
+              "2024-W44"
+            ],
+            "fully_covered": true,
+            "label": "2024-autumn",
+            "observed": {
+              "2024-W43": 5,
+              "2024-W44": 5
+            },
+            "transition": "2024-10-27",
+            "transition_weeks": [
+              "2024-W43"
+            ]
+          },
+          {
+            "first_full_session": "2025-03-10",
+            "fully_affected_weeks": [
+              "2025-W11",
+              "2025-W12",
+              "2025-W13"
+            ],
+            "fully_covered": true,
+            "label": "2025-spring",
+            "observed": {
+              "2025-W10": 5,
+              "2025-W11": 5,
+              "2025-W12": 5,
+              "2025-W13": 5
+            },
+            "transition": "2025-03-09",
+            "transition_weeks": [
+              "2025-W10"
+            ]
+          },
+          {
+            "first_full_session": "2025-10-27",
+            "fully_affected_weeks": [
+              "2025-W44"
+            ],
+            "fully_covered": true,
+            "label": "2025-autumn",
+            "observed": {
+              "2025-W43": 5,
+              "2025-W44": 5
+            },
+            "transition": "2025-10-26",
+            "transition_weeks": [
+              "2025-W43"
+            ]
+          },
+          {
+            "first_full_session": "2026-03-09",
+            "fully_affected_weeks": [
+              "2026-W11",
+              "2026-W12",
+              "2026-W13"
+            ],
+            "fully_covered": true,
+            "label": "2026-spring",
+            "observed": {
+              "2026-W10": 5,
+              "2026-W11": 5,
+              "2026-W12": 5,
+              "2026-W13": 5
+            },
+            "transition": "2026-03-08",
+            "transition_weeks": [
+              "2026-W10"
+            ]
+          }
+        ],
+        "histogram_alone_is_ambiguous": true,
+        "measured": true,
+        "new_york_open_histogram": {
+          "19:00": 352,
+          "20:00": 681
+        },
+        "price_anchor": {
+          "candidates_sharing_a_tick": 30,
+          "epochs_are_true_utc": null,
+          "incomplete_observations": 0,
+          "incomplete_reasons": [],
+          "matches": {},
+          "observations_checked": 12,
+          "offset_hours_matching_bar_open": null,
+          "reason": "no candidate offset reproduced a bar open price",
+          "resolved": false,
+          "samples_checked": 12,
+          "tied_offsets": []
+        },
+        "span": {
+          "first": "2022-09-06T00:00:00+00:00",
+          "last": "2026-09-04T00:00:00+00:00"
+        },
+        "utc_open_histogram": {
+          "00:00": 1033
+        },
+        "weekly_audit": {
+          "ambiguous_closes": [],
+          "ambiguous_weeks": [],
+          "calendar_supplied": false,
+          "duplicate_opens": [],
+          "interior_weeks": 207,
+          "missing_weeks": [],
+          "reason": "no expected-liquidity calendar (SPEC 2.4); a holiday-shortened week is indistinguishable from a dropped session",
+          "status": "INDETERMINATE",
+          "uncovered_weeks": [],
+          "weeks_excess": {},
+          "weeks_shortfall": {
+            "2022-W52": 4,
+            "2023-W01": 4,
+            "2023-W14": 4,
+            "2023-W52": 4,
+            "2024-W01": 4,
+            "2024-W13": 4,
+            "2024-W52": 4,
+            "2025-W01": 4,
+            "2025-W16": 4,
+            "2025-W52": 4,
+            "2026-W01": 4
+          }
+        }
       }
     },
     "US30": {
       "broker_symbol": "US30",
-      "m1_bar_history": {
-        "conclusive_broker_depth": false,
-        "earliest_visible": "2026-05-26T18:49:00+00:00",
-        "elapsed_seconds": 1.533792,
-        "method": "copy_rates_from(old_date, count=1)",
-        "note": "chart-limited observation; set Max. bars in chart to Unlimited and re-probe for broker depth",
-        "requested_at": "2000-01-01T00:00:00+00:00",
-        "returned_after_requested_date": true,
-        "terminal_maxbars": 100000
+      "d1_bar_reach": {
+        "expected_bars_per_window": 365,
+        "is_broker_depth": false,
+        "plan_truncated": false,
+        "planned_span_days": 7300.0,
+        "requested_span_days": 7300.0,
+        "stopped_because": "window returned only 1 out-of-range bar(s)",
+        "terminal_visible_earliest": "2013-06-17T00:00:00+00:00",
+        "timeframe": "D1",
+        "total_out_of_range": 1,
+        "walked_span_days": 5475.0,
+        "window_days": 365.0,
+        "windows_walked": 15
+      },
+      "m1_bar_reach": {
+        "expected_bars_per_window": 28800,
+        "is_broker_depth": false,
+        "plan_truncated": true,
+        "planned_span_days": 4800.0,
+        "requested_span_days": 7300.0,
+        "stopped_because": "window returned only 1 out-of-range bar(s)",
+        "terminal_visible_earliest": "2026-05-27T01:10:00+00:00",
+        "timeframe": "M1",
+        "total_out_of_range": 1,
+        "walked_span_days": 140.0,
+        "window_days": 20.0,
+        "windows_walked": 7
       },
       "selected": true,
-      "server_trading_day_offset": {
-        "measured": false,
-        "reason": "MT5 tick/bar epoch timestamps are UTC and cannot reveal the broker session offset."
-      },
       "specification": {
         "available": true,
+        "chart_mode": "0",
         "currency_base": "USD",
         "currency_margin": "USD",
         "currency_profit": "USD",
@@ -505,10 +1679,9 @@
         "name": "US30",
         "path": "CFD Cash\\Indexes\\US30",
         "point": "0.01",
-        "select": "True",
-        "session_close": "0.0",
-        "session_open": "0.0",
-        "spread": "0",
+        "session_close": "53684.65",
+        "session_open": "53695.65",
+        "spread": "360",
         "spread_float": "True",
         "swap_long": "-534.15",
         "swap_mode": "1",
@@ -522,7 +1695,6 @@
         "trade_stops_level": "0",
         "trade_tick_size": "0.01",
         "trade_tick_value": "0.1",
-        "visible": "True",
         "volume_max": "500.0",
         "volume_min": "0.01",
         "volume_step": "0.01"
@@ -543,46 +1715,276 @@
           "flags",
           "volume_real"
         ],
-        "elapsed_seconds": 0.023903,
         "has_time_msc": true,
+        "note": "recent sample only; historical density is not established",
         "sample": {
-          "ask": "52874.6",
-          "bid": "52869.9",
-          "flags": "230",
+          "ask": "53473.2",
+          "bid": "53469.3",
+          "flags": "96",
           "last": "0.0",
-          "time": "1788265952",
-          "time_msc": "1788265952842",
+          "time": "1788146342",
+          "time_msc": "1788146342944",
           "volume": "0",
           "volume_real": "0.0"
         }
       },
       "tick_history": {
-        "earliest": "2025-04-15T01:00:01+00:00",
-        "earliest_time_msc": 1744678801252,
-        "elapsed_seconds": 93.649561,
-        "method": "copy_ticks_from(requested_from, count=1)",
-        "requested_from": "2000-01-01T00:00:00+00:00"
+        "earliest": "2023-03-06T01:00:03+00:00",
+        "earliest_time_msc": 1678064403200,
+        "method": "copy_ticks_from(count=1)"
+      },
+      "trading_day_boundary": {
+        "bars": 1033,
+        "boundary_is_1700_new_york": false,
+        "dst_fingerprint_10c": {
+          "anomalous_weeks": {
+            "2024-W13": 4
+          },
+          "covered_windows": [
+            "2022-autumn",
+            "2023-spring",
+            "2023-autumn",
+            "2024-spring",
+            "2024-autumn",
+            "2025-spring",
+            "2025-autumn",
+            "2026-spring"
+          ],
+          "partially_covered_windows": [],
+          "reason": "a covered window is short of five bars, which a holiday could explain; supply the expected-liquidity calendar to decide",
+          "status": "INDETERMINATE"
+        },
+        "dst_mismatch_windows": [
+          {
+            "first_full_session": "2022-10-31",
+            "fully_affected_weeks": [
+              "2022-W44"
+            ],
+            "fully_covered": true,
+            "label": "2022-autumn",
+            "observed": {
+              "2022-W43": 5,
+              "2022-W44": 5
+            },
+            "transition": "2022-10-30",
+            "transition_weeks": [
+              "2022-W43"
+            ]
+          },
+          {
+            "first_full_session": "2023-03-13",
+            "fully_affected_weeks": [
+              "2023-W11",
+              "2023-W12"
+            ],
+            "fully_covered": true,
+            "label": "2023-spring",
+            "observed": {
+              "2023-W10": 5,
+              "2023-W11": 5,
+              "2023-W12": 5
+            },
+            "transition": "2023-03-12",
+            "transition_weeks": [
+              "2023-W10"
+            ]
+          },
+          {
+            "first_full_session": "2023-10-30",
+            "fully_affected_weeks": [
+              "2023-W44"
+            ],
+            "fully_covered": true,
+            "label": "2023-autumn",
+            "observed": {
+              "2023-W43": 5,
+              "2023-W44": 5
+            },
+            "transition": "2023-10-29",
+            "transition_weeks": [
+              "2023-W43"
+            ]
+          },
+          {
+            "first_full_session": "2024-03-11",
+            "fully_affected_weeks": [
+              "2024-W11",
+              "2024-W12",
+              "2024-W13"
+            ],
+            "fully_covered": true,
+            "label": "2024-spring",
+            "observed": {
+              "2024-W10": 5,
+              "2024-W11": 5,
+              "2024-W12": 5,
+              "2024-W13": 4
+            },
+            "transition": "2024-03-10",
+            "transition_weeks": [
+              "2024-W10"
+            ]
+          },
+          {
+            "first_full_session": "2024-10-28",
+            "fully_affected_weeks": [
+              "2024-W44"
+            ],
+            "fully_covered": true,
+            "label": "2024-autumn",
+            "observed": {
+              "2024-W43": 5,
+              "2024-W44": 5
+            },
+            "transition": "2024-10-27",
+            "transition_weeks": [
+              "2024-W43"
+            ]
+          },
+          {
+            "first_full_session": "2025-03-10",
+            "fully_affected_weeks": [
+              "2025-W11",
+              "2025-W12",
+              "2025-W13"
+            ],
+            "fully_covered": true,
+            "label": "2025-spring",
+            "observed": {
+              "2025-W10": 5,
+              "2025-W11": 5,
+              "2025-W12": 5,
+              "2025-W13": 5
+            },
+            "transition": "2025-03-09",
+            "transition_weeks": [
+              "2025-W10"
+            ]
+          },
+          {
+            "first_full_session": "2025-10-27",
+            "fully_affected_weeks": [
+              "2025-W44"
+            ],
+            "fully_covered": true,
+            "label": "2025-autumn",
+            "observed": {
+              "2025-W43": 5,
+              "2025-W44": 5
+            },
+            "transition": "2025-10-26",
+            "transition_weeks": [
+              "2025-W43"
+            ]
+          },
+          {
+            "first_full_session": "2026-03-09",
+            "fully_affected_weeks": [
+              "2026-W11",
+              "2026-W12",
+              "2026-W13"
+            ],
+            "fully_covered": true,
+            "label": "2026-spring",
+            "observed": {
+              "2026-W10": 5,
+              "2026-W11": 5,
+              "2026-W12": 5,
+              "2026-W13": 5
+            },
+            "transition": "2026-03-08",
+            "transition_weeks": [
+              "2026-W10"
+            ]
+          }
+        ],
+        "histogram_alone_is_ambiguous": true,
+        "measured": true,
+        "new_york_open_histogram": {
+          "19:00": 352,
+          "20:00": 681
+        },
+        "price_anchor": {
+          "candidates_sharing_a_tick": 30,
+          "epochs_are_true_utc": null,
+          "incomplete_observations": 0,
+          "incomplete_reasons": [],
+          "matches": {},
+          "observations_checked": 12,
+          "offset_hours_matching_bar_open": null,
+          "reason": "no candidate offset reproduced a bar open price",
+          "resolved": false,
+          "samples_checked": 12,
+          "tied_offsets": []
+        },
+        "span": {
+          "first": "2022-09-06T00:00:00+00:00",
+          "last": "2026-09-04T00:00:00+00:00"
+        },
+        "utc_open_histogram": {
+          "00:00": 1033
+        },
+        "weekly_audit": {
+          "ambiguous_closes": [],
+          "ambiguous_weeks": [],
+          "calendar_supplied": false,
+          "duplicate_opens": [],
+          "interior_weeks": 207,
+          "missing_weeks": [],
+          "reason": "no expected-liquidity calendar (SPEC 2.4); a holiday-shortened week is indistinguishable from a dropped session",
+          "status": "INDETERMINATE",
+          "uncovered_weeks": [],
+          "weeks_excess": {},
+          "weeks_shortfall": {
+            "2022-W52": 4,
+            "2023-W01": 4,
+            "2023-W14": 4,
+            "2023-W52": 4,
+            "2024-W01": 4,
+            "2024-W13": 4,
+            "2024-W52": 4,
+            "2025-W01": 4,
+            "2025-W16": 4,
+            "2025-W52": 4,
+            "2026-W01": 4
+          }
+        }
       }
     },
     "US500": {
       "broker_symbol": "US500",
-      "m1_bar_history": {
-        "conclusive_broker_depth": false,
-        "earliest_visible": "2026-05-26T18:38:00+00:00",
-        "elapsed_seconds": 3.493353,
-        "method": "copy_rates_from(old_date, count=1)",
-        "note": "chart-limited observation; set Max. bars in chart to Unlimited and re-probe for broker depth",
-        "requested_at": "2000-01-01T00:00:00+00:00",
-        "returned_after_requested_date": true,
-        "terminal_maxbars": 100000
+      "d1_bar_reach": {
+        "expected_bars_per_window": 365,
+        "is_broker_depth": false,
+        "plan_truncated": false,
+        "planned_span_days": 7300.0,
+        "requested_span_days": 7300.0,
+        "stopped_because": "window returned only 1 out-of-range bar(s)",
+        "terminal_visible_earliest": "2013-06-16T00:00:00+00:00",
+        "timeframe": "D1",
+        "total_out_of_range": 1,
+        "walked_span_days": 5475.0,
+        "window_days": 365.0,
+        "windows_walked": 15
+      },
+      "m1_bar_reach": {
+        "expected_bars_per_window": 28800,
+        "is_broker_depth": false,
+        "plan_truncated": true,
+        "planned_span_days": 4800.0,
+        "requested_span_days": 7300.0,
+        "stopped_because": "window returned only 1 out-of-range bar(s)",
+        "terminal_visible_earliest": "2026-05-27T01:02:00+00:00",
+        "timeframe": "M1",
+        "total_out_of_range": 1,
+        "walked_span_days": 140.0,
+        "window_days": 20.0,
+        "windows_walked": 7
       },
       "selected": true,
-      "server_trading_day_offset": {
-        "measured": false,
-        "reason": "MT5 tick/bar epoch timestamps are UTC and cannot reveal the broker session offset."
-      },
       "specification": {
         "available": true,
+        "chart_mode": "0",
         "currency_base": "USD",
         "currency_margin": "USD",
         "currency_profit": "USD",
@@ -595,10 +1997,9 @@
         "name": "US500",
         "path": "CFD Cash\\Indexes\\US500",
         "point": "0.01",
-        "select": "True",
-        "session_close": "0.0",
-        "session_open": "0.0",
-        "spread": "0",
+        "session_close": "7748.54",
+        "session_open": "7749.79",
+        "spread": "55",
         "spread_float": "True",
         "swap_long": "-95.6",
         "swap_mode": "1",
@@ -612,7 +2013,6 @@
         "trade_stops_level": "0",
         "trade_tick_size": "0.01",
         "trade_tick_value": "0.1",
-        "visible": "True",
         "volume_max": "500.0",
         "volume_min": "0.01",
         "volume_step": "0.01"
@@ -633,66 +2033,271 @@
           "flags",
           "volume_real"
         ],
-        "elapsed_seconds": 0.020694,
         "has_time_msc": true,
+        "note": "recent sample only; historical density is not established",
         "sample": {
-          "ask": "7650.61",
-          "bid": "7650.06",
+          "ask": "7689.84",
+          "bid": "7689.29",
           "flags": "96",
           "last": "0.0",
-          "time": "1788266164",
-          "time_msc": "1788266164141",
+          "time": "1788144898",
+          "time_msc": "1788144898919",
           "volume": "0",
           "volume_real": "0.0"
         }
       },
       "tick_history": {
-        "earliest": "2026-01-29T01:00:00+00:00",
-        "earliest_time_msc": 1769648400462,
-        "elapsed_seconds": 44.176777,
-        "method": "copy_ticks_from(requested_from, count=1)",
-        "requested_from": "2000-01-01T00:00:00+00:00"
+        "earliest": "2025-02-27T01:00:00+00:00",
+        "earliest_time_msc": 1740618000897,
+        "method": "copy_ticks_from(count=1)"
+      },
+      "trading_day_boundary": {
+        "bars": 1033,
+        "boundary_is_1700_new_york": false,
+        "dst_fingerprint_10c": {
+          "anomalous_weeks": {
+            "2024-W13": 4
+          },
+          "covered_windows": [
+            "2022-autumn",
+            "2023-spring",
+            "2023-autumn",
+            "2024-spring",
+            "2024-autumn",
+            "2025-spring",
+            "2025-autumn",
+            "2026-spring"
+          ],
+          "partially_covered_windows": [],
+          "reason": "a covered window is short of five bars, which a holiday could explain; supply the expected-liquidity calendar to decide",
+          "status": "INDETERMINATE"
+        },
+        "dst_mismatch_windows": [
+          {
+            "first_full_session": "2022-10-31",
+            "fully_affected_weeks": [
+              "2022-W44"
+            ],
+            "fully_covered": true,
+            "label": "2022-autumn",
+            "observed": {
+              "2022-W43": 5,
+              "2022-W44": 5
+            },
+            "transition": "2022-10-30",
+            "transition_weeks": [
+              "2022-W43"
+            ]
+          },
+          {
+            "first_full_session": "2023-03-13",
+            "fully_affected_weeks": [
+              "2023-W11",
+              "2023-W12"
+            ],
+            "fully_covered": true,
+            "label": "2023-spring",
+            "observed": {
+              "2023-W10": 5,
+              "2023-W11": 5,
+              "2023-W12": 5
+            },
+            "transition": "2023-03-12",
+            "transition_weeks": [
+              "2023-W10"
+            ]
+          },
+          {
+            "first_full_session": "2023-10-30",
+            "fully_affected_weeks": [
+              "2023-W44"
+            ],
+            "fully_covered": true,
+            "label": "2023-autumn",
+            "observed": {
+              "2023-W43": 5,
+              "2023-W44": 5
+            },
+            "transition": "2023-10-29",
+            "transition_weeks": [
+              "2023-W43"
+            ]
+          },
+          {
+            "first_full_session": "2024-03-11",
+            "fully_affected_weeks": [
+              "2024-W11",
+              "2024-W12",
+              "2024-W13"
+            ],
+            "fully_covered": true,
+            "label": "2024-spring",
+            "observed": {
+              "2024-W10": 5,
+              "2024-W11": 5,
+              "2024-W12": 5,
+              "2024-W13": 4
+            },
+            "transition": "2024-03-10",
+            "transition_weeks": [
+              "2024-W10"
+            ]
+          },
+          {
+            "first_full_session": "2024-10-28",
+            "fully_affected_weeks": [
+              "2024-W44"
+            ],
+            "fully_covered": true,
+            "label": "2024-autumn",
+            "observed": {
+              "2024-W43": 5,
+              "2024-W44": 5
+            },
+            "transition": "2024-10-27",
+            "transition_weeks": [
+              "2024-W43"
+            ]
+          },
+          {
+            "first_full_session": "2025-03-10",
+            "fully_affected_weeks": [
+              "2025-W11",
+              "2025-W12",
+              "2025-W13"
+            ],
+            "fully_covered": true,
+            "label": "2025-spring",
+            "observed": {
+              "2025-W10": 5,
+              "2025-W11": 5,
+              "2025-W12": 5,
+              "2025-W13": 5
+            },
+            "transition": "2025-03-09",
+            "transition_weeks": [
+              "2025-W10"
+            ]
+          },
+          {
+            "first_full_session": "2025-10-27",
+            "fully_affected_weeks": [
+              "2025-W44"
+            ],
+            "fully_covered": true,
+            "label": "2025-autumn",
+            "observed": {
+              "2025-W43": 5,
+              "2025-W44": 5
+            },
+            "transition": "2025-10-26",
+            "transition_weeks": [
+              "2025-W43"
+            ]
+          },
+          {
+            "first_full_session": "2026-03-09",
+            "fully_affected_weeks": [
+              "2026-W11",
+              "2026-W12",
+              "2026-W13"
+            ],
+            "fully_covered": true,
+            "label": "2026-spring",
+            "observed": {
+              "2026-W10": 5,
+              "2026-W11": 5,
+              "2026-W12": 5,
+              "2026-W13": 5
+            },
+            "transition": "2026-03-08",
+            "transition_weeks": [
+              "2026-W10"
+            ]
+          }
+        ],
+        "histogram_alone_is_ambiguous": true,
+        "measured": true,
+        "new_york_open_histogram": {
+          "19:00": 352,
+          "20:00": 681
+        },
+        "price_anchor": {
+          "candidates_sharing_a_tick": 30,
+          "epochs_are_true_utc": null,
+          "incomplete_observations": 0,
+          "incomplete_reasons": [],
+          "matches": {},
+          "observations_checked": 12,
+          "offset_hours_matching_bar_open": null,
+          "reason": "no candidate offset reproduced a bar open price",
+          "resolved": false,
+          "samples_checked": 12,
+          "tied_offsets": []
+        },
+        "span": {
+          "first": "2022-09-06T00:00:00+00:00",
+          "last": "2026-09-04T00:00:00+00:00"
+        },
+        "utc_open_histogram": {
+          "00:00": 1033
+        },
+        "weekly_audit": {
+          "ambiguous_closes": [],
+          "ambiguous_weeks": [],
+          "calendar_supplied": false,
+          "duplicate_opens": [],
+          "interior_weeks": 207,
+          "missing_weeks": [],
+          "reason": "no expected-liquidity calendar (SPEC 2.4); a holiday-shortened week is indistinguishable from a dropped session",
+          "status": "INDETERMINATE",
+          "uncovered_weeks": [],
+          "weeks_excess": {},
+          "weeks_shortfall": {
+            "2022-W52": 4,
+            "2023-W01": 4,
+            "2023-W14": 4,
+            "2023-W52": 4,
+            "2024-W01": 4,
+            "2024-W13": 4,
+            "2024-W52": 4,
+            "2025-W01": 4,
+            "2025-W16": 4,
+            "2025-W52": 4,
+            "2026-W01": 4
+          }
+        }
       }
     }
   },
   "limitations": [
-    "MT5 tick epochs are UTC; broker trading-day offset is not inferable from quote timestamps.",
-    "This probe measures retrievable tick/M1 depth and recent bid/ask population, not demo/live identity.",
-    "M1 history is constrained by the terminal's finite Max. bars in chart setting and is not conclusive broker depth."
+    "Bar depth is TERMINAL-VISIBLE reach, not broker depth: copy_rates_* reads backwards and is bounded by chart history. True M1 depth is unresolved.",
+    "Out-of-range bars are discarded: a live run requested 2012 and received a single 2026 bar, which must not be read as depth.",
+    "A 00:00 UTC D1 histogram is ambiguous between a genuine UTC boundary and server-local time encoded as UTC; only the price anchor separates them.",
+    "A tied anchor is reported unresolved, never broken by candidate order.",
+    "Tick epochs are UTC, so the session offset can never be inferred by comparing a quote epoch against the local clock.",
+    "session_open/session_close are PRICES, not times; session hours remain unmeasured and need the session-quote/session-trade calls.",
+    "trade_tick_value is live-rate derived; never cache or equality-compare it.",
+    "Neither the weekly audit nor the 10(c) fingerprint can PASS without SPEC 2.4's expected-liquidity calendar, and this probe supplies none.",
+    "Two-sidedness is a recent sample only; historical density is not established.",
+    "Only the exact aliased symbols were probed; near_matches were NOT measured.",
+    "Every MT5 request is bounded to 90s of PROBE waiting on a daemon thread. A stuck request is recorded as a timeout instead of hanging the run, but it is not cancelled inside the terminal, so a timed-out measurement is absent evidence, not a negative result.",
+    "The first timeout poisons the MT5 IPC session. No later MT5 call or shutdown is attempted; a PARTIAL sidecar is fsynced and the process exits nonzero.",
+    "A PARTIAL run never replaces the requested complete-evidence output."
   ],
   "package_version": "5.0.6162",
-  "probe_version": "safe-runner-v1",
-  "probed_at_utc": "2026-09-04T11:26:51.014332+00:00",
-  "resumed_at_utc": [
-    "2026-09-04T11:39:09.526874+00:00"
-  ],
-  "status": "complete",
+  "probe_version": "boundary-pass-v5",
+  "probed_at_utc": "2026-09-04T16:53:54.150845+00:00",
+  "status": "COMPLETE",
   "symbols": {
-    "candidates": {
-      "DE30": [
-        "DE30"
-      ],
-      "EURUSD": [
-        "EURUSD",
-        "EURUSDw"
-      ],
-      "GBPUSD": [
-        "GBPUSD",
-        "GBPUSDw"
-      ],
-      "GER40": [],
-      "UK100": [
-        "UK100"
-      ],
-      "US100": [
-        "US100"
-      ],
-      "US30": [
-        "US30"
-      ],
-      "US500": [
-        "US500"
-      ]
+    "aliases_declared": {
+      "EURUSD": "EURUSD",
+      "GBPUSD": "GBPUSD",
+      "GER40": "DE30",
+      "UK100": "UK100",
+      "US100": "US100",
+      "US30": "US30",
+      "US500": "US500"
     },
     "logical_to_broker": {
       "EURUSD": "EURUSD",
@@ -703,7 +2308,21 @@
       "US30": "US30",
       "US500": "US500"
     },
-    "total": 585
+    "near_matches": {
+      "EURUSD": [
+        "EURUSDw"
+      ],
+      "GBPUSD": [
+        "GBPUSDw"
+      ],
+      "GER40": [],
+      "UK100": [],
+      "US100": [],
+      "US30": [],
+      "US500": []
+    },
+    "total": 585,
+    "unavailable": []
   },
   "terminal": {
     "build": 6140,
@@ -711,7 +2330,7 @@
     "connected": true,
     "maxbars": 100000,
     "name": "MetaTrader 5",
-    "path": "C:\\Program Files\\MetaTrader 5",
+    "path_supplied": "C:\\Program Files\\MetaTrader 5\\terminal64.exe",
     "trade_allowed": false
   }
 }
