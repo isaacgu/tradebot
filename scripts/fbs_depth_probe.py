@@ -74,9 +74,13 @@ ALIASES: dict[str, str] = {
 HISTORY_FLOOR = datetime(2000, 1, 1, tzinfo=UTC)
 BOUNDARY_YEARS = 4
 BAR_WALK_YEARS = 20
+# Hold each bar request to a fraction of the terminal cap; a flat 365-day M1 window
+# is ~525,600 bars against maxbars=100,000 and the call hangs.
+WINDOW_CAP_FRACTION = 0.3
+MAX_WALK_STEPS = 240
 PRICE_ANCHOR_SAMPLES = 12
 CANDIDATE_OFFSETS_HOURS = (0, -1, -2, -3, 1, 2, 3)
-PROBE_VERSION = "boundary-pass-v3"
+PROBE_VERSION = "boundary-pass-v4"
 
 
 def _fail(message: str) -> NoReturn:
@@ -123,19 +127,29 @@ def _earliest_tick(symbol: str) -> dict[str, Any]:
     }
 
 
-def _bar_reach(symbol: str, timeframe: int, label: str) -> dict[str, Any]:
+def _bar_reach(
+    symbol: str, timeframe: int, label: str, bar_minutes: int, maxbars: int
+) -> dict[str, Any]:
     """How far back the TERMINAL can currently show bars — a floor, not broker depth.
 
     `copy_rates_from(date, count)` counts backwards and is bounded by chart history, so
-    a one-record probe cannot find the earliest bar. This walks one-year windows back
-    from now and stops at the first that yields nothing, recording why.
+    a one-record probe cannot find the earliest bar. This walks *cap-sized* windows back
+    from now and stops at the first that yields nothing.
+
+    **The window is sized from the cap, not fixed.** A flat 365-day window is about
+    525,600 M1 bars against a 100,000-bar limit; the live run hung in exactly that call
+    and had to be aborted. Each window is therefore held to a fraction of `maxbars`, so
+    a structurally oversized request can never be issued.
     """
+    safe_bars = max(1, int(maxbars * WINDOW_CAP_FRACTION))
+    window = timedelta(minutes=safe_bars * bar_minutes)
+    steps = max(1, min(MAX_WALK_STEPS, int(timedelta(days=365 * BAR_WALK_YEARS) / window)))
     now = datetime.now(UTC)
     windows: list[dict[str, Any]] = []
     earliest: str | None = None
-    for years_back in range(BAR_WALK_YEARS):
-        end = now - timedelta(days=365 * years_back)
-        start = end - timedelta(days=365)
+    for step in range(steps):
+        end = now - window * step
+        start = end - window
         rates = mt5.copy_rates_range(symbol, timeframe, start, end)
         outcome: dict[str, Any] = {"from": start.date().isoformat(), "bars": 0}
         if rates is None:
@@ -143,15 +157,17 @@ def _bar_reach(symbol: str, timeframe: int, label: str) -> dict[str, Any]:
             windows.append(outcome)
             break
         outcome["bars"] = len(rates)
+        windows.append(outcome)
         if len(rates) == 0:
-            windows.append(outcome)
             break
         earliest = _utc(int(rates[0]["time"])).isoformat()
-        windows.append(outcome)
     return {
         "timeframe": label,
         "terminal_visible_earliest": earliest,
         "is_broker_depth": False,
+        "window_days": round(window.total_seconds() / 86400, 2),
+        "expected_bars_per_window": safe_bars,
+        "windows_walked": len(windows),
         "note": "floor only; copy_rates_* is bounded by chart history and reads backwards",
         "windows": windows,
     }
@@ -162,35 +178,69 @@ def _boundary_price_anchor(symbol: str, rates: Any) -> dict[str, Any]:
 
     For a sample of D1 bars, compare the bar's open price against the first tick at or
     after each candidate boundary instant (`epoch + offset`). The offset whose first
-    tick reproduces the bar open is the real boundary. This is the only way to break
-    the histogram's ambiguity, because both interpretations produce identical epochs.
+    tick reproduces the bar open is the real boundary — the only way to break the
+    histogram's ambiguity, since both interpretations produce identical epochs.
+
+    Two guards, both learned from a false positive on the index symbols.
+
+    *A candidate only votes if its first tick is its own.* `copy_ticks_from` reads
+    FORWARD, so when the market is shut between two candidate instants both resolve to
+    the SAME first tick — one observation counted twice, discriminating nothing. Any
+    tick shared by more than one candidate for a bar is discarded for that bar.
+
+    *A tie is never a resolution.* The live index run scored offsets 0 and +1 at 12/12
+    each, and `Counter.most_common` silently returned offset 0 because it was inserted
+    first. Resolution now requires a strictly unique top scorer.
     """
     sample = list(rates)[-PRICE_ANCHOR_SAMPLES:]
     scores: Counter[int] = Counter()
+    discarded_shared = 0
     checked = 0
     for rate in sample:
         opened = _utc(int(rate["time"]))
         bar_open = float(rate["open"])
+        # Map each candidate to the identity of the first tick it finds.
+        found: dict[int, tuple[int, float]] = {}
         for offset in CANDIDATE_OFFSETS_HOURS:
-            candidate = opened + timedelta(hours=offset)
-            ticks = mt5.copy_ticks_from(symbol, candidate, 1, mt5.COPY_TICKS_ALL)
+            ticks = mt5.copy_ticks_from(
+                symbol, opened + timedelta(hours=offset), 1, mt5.COPY_TICKS_ALL
+            )
             if ticks is None or len(ticks) == 0:
                 continue
-            if abs(float(ticks[0]["bid"]) - bar_open) < 1e-9:
+            found[offset] = (int(ticks[0]["time_msc"]), float(ticks[0]["bid"]))
+        seen_msc = Counter(msc for msc, _ in found.values())
+        for offset, (msc, bid) in found.items():
+            if seen_msc[msc] > 1:
+                discarded_shared += 1
+                continue
+            if abs(bid - bar_open) < 1e-9:
                 scores[offset] += 1
         checked += 1
-    if not scores:
+
+    ranked = scores.most_common()
+    unique_winner = len(ranked) == 1 or (len(ranked) > 1 and ranked[0][1] > ranked[1][1])
+    if not ranked or not unique_winner:
         return {
             "resolved": False,
             "samples_checked": checked,
-            "note": "no candidate offset reproduced a bar open; boundary unresolved",
+            "matches": dict(scores),
+            "tied_offsets": [offset for offset, hits in ranked if hits == ranked[0][1]]
+            if ranked
+            else [],
+            "candidates_sharing_a_tick": discarded_shared,
+            "note": (
+                "unresolved: either no candidate reproduced a bar open, or two or more "
+                "tied — a tie means the candidates are indistinguishable, not that the "
+                "first one is right"
+            ),
         }
-    best, hits = scores.most_common(1)[0]
+    best, hits = ranked[0]
     return {
         "resolved": hits >= max(1, checked // 2),
         "samples_checked": checked,
         "offset_hours_matching_bar_open": best,
         "matches": dict(scores),
+        "candidates_sharing_a_tick": discarded_shared,
         "epochs_are_true_utc": best == 0,
         "note": (
             "offset 0 means the reported epoch IS the boundary instant; a non-zero "
@@ -283,6 +333,10 @@ def _specification(symbol: str) -> dict[str, Any]:
     they do not answer the trading-hours question. `trade_tick_value` is derived from
     the live conversion rate and moves daily: SPEC 2.4 requires it be read live and it
     MUST NOT be equality-compared against a cached config value.
+
+    `chart_mode` is captured because the price anchor compares a bar open against a
+    tick BID. That is only valid while bars are bid-built, so the assumption is
+    recorded as evidence in the artifact rather than left implicit.
     """
     info = mt5.symbol_info(symbol)
     if info is None:
@@ -386,6 +440,11 @@ def main() -> None:
             "unmeasured and need the session-quote/session-trade calls.",
             "trade_tick_value is live-rate derived; never cache or equality-compare it.",
             "Two-sidedness is a recent sample only; historical density is not established.",
+            "The price anchor compares bar open against tick BID; chart_mode is recorded "
+            "per symbol so that assumption is evidenced, not assumed.",
+            "A tied anchor is reported unresolved, never broken by candidate order.",
+            "The weekly audit cannot return PASSED without SPEC 2.4's expected-liquidity "
+            "calendar; a holiday-shortened week is legitimate.",
             "Only the exact aliased symbols were probed; suffixed variants are listed "
             "under near_matches and were NOT measured.",
         ],
@@ -403,8 +462,12 @@ def main() -> None:
             "broker_symbol": symbol,
             "selected": True,
             "tick_history": _earliest_tick(symbol),
-            "m1_bar_reach": _bar_reach(symbol, mt5.TIMEFRAME_M1, "M1"),
-            "d1_bar_reach": _bar_reach(symbol, mt5.TIMEFRAME_D1, "D1"),
+            "m1_bar_reach": _bar_reach(
+                symbol, mt5.TIMEFRAME_M1, "M1", bar_minutes=1, maxbars=terminal.maxbars
+            ),
+            "d1_bar_reach": _bar_reach(
+                symbol, mt5.TIMEFRAME_D1, "D1", bar_minutes=1440, maxbars=terminal.maxbars
+            ),
             "trading_day_boundary": _d1_boundary(symbol),
             "tick_fields": _tick_fields(symbol),
             "specification": _specification(symbol),

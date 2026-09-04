@@ -136,12 +136,26 @@ stands is depth, and it is now a number rather than an assumption.
   timestamps, so no histogram can separate them and the former `epochs_look_like_true_utc` flag was
   unsound. It has been removed.
 
-  **What does separate them is a price anchor.** For a sample of D1 bars, compare the bar's open
-  price against the first tick at or after each candidate boundary instant (`epoch + offset` for a
-  range of offsets). The offset whose first tick reproduces the bar's open price is the real
-  boundary; offset zero means the reported epoch *is* the boundary. `scripts/fbs_depth_probe.py`
-  (`boundary-pass-v3`) now performs this and reports `price_anchor.offset_hours_matching_bar_open`.
-  Until that resolves, treat the boundary as unknown and do not assume either reading.
+  **What separates them is a price anchor**, and it has now been run. For a sample of D1 bars,
+  compare the bar's open price against the first tick at or after each candidate boundary instant
+  (`epoch + offset`). The offset whose first tick reproduces the bar's open price is the real
+  boundary; offset zero means the reported epoch *is* the boundary.
+
+  | Instrument | Anchor result | Reading |
+  |---|---|---|
+  | GBPUSD | offset 0, 12/12, unique | Genuine 00:00 UTC D1 boundary |
+  | EURUSD | offset 0, 12/12, unique | Same |
+  | All five indices | offsets 0 **and** +1 both 12/12 | **Unresolved** — the same first tick arrived at 01:00:01 for both candidates |
+
+  **The FX conclusion, and it is a firm one.** The four-year histogram is `00:00 UTC`, i.e.
+  19:00/20:00 New York, which is **not** the 17:00 New York internal FX day SPEC §3.4 mandates. The
+  broker's daily bars are therefore a different object from ours. They remain **validation references
+  only** (§4.3), and internal daily bars MUST be built from ticks on the 17:00 New York boundary.
+  That makes §4.3's build-from-ticks rule load-bearing rather than stylistic, and it means the
+  reconciliation rule joining on the UTC close instant — never the label date — is mandatory here.
+
+  **Every mapped symbol reported Bid chart mode**, so the anchor's bid comparison is sound today. The
+  probe now records `chart_mode` per symbol so that remains evidence rather than an assumption.
 
   The session-week and DST-window logic is **production code** (SPEC §4.4 check 10(c)), not probe
   scaffolding: it lives in `src/tradebot/data/session_weeks.py` with 19 repository tests, and the

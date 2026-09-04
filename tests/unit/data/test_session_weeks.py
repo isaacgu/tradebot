@@ -6,6 +6,7 @@ import pytest
 
 from tradebot.core.time_rules import NEW_YORK
 from tradebot.data.session_weeks import (
+    WeekAuditStatus,
     audit_weekly_bars,
     dst_mismatch_windows,
     expected_weeks,
@@ -95,15 +96,15 @@ def test_a_window_starts_the_monday_after_the_transition_sunday() -> None:
     spring, autumn = dst_mismatch_windows(2025)
 
     # US spring-forward 2025-03-09 (Sunday) -> affected sessions start Monday 03-10.
-    assert spring.first_session == date(2025, 3, 10)
+    assert spring.first_full_session == date(2025, 3, 10)
     assert spring.last_session == date(2025, 3, 30)
-    assert "2025-W10" not in spring.weeks, "the transition Sunday's own week is excluded"
-    assert spring.weeks[0] == "2025-W11"
+    assert "2025-W10" not in spring.fully_affected_weeks
+    assert spring.fully_affected_weeks[0] == "2025-W11"
 
     # EU fall-back 2025-10-26 (Sunday) -> affected sessions start Monday 10-27.
-    assert autumn.first_session == date(2025, 10, 27)
+    assert autumn.first_full_session == date(2025, 10, 27)
     assert autumn.last_session == date(2025, 11, 2)
-    assert autumn.weeks[0] == "2025-W44"
+    assert autumn.fully_affected_weeks[0] == "2025-W44"
 
 
 @pytest.mark.parametrize(
@@ -119,9 +120,11 @@ def test_window_bounds_match_the_real_transition_calendar(
 ) -> None:
     spring, autumn = dst_mismatch_windows(year)
 
-    assert spring.first_session == us_spring + timedelta(days=1)
+    assert spring.transition == us_spring
+    assert spring.first_full_session == us_spring + timedelta(days=1)
     assert spring.last_session == eu_spring
-    assert autumn.first_session == eu_autumn + timedelta(days=1)
+    assert autumn.transition == eu_autumn
+    assert autumn.first_full_session == eu_autumn + timedelta(days=1)
     assert autumn.last_session == us_autumn
 
 
@@ -140,43 +143,43 @@ def test_a_clean_run_flags_nothing() -> None:
 
     audit = audit_weekly_bars(opens, zone=NEW_YORK)
 
-    assert audit.clean
+    assert audit.status is WeekAuditStatus.INDETERMINATE
+    assert not audit.anomalies
     assert audit.missing_weeks == ()
-    assert audit.weeks_not_five == {}
     assert len(audit.interior_weeks) == 4, "first and last weeks are partial by nature"
 
 
 def test_a_completely_missing_interior_week_is_visible() -> None:
     """The bug this closes: a week with no bars has no key to iterate."""
-    opens = _weekday_opens(date(2025, 1, 6), weeks=2) + _weekday_opens(date(2025, 1, 27), weeks=2)
+    opens = _weekday_opens(date(2025, 1, 6), weeks=3) + _weekday_opens(date(2025, 2, 3), weeks=3)
 
     audit = audit_weekly_bars(opens, zone=NEW_YORK)
 
-    assert "2025-W04" in audit.missing_weeks
-    assert audit.weeks_not_five["2025-W04"] == 0
-    assert not audit.clean
+    assert "2025-W05" in audit.missing_weeks, "the wholly absent week has no key of its own"
+    assert audit.weeks_off_expected["2025-W05"] == 0
+    assert audit.anomalies
 
 
 def test_a_sixth_bar_in_a_week_is_flagged() -> None:
     """A Sunday stub inside a DST mismatch window is exactly this shape."""
-    opens = _weekday_opens(date(2025, 1, 6), weeks=4)
-    opens.append(_utc(2025, 1, 19, 0))  # a Sunday stub closing inside 2025-W03
+    opens = _weekday_opens(date(2025, 1, 6), weeks=7)
+    opens.append(_utc(2025, 1, 26, 0))  # a Sunday stub closing inside 2025-W04
 
     audit = audit_weekly_bars(opens, zone=NEW_YORK)
 
-    assert audit.weeks_not_five == {"2025-W03": 6}
+    assert audit.weeks_off_expected == {"2025-W04": 6}
     assert audit.missing_weeks == ()
 
 
 def test_duplicate_bar_opens_are_reported() -> None:
-    opens = _weekday_opens(date(2025, 1, 6), weeks=4)
-    opens.append(opens[7])
+    opens = _weekday_opens(date(2025, 1, 6), weeks=7)
+    opens.append(opens[12])
 
     audit = audit_weekly_bars(opens, zone=NEW_YORK)
 
     assert len(audit.duplicate_opens) == 1
-    assert opens[7].isoformat() in audit.duplicate_opens
-    assert not audit.clean
+    assert opens[12].isoformat() in audit.duplicate_opens
+    assert audit.status is WeekAuditStatus.FAILED
 
 
 def test_the_first_and_last_weeks_are_never_judged() -> None:
@@ -190,13 +193,13 @@ def test_the_first_and_last_weeks_are_never_judged() -> None:
     audit = audit_weekly_bars(opens, zone=NEW_YORK)
 
     assert audit.interior_weeks == ("2025-W03",)
-    assert audit.weeks_not_five == {}
+    assert audit.status is WeekAuditStatus.INSUFFICIENT_DATA
 
 
 def test_an_empty_sample_audits_cleanly_rather_than_raising() -> None:
     audit = audit_weekly_bars([], zone=NEW_YORK)
 
-    assert audit.clean
+    assert audit.status is WeekAuditStatus.INSUFFICIENT_DATA, "absence must never pass"
     assert audit.counts == {}
     assert audit.interior_weeks == ()
 
@@ -207,4 +210,109 @@ def test_an_audit_spanning_a_53_week_year_enumerates_every_week() -> None:
     audit = audit_weekly_bars(opens, zone=NEW_YORK)
 
     assert "2020-W53" in audit.interior_weeks
-    assert audit.clean
+    assert not audit.anomalies
+
+
+# --- transition stub vs fully affected -------------------------------------------
+
+
+def test_a_window_reports_the_transition_stub_week_separately() -> None:
+    """Monday-start alone would miss the stub; the measured 2024-W43 case proves it.
+
+    EU fell back Sunday 2024-10-27, so the fully affected sessions begin Monday
+    2024-10-28 in 2024-W44 — but the six-bar week the live probe found was W43, the
+    week the transition Sunday itself closes.
+    """
+    autumn = dst_mismatch_windows(2024)[1]
+
+    assert autumn.transition == date(2024, 10, 27)
+    assert autumn.transition_weeks == ("2024-W43",)
+    assert "2024-W43" not in autumn.fully_affected_weeks
+    assert autumn.fully_affected_weeks[0] == "2024-W44"
+    assert "2024-W43" in autumn.audit_weeks, "the fingerprint must inspect the stub week"
+    assert "2024-W44" in autumn.audit_weeks
+
+
+def test_audit_weeks_is_ordered_and_deduplicated() -> None:
+    spring = dst_mismatch_windows(2025)[0]
+
+    assert spring.audit_weeks[0] == spring.transition_weeks[0]
+    assert len(spring.audit_weeks) == len(set(spring.audit_weeks))
+
+
+def test_the_stub_week_matches_where_a_sunday_session_actually_keys() -> None:
+    """The window's stub week and the session key must agree, or the check misfires."""
+    autumn = dst_mismatch_windows(2024)[1]
+    sunday_session = datetime(2024, 10, 27, 0, tzinfo=UTC)
+
+    assert session_week_key(sunday_session, zone=NEW_YORK) in autumn.transition_weeks
+
+
+# --- status model ----------------------------------------------------------------
+
+
+def test_without_a_calendar_a_clean_run_is_indeterminate_not_pass() -> None:
+    """SPEC 2.4: a holiday-shortened week is legitimate and only the calendar knows."""
+    audit = audit_weekly_bars(_weekday_opens(date(2025, 1, 6), weeks=8), zone=NEW_YORK)
+
+    assert audit.status is WeekAuditStatus.INDETERMINATE
+    assert not audit.calendar_supplied
+    assert "calendar" in audit.reason
+
+
+def test_with_a_calendar_a_matching_run_passes() -> None:
+    opens = _weekday_opens(date(2025, 1, 6), weeks=8)
+    audit_without = audit_weekly_bars(opens, zone=NEW_YORK)
+    calendar = dict.fromkeys(audit_without.interior_weeks, 5)
+
+    audit = audit_weekly_bars(opens, zone=NEW_YORK, expected_per_week=calendar)
+
+    assert audit.status is WeekAuditStatus.PASSED
+    assert audit.calendar_supplied
+
+
+def test_a_holiday_shortened_week_passes_when_the_calendar_expects_four() -> None:
+    """The live index pass showed four-bar weeks around Good Friday; not a defect."""
+    opens = _weekday_opens(date(2025, 1, 6), weeks=8)
+    short = [moment for moment in opens if moment.date() != date(2025, 1, 24)]
+    audit_without = audit_weekly_bars(short, zone=NEW_YORK)
+    calendar = dict.fromkeys(audit_without.interior_weeks, 5) | {"2025-W04": 4}
+
+    audit = audit_weekly_bars(short, zone=NEW_YORK, expected_per_week=calendar)
+
+    assert audit.status is WeekAuditStatus.PASSED
+    assert audit.weeks_off_expected == {}
+
+
+def test_the_same_short_week_fails_when_the_calendar_expects_five() -> None:
+    opens = _weekday_opens(date(2025, 1, 6), weeks=8)
+    short = [moment for moment in opens if moment.date() != date(2025, 1, 24)]
+    audit_without = audit_weekly_bars(short, zone=NEW_YORK)
+    calendar = dict.fromkeys(audit_without.interior_weeks, 5)
+
+    audit = audit_weekly_bars(short, zone=NEW_YORK, expected_per_week=calendar)
+
+    assert audit.status is WeekAuditStatus.FAILED
+    assert audit.weeks_off_expected == {"2025-W04": 4}
+
+
+def test_too_few_interior_weeks_is_insufficient_not_a_pass() -> None:
+    opens = _weekday_opens(date(2025, 1, 6), weeks=3)
+
+    audit = audit_weekly_bars(opens, zone=NEW_YORK)
+
+    assert audit.status is WeekAuditStatus.INSUFFICIENT_DATA
+    assert "interior week" in audit.reason
+
+
+def test_duplicates_fail_even_with_a_satisfied_calendar() -> None:
+    """A duplicated bar is never legitimate, so it outranks a matching calendar."""
+    opens = _weekday_opens(date(2025, 1, 6), weeks=8)
+    opens.append(opens[10])
+    audit_without = audit_weekly_bars(opens, zone=NEW_YORK)
+    calendar = dict(audit_without.counts)
+
+    audit = audit_weekly_bars(opens, zone=NEW_YORK, expected_per_week=calendar)
+
+    assert audit.status is WeekAuditStatus.FAILED
+    assert audit.duplicate_opens
