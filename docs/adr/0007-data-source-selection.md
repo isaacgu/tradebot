@@ -105,14 +105,50 @@ stands is depth, and it is now a number rather than an assumption.
 
 ### Still open
 
-- **M1/D1 depth is inconclusive.** `copy_rates_range` from 2000 failed (`-1 Terminal: Call failed`)
-  against `maxbars = 100000`. Re-run with `Max. bars in chart` set to Unlimited.
-- **The broker's trading-day boundary is unmeasured, and cannot be measured the way the probe first
-  tried.** MT5 tick and bar epochs are UTC, so comparing a quote's timestamp against our own clock
-  reveals nothing about the server's session offset. The observable route is **D1 bar open times**,
-  which are UTC epochs and therefore expose the boundary directly — so the re-run must cover D1, not
-  only M1. This is the input SPEC §4.3 needs for a broker-priced instrument's daily bars, and §6.3
-  needs for the financing accrual boundary.
+- **M1 depth is unresolved, and the one-record trick does not transfer from ticks to bars.** An
+  earlier draft of this ADR claimed `copy_rates_from(date, count=1)` would sidestep the
+  `maxbars = 100000` cap the way `copy_ticks_from(date, count=1)` sidesteps depth scanning. **That
+  claim was wrong and is withdrawn.** The two calls do not share semantics: `copy_rates_from` counts
+  **backwards** from the given date and is bounded by the terminal's chart history, so a single-record
+  request reveals nothing about earliest bar depth. Measured against this broker it fails at 2000,
+  2020 **and** 2026 alike (`-1 Terminal: Call failed`), while `copy_ticks_from(2000, count=1)`
+  succeeds and returns 2011-12-19. MetaQuotes documents both the backwards semantics and the chart
+  cap. What the probe now reports for bars is explicitly `terminal_visible_earliest` — a floor on
+  broker depth, not a measurement of it. Resolving true M1 depth requires chart history built out
+  with `Max. bars in chart` unlimited.
+- **The broker's trading-day boundary is unmeasured**, and cannot be measured the way the probe
+  first tried: MT5 tick and bar epochs are UTC, so comparing a quote's timestamp against our own
+  clock reveals nothing about the server's session offset. The observable route is **D1 bar OPEN
+  instants**, which `scripts/fbs_depth_probe.py` (`boundary-pass-v2`) now measures. This is the input
+  SPEC §4.3 needs for a broker-priced instrument's daily bars, and §6.3 needs for the financing
+  accrual boundary.
+
+  **First D1 pass, measured:** 1,038 bars; UTC opens `00:00 × 1038`; New York opens
+  `19:00 × 353`, `20:00 × 685`; eight interior weeks not holding five bars, of which `2024-W43` held
+  **six** because of a short Sunday `00:00` bar carrying tick volume 71. That Sunday stub sits inside
+  the autumn DST mismatch window (EU fell back 2024-10-27) and is exactly the anomaly SPEC §4.4 check
+  10(c) exists to catch.
+
+  **The boundary is nevertheless still UNRESOLVED, and an earlier draft of this ADR overclaimed by
+  saying otherwise.** A uniform `00:00 UTC` open histogram is equally consistent with two different
+  worlds: a broker whose trading day genuinely rolls at UTC midnight, and a broker on some non-zero
+  offset whose *local* midnight is being encoded as a UTC epoch. Both produce byte-identical
+  timestamps, so no histogram can separate them and the former `epochs_look_like_true_utc` flag was
+  unsound. It has been removed.
+
+  **What does separate them is a price anchor.** For a sample of D1 bars, compare the bar's open
+  price against the first tick at or after each candidate boundary instant (`epoch + offset` for a
+  range of offsets). The offset whose first tick reproduces the bar's open price is the real
+  boundary; offset zero means the reported epoch *is* the boundary. `scripts/fbs_depth_probe.py`
+  (`boundary-pass-v3`) now performs this and reports `price_anchor.offset_hours_matching_bar_open`.
+  Until that resolves, treat the boundary as unknown and do not assume either reading.
+
+  The session-week and DST-window logic is **production code** (SPEC §4.4 check 10(c)), not probe
+  scaffolding: it lives in `src/tradebot/data/session_weeks.py` with 19 repository tests, and the
+  probe imports it so there is one implementation. Two bugs found in the first pass are fixed there:
+  a wholly missing interior week was invisible because only observed week keys were counted, and the
+  DST windows began at the transition Sunday's own ISO week — but that Sunday *closes* the preceding
+  week, so under close-labelling the window must start on the following Monday.
 - **Session hours are unmeasured.** `SYMBOL_SESSION_OPEN` / `SYMBOL_SESSION_CLOSE` are session
   open/close **prices**, not times (`GBPUSD` reports 1.35246 / 1.35224), so they do not answer the
   question. Session times require the session-quote/session-trade calls.
