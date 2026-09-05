@@ -25,8 +25,8 @@ from tradebot.data.reference_acceptance import (
     evaluate_reference_month,
     read_approval_binding,
     read_clean_bar_files,
+    read_clean_tick_files,
     read_policy,
-    read_retrospective_tick_files,
     verify_producer_inventory,
 )
 from tradebot.data.storage import sha256_path
@@ -94,6 +94,10 @@ def build_report(
 
     known_at = require_utc(known_at, field="known_at")
     generated_at = require_utc(generated_at, field="generated_at")
+    if known_at > generated_at:
+        raise ReferenceAcceptanceError("known_at cannot postdate generated_at")
+    if generated_at > datetime.now(UTC):
+        raise ReferenceAcceptanceError("generated_at cannot be in the future")
     policy_file = _inside_repository(policy_path, label="policy")
     policy = read_policy(policy_file)
     if policy.scope != scope:
@@ -120,7 +124,7 @@ def build_report(
     if tick_root is not None:
         tick_paths = _parquet_files(tick_root, label="tick root")
         if tick_paths:
-            loaded_ticks = read_retrospective_tick_files(tick_paths, scope=scope)
+            loaded_ticks = read_clean_tick_files(tick_paths, scope=scope)
 
     if len(loaded_bars.corpus_ids) > 1:
         raise ReferenceAcceptanceError("bar files mix multiple corpus identities")
@@ -182,6 +186,26 @@ def build_report(
             None if loaded_ticks is None else loaded_ticks.flags_by_minute
         ),
         tick_covered_minutes=(None if loaded_ticks is None else loaded_ticks.covered_minutes),
+        outside_canonical_session_causal_flags_by_utc_minute=(
+            None
+            if loaded_ticks is None
+            else loaded_ticks.outside_canonical_session_causal_flags_by_utc_minute
+        ),
+        outside_canonical_session_retrospective_flags_by_utc_minute=(
+            None
+            if loaded_ticks is None
+            else loaded_ticks.outside_canonical_session_retrospective_flags_by_utc_minute
+        ),
+        outside_canonical_session_covered_utc_minutes=(
+            None
+            if loaded_ticks is None
+            else loaded_ticks.outside_canonical_session_covered_utc_minutes
+        ),
+        outside_canonical_session_tick_rows_in_utc_month=(
+            0
+            if loaded_ticks is None
+            else loaded_ticks.outside_canonical_session_tick_rows_in_utc_month
+        ),
     )
     code_paths = (
         "src/tradebot/data/reference_acceptance.py",
@@ -225,6 +249,8 @@ def build_report(
         },
         "clean_bar_files": _file_evidence(loaded_bars.files),
         "clean_bar_corpus_ids": list(loaded_bars.corpus_ids),
+        "clean_tick_files": [] if loaded_ticks is None else _file_evidence(loaded_ticks.files),
+        "clean_tick_corpus_ids": [] if loaded_ticks is None else list(loaded_ticks.corpus_ids),
         "retrospective_tick_files": []
         if loaded_ticks is None
         else _file_evidence(loaded_ticks.files),

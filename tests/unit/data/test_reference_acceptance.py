@@ -32,9 +32,10 @@ from tradebot.data.reference_acceptance import (
     ReferenceMonthResult,
     ReferenceScope,
     evaluate_reference_month,
+    read_approval_binding,
     read_clean_bar_files,
+    read_clean_tick_files,
     read_policy,
-    read_retrospective_tick_files,
     verify_producer_inventory,
 )
 from tradebot.data.storage import CLEAN_TICK_SCHEMA
@@ -88,6 +89,13 @@ def _rules(
             classification=FlagClass.RETROSPECTIVE_QA,
             treatment=retrospective,
             rationale="The test policy explicitly classifies future-informed QA.",
+        ),
+        FlagRule(
+            name="OUT_OF_SESSION",
+            source=FlagSource.CAUSAL_BAR,
+            classification=FlagClass.CAUSAL_DEFECT,
+            treatment=FlagTreatment.COUNT_AS_FLAGGED,
+            rationale="Outside-session evidence is retained separately in the test policy.",
         ),
     )
 
@@ -276,9 +284,15 @@ def test_causal_flag_from_excluded_tick_minute_is_not_laundered_by_absent_bar() 
     )
 
     assert result.observed_counted_flag_union == 1
+    assert result.canonical_session_observed_counted_evidence_minute_union == 1
     assert result.causal_tick_flagged_minutes_without_bar == 1
     # All other expected bars are also absent and union counting still counts each bin once.
     assert result.counted_flagged_union == 1001
+    defect = next(row for row in result.flag_observations if row["flag"] == "DEFECT")
+    assert defect["evidence_source"] == "CAUSAL_BAR_OR_TICK"
+    assert defect["observed_evidence_minutes"] == 1
+    assert defect["observed_bar_minutes"] == 0
+    assert defect["observed_tick_only_minutes"] == 1
 
 
 def test_sparse_tick_coverage_is_indeterminate_even_when_flags_are_empty() -> None:
@@ -376,6 +390,12 @@ def test_partial_month_calendar_is_indeterminate() -> None:
 
     assert result.status == AcceptanceStatus.INDETERMINATE
     assert result.calendar_days_missing == ("2024-01-31",)
+    assert result.calendar_comparison_status == "NOT_EVALUABLE_INCOMPLETE_CALENDAR"
+    assert result.expected_liquid_minutes is None
+    assert result.observed_expected_minutes is None
+    assert result.missing_expected_minutes is None
+    assert result.unexpected_actual_minutes is None
+    assert result.diagnostic_resolved_expected_liquid_minutes == 1
 
 
 def test_missing_calendar_is_indeterminate() -> None:
@@ -385,6 +405,66 @@ def test_missing_calendar_is_indeterminate() -> None:
     assert result.status == AcceptanceStatus.INDETERMINATE
     assert "no expected-liquidity calendar was supplied" in result.reasons
     assert len(result.calendar_days_missing) == 31
+    assert result.calendar_comparison_status == "NOT_EVALUABLE_NO_CALENDAR"
+    assert result.expected_liquid_minutes is None
+    assert result.counted_flagged_union is None
+    assert "approved expected-liquid minute denominator is empty" not in result.reasons
+
+
+def test_outside_canonical_session_ticks_are_reported_but_not_in_numerator() -> None:
+    scope = _scope()
+    start = datetime(2024, 1, 1, 22, tzinfo=UTC)
+    outside = datetime(2024, 1, 6, 12, tzinfo=UTC)
+
+    result = evaluate_reference_month(
+        scope=scope,
+        bars=[_bar(scope, start)],
+        calendar=_calendar(scope, start, 1),
+        calendar_sha256=CALENDAR_SHA,
+        policy=_policy(scope),
+        known_at=KNOWN_AT,
+        approval=_approval(scope),
+        producer_inventory=INVENTORY,
+        causal_tick_flags_by_minute={},
+        retrospective_flags_by_minute={},
+        tick_covered_minutes={start},
+        outside_canonical_session_causal_flags_by_utc_minute={outside: ("OUT_OF_SESSION",)},
+        outside_canonical_session_retrospective_flags_by_utc_minute={outside: ("PRICE_OUTLIER",)},
+        outside_canonical_session_covered_utc_minutes={outside},
+        outside_canonical_session_tick_rows_in_utc_month=2,
+    )
+
+    assert result.status == AcceptanceStatus.PASSED
+    assert result.counted_flagged_union == 0
+    assert result.outside_canonical_session_scope == "UTC_EVENT_MONTH"
+    assert result.outside_canonical_session_tick_rows == 2
+    assert result.outside_canonical_session_evidence_minutes == 1
+    assert result.outside_canonical_session_causal_flagged_minutes == 1
+    assert result.outside_canonical_session_retrospective_flagged_minutes == 1
+    assert {
+        row["flag"]: row["observed_utc_event_minutes"]
+        for row in result.outside_canonical_session_flag_observations
+    } == {"OUT_OF_SESSION": 1, "PRICE_OUTLIER": 1}
+
+
+def test_outside_session_evidence_cannot_be_silently_put_in_canonical_map() -> None:
+    scope = _scope()
+    outside = datetime(2024, 1, 6, 12, tzinfo=UTC)
+
+    with pytest.raises(ValueError, match="explicit outside-session fields"):
+        evaluate_reference_month(
+            scope=scope,
+            bars=[],
+            calendar=None,
+            calendar_sha256=None,
+            policy=_policy(scope),
+            known_at=KNOWN_AT,
+            approval=None,
+            producer_inventory=None,
+            causal_tick_flags_by_minute={outside: ("OUT_OF_SESSION",)},
+            retrospective_flags_by_minute={},
+            tick_covered_minutes=set(),
+        )
 
 
 def test_absent_approval_is_indeterminate() -> None:
@@ -407,6 +487,103 @@ def test_absent_approval_is_indeterminate() -> None:
     assert result.status == AcceptanceStatus.INDETERMINATE
     assert not result.approval_binding_verified
     assert "hash-bound independent-review and Principal approval are absent" in result.reasons
+
+
+def test_approval_scope_and_hashes_must_match_exact_evaluation() -> None:
+    scope = _scope()
+    start = datetime(2024, 1, 1, 22, tzinfo=UTC)
+    wrong_scope = replace(_approval(scope), scope=_scope("2024-02"))
+    wrong_hash = replace(_approval(scope), policy_sha256="9" * 64)
+    wrong_calendar_hash = replace(_approval(scope), calendar_sha256="8" * 64)
+
+    scope_result = _evaluate(
+        scope, [_bar(scope, start)], _calendar(scope, start, 1), approval=wrong_scope
+    )
+    hash_result = _evaluate(
+        scope, [_bar(scope, start)], _calendar(scope, start, 1), approval=wrong_hash
+    )
+    calendar_hash_result = _evaluate(
+        scope,
+        [_bar(scope, start)],
+        _calendar(scope, start, 1),
+        approval=wrong_calendar_hash,
+    )
+
+    assert scope_result.status == AcceptanceStatus.INDETERMINATE
+    assert not scope_result.approval_binding_verified
+    assert "approval binding scope does not match the evaluation" in scope_result.reasons
+    assert hash_result.status == AcceptanceStatus.INDETERMINATE
+    assert not hash_result.approval_binding_verified
+    assert "approval binding does not match the policy bytes" in hash_result.reasons
+    assert calendar_hash_result.status == AcceptanceStatus.INDETERMINATE
+    assert not calendar_hash_result.approval_binding_verified
+    assert "approval binding does not match the calendar bytes" in calendar_hash_result.reasons
+
+
+def test_approval_decisions_cannot_postdate_evaluation_known_at() -> None:
+    scope = _scope()
+    start = datetime(2024, 1, 1, 22, tzinfo=UTC)
+    future_review = replace(
+        _approval(scope).independent_review,
+        decided_at_utc=KNOWN_AT + timedelta(days=1),
+    )
+    future_principal = replace(
+        _approval(scope).principal_approval,
+        decided_at_utc=KNOWN_AT + timedelta(days=2),
+    )
+    future_approval = replace(
+        _approval(scope),
+        independent_review=future_review,
+        principal_approval=future_principal,
+    )
+
+    result = _evaluate(
+        scope,
+        [_bar(scope, start)],
+        _calendar(scope, start, 1),
+        approval=future_approval,
+    )
+
+    assert result.status == AcceptanceStatus.INDETERMINATE
+    assert not result.approval_binding_verified
+    assert "independent-review decision postdates the evaluation known_at" in result.reasons
+    assert "Principal decision postdates the evaluation known_at" in result.reasons
+
+
+@pytest.mark.parametrize(
+    ("role", "person"),
+    [
+        ("INDEPENDENT_REVIEWER", " Delsa"),
+        ("PRINCIPAL", "Delsa "),
+    ],
+)
+def test_approval_decision_rejects_padded_person_names(role: str, person: str) -> None:
+    with pytest.raises(ValueError, match="leading or trailing whitespace"):
+        ApprovalDecision(
+            role=role,
+            person=person,
+            decision="APPROVED",
+            decided_at_utc=KNOWN_AT,
+            artifact_path="approval.md",
+            artifact_sha256="c" * 64,
+        )
+
+
+def test_reviewer_and_principal_names_must_differ_case_insensitively() -> None:
+    scope = _scope()
+    approval = _approval(scope)
+    same_name = replace(approval.principal_approval, person="rEVIEWER")
+
+    with pytest.raises(ValueError, match="must be different humans"):
+        replace(approval, principal_approval=same_name)
+
+
+def test_boolean_approval_shortcut_is_rejected(tmp_path: Path) -> None:
+    shortcut = tmp_path / "approval.json"
+    shortcut.write_text('{"approved":true}', encoding="utf-8")
+
+    with pytest.raises(ValueError, match="must contain exactly"):
+        read_approval_binding(shortcut, repository=tmp_path)
 
 
 def test_reference_month_uses_canonical_new_york_close_date_not_utc_month() -> None:
@@ -498,6 +675,7 @@ def test_policy_rejects_duplicate_keys_and_boolean_schema_version(tmp_path: Path
 
 def test_tick_loader_preserves_causal_retrospective_and_coverage(tmp_path: Path) -> None:
     start = datetime(2024, 1, 1, 22, tzinfo=UTC)
+    outside = datetime(2024, 1, 6, 12, tzinfo=UTC)
     table = pa.Table.from_pylist(
         [
             {
@@ -515,19 +693,43 @@ def test_tick_loader_preserves_causal_retrospective_and_coverage(tmp_path: Path)
                 "quality_flags": ["CROSSED_QUOTE"],
                 "retrospective_flags": ["PRICE_OUTLIER"],
                 "eligible_for_bars": False,
-            }
+            },
+            {
+                "instrument": "EURUSD",
+                "ts_event": outside,
+                "ts_recv": outside,
+                "available_at": outside,
+                "bid": Decimal("1.1"),
+                "ask": Decimal("1.2"),
+                "bid_size": None,
+                "ask_size": None,
+                "source": "FBS-Demo",
+                "seq": 2,
+                "source_flags": 0,
+                "quality_flags": ["OUT_OF_SESSION"],
+                "retrospective_flags": ["PRICE_OUTLIER"],
+                "eligible_for_bars": False,
+            },
         ],
         schema=CLEAN_TICK_SCHEMA,
     ).replace_schema_metadata(_clean_metadata(kind="clean-tick", schema="clean-tick-v2"))
     path = tmp_path / "tick.parquet"
     pq.write_table(table, path)
 
-    loaded = read_retrospective_tick_files([path], scope=_scope())
+    loaded = read_clean_tick_files([path], scope=_scope())
 
     assert loaded.causal_flags_by_minute == {start: ("CROSSED_QUOTE",)}
     assert loaded.flags_by_minute == {start: ("PRICE_OUTLIER",)}
     assert loaded.covered_minutes == frozenset({start})
-    assert loaded.files[0].rows == 1
+    assert loaded.outside_canonical_session_causal_flags_by_utc_minute == {
+        outside: ("OUT_OF_SESSION",)
+    }
+    assert loaded.outside_canonical_session_retrospective_flags_by_utc_minute == {
+        outside: ("PRICE_OUTLIER",)
+    }
+    assert loaded.outside_canonical_session_covered_utc_minutes == frozenset({outside})
+    assert loaded.outside_canonical_session_tick_rows_in_utc_month == 1
+    assert loaded.files[0].rows == 2
 
 
 def test_forged_sparse_inventory_and_matching_sidecar_fail_original_pin(tmp_path: Path) -> None:

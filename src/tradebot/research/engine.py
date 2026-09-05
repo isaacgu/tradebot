@@ -11,7 +11,9 @@ from tradebot.core.clock import SimClock
 from tradebot.core.ports import StrategyContext
 from tradebot.core.types import Bar, Forecast
 from tradebot.features.causal import FeatureSnapshot
+from tradebot.research.authorization import AuthorizationError, ResearchPurpose
 from tradebot.research.feed import ReplayBar
+from tradebot.research.guarded import ApprovedSnapshotStream
 from tradebot.strategies.momentum import MomentumConfig, MomentumStrategy
 
 
@@ -64,13 +66,54 @@ class _DecisionClock:
         return self.timestamp
 
 
-def iter_decisions(records: Iterable[ReplayBar], config: ReplayConfig) -> Iterator[DecisionRecord]:
+def validate_replay_request(
+    records: Iterable[ReplayBar], config: ReplayConfig, *, purpose: ResearchPurpose | None
+) -> None:
+    """Validate the trusted workflow boundary before acquiring an input iterator.
+
+    The Synthetic namespace is an engineering caller convention, not proof that
+    arbitrary Python cannot relabel or directly read data. Real-data consumption
+    must use the guard-owned feed, never an unrelated iterable plus approval flag.
+    """
+    if all(name.startswith("Synthetic/") for name in config.instruments):
+        if purpose is not None or isinstance(records, ApprovedSnapshotStream):
+            raise AuthorizationError("synthetic engineering replay is not training or evaluation")
+        return
+    if not isinstance(purpose, ResearchPurpose) or type(records) is not ApprovedSnapshotStream:
+        raise AuthorizationError("real-data decisions require a purpose-scoped approved snapshot")
+    records.validate_request(
+        instruments=config.instruments,
+        timeframe_seconds=config.timeframe_seconds,
+        purpose=purpose,
+    )
+
+
+def iter_decisions(
+    records: Iterable[ReplayBar], config: ReplayConfig, *, purpose: ResearchPurpose | None = None
+) -> Iterator[DecisionRecord]:
+    """Authorize eagerly; return the causal engineering decision iterator.
+
+    This function does not fit a strategy or certify economic results, regardless
+    of the purpose for which a separately released dataset may be consumed.
+    """
+    validate_replay_request(records, config, purpose=purpose)
+    return _iter_decisions(records, config, purpose=purpose)
+
+
+def _iter_decisions(
+    records: Iterable[ReplayBar], config: ReplayConfig, *, purpose: ResearchPurpose | None
+) -> Iterator[DecisionRecord]:
     """Yield decisions in strict availability/source/sequence order with bounded state.
 
     Each instrument gets its own strategy state. The last record must be consumed
     before a run can be considered complete: feeds verify snapshot hashes at EOF.
     """
+    # An eager authorization can be separated from first advancement by arbitrary
+    # caller code. Recheck pristine state here, then detect any interleaved raw
+    # consumption at EOF before a publisher can claim the full selected snapshot.
+    validate_replay_request(records, config, purpose=purpose)
     strategies = {name: MomentumStrategy(name, config.momentum) for name in config.instruments}
+    observed_records = 0
     seen: set[str] = set()
     previous_key: tuple[datetime, str, int, str] | None = None
     last_sequences: dict[tuple[str, str], int] = {}
@@ -87,6 +130,7 @@ def iter_decisions(records: Iterable[ReplayBar], config: ReplayConfig) -> Iterat
             bus.publish(forecast)
 
     for record in records:
+        observed_records += 1
         bar = record.bar
         if bar.instrument not in strategies:
             raise ValueError(f"unconfigured series: {bar.instrument}")
@@ -133,6 +177,8 @@ def iter_decisions(records: Iterable[ReplayBar], config: ReplayConfig) -> Iterat
             features=decision.features,
             forecast=decision.forecast,
         )
+    if isinstance(records, ApprovedSnapshotStream):
+        records.verify_completed(observed_records=observed_records)
     missing = set(config.instruments) - seen
     if missing:
         raise ValueError(f"snapshot contained no records for: {', '.join(sorted(missing))}")

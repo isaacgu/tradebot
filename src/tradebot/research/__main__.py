@@ -1,4 +1,4 @@
-"""Run a synthetic demonstration or an explicitly frozen clean-bar snapshot."""
+"""Run synthetic engineering fixtures only; this CLI never authorizes strategy training."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--synthetic", action="store_true", help="Run the fixed software fixture")
-    mode.add_argument("--snapshot", type=Path, help="Explicit immutable clean-bar manifest JSON")
+    mode.add_argument("--snapshot", type=Path, help="Explicit immutable Synthetic fixture manifest")
     parser.add_argument(
         "--root", type=Path, help="Snapshot manifest paths resolve under this directory"
     )
@@ -39,6 +39,11 @@ def main() -> None:
         if args.root is None:
             parser.error("--snapshot requires --root")
         spec = load_snapshot_spec(args.snapshot)
+        if spec.venue != "Synthetic":
+            parser.error(
+                "real-data strategy replay is denied here; use a separately approved "
+                "purpose-scoped consumer, not the synthetic engineering CLI"
+            )
         if spec.timeframe not in _TIMEFRAMES:
             parser.error(f"unsupported timeframe: {spec.timeframe}")
         instruments = tuple(

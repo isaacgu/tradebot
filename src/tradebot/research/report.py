@@ -18,8 +18,10 @@ from decimal import Decimal
 from pathlib import Path
 
 from tradebot.data.storage import FileDigest, dataset_id, sha256_path
-from tradebot.research.engine import ReplayConfig, iter_decisions
+from tradebot.research.authorization import AuthorizationError, ResearchPurpose
+from tradebot.research.engine import ReplayConfig, iter_decisions, validate_replay_request
 from tradebot.research.feed import ReplayBar
+from tradebot.research.guarded import ApprovedSnapshotStream
 
 SPEC_SHA256 = "dccdcbd9a237009116b4b3219860f371a3bc51700f20b1199746479921689f37"
 _IMPLEMENTATION_MODULES = (
@@ -38,6 +40,8 @@ _IMPLEMENTATION_MODULES = (
     "tradebot.strategies",
     "tradebot.strategies.momentum",
     "tradebot.research",
+    "tradebot.research.authorization",
+    "tradebot.research.guarded",
     "tradebot.research.engine",
     "tradebot.research.feed",
     "tradebot.research.report",
@@ -139,12 +143,20 @@ def publish_replay(
     provenance: ReplayProvenance,
     *,
     output_root: Path,
+    purpose: ResearchPurpose | None = None,
 ) -> PublishedReplay:
     """Stream an engineering replay, publish after complete validation, then update latest.
 
     Memory is bounded by each strategy's feature history and one latest decision
     per configured instrument. No run is published if input or execution fails.
     """
+    validate_replay_request(records, config, purpose=purpose)
+    if isinstance(records, ApprovedSnapshotStream) and (
+        provenance.source_kind != "immutable_clean_snapshot"
+        or provenance.dataset_id != records.spec.dataset_id
+        or provenance.source_manifest != records.spec.files
+    ):
+        raise AuthorizationError("provenance differs from the guard-owned selected snapshot")
     before = implementation_identity()
     runtime = {
         "python": platform.python_version(),
@@ -163,6 +175,19 @@ def publish_replay(
         "runtime": runtime,
         "randomness": "NONE",
         "provenance": provenance,
+        "authorized_use": (
+            None
+            if not isinstance(records, ApprovedSnapshotStream)
+            else {
+                "purpose": records.purpose.value,
+                "release_sha256": records.release_sha256,
+                "registry_sha256": records.registry_sha256,
+                "scope": asdict(records.scope),
+                "known_at": records.known_at,
+                "authority": "OPERATOR_PINNED_RELEASE_NOT_IDENTITY_AUTH",
+                "human_identities_authenticated": False,
+            }
+        ),
     }
     output_root = output_root.resolve()
     output_root.mkdir(parents=True, exist_ok=True)
@@ -178,7 +203,7 @@ def publish_replay(
         staging = Path(temporary)
         trace_path = staging / "decisions.jsonl"
         with trace_path.open("xb") as trace:
-            for decision in iter_decisions(records, config):
+            for decision in iter_decisions(records, config, purpose=purpose):
                 payload = canonical_bytes(decision)
                 trace.write(payload)
                 trace_digest.update(payload)
@@ -194,6 +219,8 @@ def publish_replay(
             os.fsync(trace.fileno())
         if implementation_identity() != before:
             raise RuntimeError("implementation changed while the replay was running")
+        if isinstance(records, ApprovedSnapshotStream):
+            records.verify_completed()
         trace_sha256 = trace_digest.hexdigest()
         run_id = hashlib.sha256(canonical_bytes((identity, trace_sha256))).hexdigest()
         caveats = [
@@ -201,6 +228,7 @@ def publish_replay(
             "Forecast scale is uncalibrated and is not a probability or position size.",
             "Costs, fills, PnL, allocation, execution and statistical validation are absent.",
             "Data or phase-gate acceptance is not asserted by successful replay.",
+            "No strategy fitting occurs; authorized input use is not proof of completed training.",
             "Horizon lengths count observed bars; no missing interval is forward-filled.",
             "Calendar, macro, cross-asset and tick microstructure features are not connected.",
             "All quality-flagged and missing-spread bars suppress forecasts and reset warmup.",

@@ -268,14 +268,14 @@ def test_gap_requires_point_in_time_calendar_before_it_can_fail() -> None:
     assert DataQualityFlag.GAP_CALENDAR_UNKNOWN not in closed_rows[-1].quality_flags
 
 
-def test_calendar_uses_session_key_when_expected_interval_crosses_utc_midnight() -> None:
-    session_date = date(2024, 10, 21)
-    start, end = acquisition_session_bounds(session_date)
+def test_calendar_uses_close_date_when_expected_interval_crosses_utc_midnight() -> None:
+    open_date = date(2024, 10, 21)
+    start, end = acquisition_session_bounds(open_date)
     calendar = ExpectedLiquidityCalendar(
         [
             LiquidityDay(
                 instrument="FBS-Demo/GBPUSD",
-                session_date=session_date,
+                session_date=date(2024, 10, 22),
                 status=LiquidityStatus.FULL,
                 source="broker-hours",
                 source_citation="test fixture",

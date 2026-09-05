@@ -4,7 +4,7 @@ The evaluator compares immutable one-minute clean bars with a point-in-time
 ``ExpectedLiquidityCalendar``.  It deliberately keeps three questions separate:
 
 * which minute bins an approved calendar expected to be liquid;
-* which observed bars carried each causal or retrospective flag; and
+* which observed bar-or-tick evidence minutes carried each causal or retrospective flag; and
 * whether the hash-bound calendar and counted-flag policy have the required human
   decision records.
 
@@ -22,6 +22,7 @@ import re
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass
+from dataclasses import field as dataclass_field
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from enum import StrEnum
@@ -261,7 +262,11 @@ class ApprovalDecision:
     def __post_init__(self) -> None:
         if self.role not in ("INDEPENDENT_REVIEWER", "PRINCIPAL"):
             raise ReferenceAcceptanceError("approval role is invalid")
-        _nonempty(self.person, "approval person")
+        person = _nonempty(self.person, "approval person")
+        if person != person.strip():
+            raise ReferenceAcceptanceError(
+                "approval person must not contain leading or trailing whitespace"
+            )
         if self.decision != "APPROVED":
             raise ReferenceAcceptanceError("decision artifacts must explicitly say APPROVED")
         require_utc(self.decided_at_utc, field="decided_at_utc")
@@ -286,7 +291,9 @@ class ApprovalBinding:
             raise ReferenceAcceptanceError("independent-review role binding is invalid")
         if self.principal_approval.role != "PRINCIPAL":
             raise ReferenceAcceptanceError("principal role binding is invalid")
-        if self.independent_review.person.casefold() == self.principal_approval.person.casefold():
+        if self.independent_review.person.strip().casefold() == (
+            self.principal_approval.person.strip().casefold()
+        ):
             raise ReferenceAcceptanceError("reviewer and Principal must be different humans")
         if self.principal_approval.decided_at_utc < self.independent_review.decided_at_utc:
             raise ReferenceAcceptanceError("Principal decision cannot predate independent review")
@@ -297,7 +304,9 @@ class ApprovalBinding:
         scope: ReferenceScope,
         calendar_sha256: str | None,
         policy_sha256: str,
+        known_at: datetime,
     ) -> tuple[str, ...]:
+        known_at = require_utc(known_at, field="known_at")
         reasons: list[str] = []
         if self.scope != scope:
             reasons.append("approval binding scope does not match the evaluation")
@@ -305,6 +314,10 @@ class ApprovalBinding:
             reasons.append("approval binding does not match the calendar bytes")
         if self.policy_sha256 != policy_sha256:
             reasons.append("approval binding does not match the policy bytes")
+        if self.independent_review.decided_at_utc > known_at:
+            reasons.append("independent-review decision postdates the evaluation known_at")
+        if self.principal_approval.decided_at_utc > known_at:
+            reasons.append("Principal decision postdates the evaluation known_at")
         return tuple(reasons)
 
 
@@ -324,11 +337,21 @@ class LoadedBars:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class LoadedRetrospectiveFlags:
+    """Complete clean-tick evidence; the class name is retained for API compatibility."""
+
     causal_flags_by_minute: Mapping[datetime, tuple[str, ...]]
     flags_by_minute: Mapping[datetime, tuple[str, ...]]
     covered_minutes: frozenset[datetime]
     files: tuple[FileEvidence, ...]
     corpus_ids: tuple[str, ...]
+    outside_canonical_session_causal_flags_by_utc_minute: Mapping[datetime, tuple[str, ...]] = (
+        dataclass_field(default_factory=dict)
+    )
+    outside_canonical_session_retrospective_flags_by_utc_minute: Mapping[
+        datetime, tuple[str, ...]
+    ] = dataclass_field(default_factory=dict)
+    outside_canonical_session_covered_utc_minutes: frozenset[datetime] = frozenset()
+    outside_canonical_session_tick_rows_in_utc_month: int = 0
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -361,18 +384,31 @@ class ReferenceMonthResult:
     calendar_days_in_month: int
     calendar_days_resolved: int
     calendar_days_missing: tuple[str, ...]
-    expected_liquid_minutes: int
+    calendar_comparison_status: str
+    expected_liquid_minutes: int | None
+    diagnostic_resolved_expected_liquid_minutes: int
     actual_bars_in_close_month: int
-    observed_expected_minutes: int
-    missing_expected_minutes: int
-    unexpected_actual_minutes: int
+    observed_expected_minutes: int | None
+    missing_expected_minutes: int | None
+    unexpected_actual_minutes: int | None
+    diagnostic_observed_resolved_expected_minutes: int
+    diagnostic_missing_resolved_expected_minutes: int
+    diagnostic_actual_not_in_resolved_expected_minutes: int
     tick_minutes_covered: int
     actual_bar_minutes_without_tick_coverage: int
     causal_tick_flagged_minutes_without_bar: int
     retrospective_flagged_minutes_without_bar: int
+    outside_canonical_session_scope: str
+    outside_canonical_session_tick_rows: int
+    outside_canonical_session_evidence_minutes: int
+    outside_canonical_session_causal_flagged_minutes: int
+    outside_canonical_session_retrospective_flagged_minutes: int
+    outside_canonical_session_flag_observations: tuple[Mapping[str, object], ...]
+    canonical_session_observed_counted_evidence_minute_union: int
     observed_counted_flag_union: int
-    missing_counted_as_flagged: int
-    counted_flagged_union: int
+    missing_counted_as_flagged: int | None
+    counted_flagged_union: int | None
+    diagnostic_counted_resolved_expected_minute_union: int
     flagged_fraction: str | None
     strict_less_than_0_1_percent: bool | None
     flag_observations: tuple[Mapping[str, object], ...]
@@ -389,6 +425,16 @@ class ReferenceMonthResult:
             "threshold_percent": "0.1",
             "denominator": "EXPECTED_LIQUID_MINUTE_BINS",
             "overlap_treatment": "UNION_EACH_MINUTE_COUNTED_ONCE",
+        }
+        result["compatibility_aliases"] = {
+            "observed_counted_flag_union": (
+                "legacy count restricted to currently resolved expected-minute bins; "
+                "use canonical_session_observed_counted_evidence_minute_union for all "
+                "observed canonical-session evidence in the reference close month"
+            ),
+            "flag_observations[].observed_bars": (
+                "legacy alias of observed_evidence_minutes; it can include tick-only minutes"
+            ),
         }
         return result
 
@@ -460,6 +506,12 @@ def evaluate_reference_month(
     causal_tick_flags_by_minute: Mapping[datetime, Sequence[str]] | None,
     retrospective_flags_by_minute: Mapping[datetime, Sequence[str]] | None,
     tick_covered_minutes: Iterable[datetime] | None,
+    outside_canonical_session_causal_flags_by_utc_minute: Mapping[datetime, Sequence[str]]
+    | None = None,
+    outside_canonical_session_retrospective_flags_by_utc_minute: Mapping[datetime, Sequence[str]]
+    | None = None,
+    outside_canonical_session_covered_utc_minutes: Iterable[datetime] | None = None,
+    outside_canonical_session_tick_rows_in_utc_month: int = 0,
 ) -> ReferenceMonthResult:
     """Evaluate one exact venue/symbol/month without manufacturing missing evidence."""
 
@@ -505,10 +557,12 @@ def evaluate_reference_month(
             for flag in normalized:
                 _nonempty(flag, f"{label} flag")
             bounds = fx_session_bounds(minute)
-            if (
-                bounds is not None
-                and bounds[1].astimezone(NEW_YORK).strftime("%Y-%m") == scope.reference_month
-            ):
+            if bounds is None:
+                raise ReferenceAcceptanceError(
+                    f"{label} contains outside-canonical-session evidence; "
+                    "supply it through the explicit outside-session fields"
+                )
+            if bounds[1].astimezone(NEW_YORK).strftime("%Y-%m") == scope.reference_month:
                 normalized_map[minute] = normalized
         return normalized_map
 
@@ -524,15 +578,82 @@ def evaluate_reference_month(
                     "tick coverage evidence keys must be aligned minutes"
                 )
             bounds = fx_session_bounds(minute)
-            if (
-                bounds is not None
-                and bounds[1].astimezone(NEW_YORK).strftime("%Y-%m") == scope.reference_month
-            ):
+            if bounds is None:
+                raise ReferenceAcceptanceError(
+                    "tick coverage contains an outside-canonical-session minute; "
+                    "supply it through the explicit outside-session coverage field"
+                )
+            if bounds[1].astimezone(NEW_YORK).strftime("%Y-%m") == scope.reference_month:
                 coverage.add(minute)
+
+    def normalize_outside_flags(
+        values: Mapping[datetime, Sequence[str]] | None, *, label: str
+    ) -> dict[datetime, tuple[str, ...]]:
+        normalized_map: dict[datetime, tuple[str, ...]] = {}
+        if values is None:
+            return normalized_map
+        for minute, flags in values.items():
+            minute = require_utc(minute, field=f"{label} minute")
+            if minute.second or minute.microsecond:
+                raise ReferenceAcceptanceError(f"{label} evidence keys must be aligned UTC minutes")
+            if fx_session_bounds(minute) is not None:
+                raise ReferenceAcceptanceError(
+                    f"{label} evidence must be outside the canonical FX session"
+                )
+            if minute.strftime("%Y-%m") != scope.reference_month:
+                raise ReferenceAcceptanceError(
+                    f"{label} evidence must be scoped by UTC event month"
+                )
+            normalized = tuple(flags)
+            if len(set(normalized)) != len(normalized):
+                raise ReferenceAcceptanceError(f"{label} flag evidence contains duplicates")
+            for flag in normalized:
+                _nonempty(flag, f"{label} flag")
+            normalized_map[minute] = normalized
+        return normalized_map
+
+    outside_causal = normalize_outside_flags(
+        outside_canonical_session_causal_flags_by_utc_minute,
+        label="outside-canonical-session causal tick",
+    )
+    outside_retrospective = normalize_outside_flags(
+        outside_canonical_session_retrospective_flags_by_utc_minute,
+        label="outside-canonical-session retrospective tick",
+    )
+    outside_coverage: set[datetime] = set()
+    if outside_canonical_session_covered_utc_minutes is not None:
+        for minute in outside_canonical_session_covered_utc_minutes:
+            minute = require_utc(minute, field="outside-canonical-session coverage minute")
+            if minute.second or minute.microsecond:
+                raise ReferenceAcceptanceError(
+                    "outside-canonical-session coverage keys must be aligned UTC minutes"
+                )
+            if fx_session_bounds(minute) is not None:
+                raise ReferenceAcceptanceError(
+                    "outside-canonical-session coverage contains an in-session minute"
+                )
+            if minute.strftime("%Y-%m") != scope.reference_month:
+                raise ReferenceAcceptanceError(
+                    "outside-canonical-session coverage must use the UTC event month"
+                )
+            outside_coverage.add(minute)
+    if type(outside_canonical_session_tick_rows_in_utc_month) is not int or (
+        outside_canonical_session_tick_rows_in_utc_month < 0
+    ):
+        raise ReferenceAcceptanceError("outside-canonical-session tick rows must be nonnegative")
+    if outside_canonical_session_tick_rows_in_utc_month < len(outside_coverage):
+        raise ReferenceAcceptanceError(
+            "outside-canonical-session tick rows cannot be fewer than covered minutes"
+        )
+    if (set(outside_causal) | set(outside_retrospective)) - outside_coverage:
+        raise ReferenceAcceptanceError(
+            "outside-canonical-session flagged minutes lack tick coverage evidence"
+        )
 
     rules = policy.rule_map
     observed_by_rule: dict[tuple[FlagSource, str], set[datetime]] = defaultdict(set)
     unknown_by_rule: dict[tuple[FlagSource, str], set[datetime]] = defaultdict(set)
+    counted_observed_all: set[datetime] = set()
     counted_observed: set[datetime] = set()
     unresolved_observed: set[datetime] = set()
     evidence_minutes = set(actual)
@@ -561,6 +682,8 @@ def evaluate_reference_month(
                 key = (source, flag)
                 observed_by_rule[key].add(minute)
                 rule = rules.get(key)
+                if rule is not None and rule.treatment == FlagTreatment.COUNT_AS_FLAGGED:
+                    counted_observed_all.add(minute)
                 if minute not in expected:
                     continue
                 if rule is None:
@@ -587,7 +710,6 @@ def evaluate_reference_month(
     observed_expected = set(actual) & expected
     missing_expected = expected - set(actual)
     unexpected_actual = set(actual) - expected
-    counted_observed &= expected
     missing_counted: set[datetime] = set()
     if policy.missing_expected_bar_treatment == MissingBarTreatment.COUNT_AS_FLAGGED:
         missing_counted = missing_expected
@@ -595,13 +717,20 @@ def evaluate_reference_month(
 
     reasons: list[str] = []
     days = _month_days(scope.reference_month)
+    calendar_complete = calendar is not None and not missing_days
+    if calendar is None:
+        calendar_comparison_status = "NOT_EVALUABLE_NO_CALENDAR"
+    elif missing_days:
+        calendar_comparison_status = "NOT_EVALUABLE_INCOMPLETE_CALENDAR"
+    else:
+        calendar_comparison_status = "EVALUABLE_COMPLETE_CALENDAR"
     if calendar is None:
         reasons.append("no expected-liquidity calendar was supplied")
     if missing_days:
         reasons.append(
             f"expected-liquidity calendar is unknown for {len(missing_days)} month day(s)"
         )
-    if not expected:
+    if calendar_complete and not expected:
         reasons.append("approved expected-liquid minute denominator is empty")
     if policy.status != "APPROVED":
         reasons.append("counted-flag policy is draft/unapproved")
@@ -643,14 +772,19 @@ def evaluate_reference_month(
             scope=scope,
             calendar_sha256=calendar_sha256,
             policy_sha256=policy.sha256,
+            known_at=known_at,
         )
         reasons.extend(mismatches)
         approval_verified = not mismatches
 
-    denominator = len(expected)
-    numerator = len(counted_union)
-    fraction = None if denominator == 0 else str(Decimal(numerator) / Decimal(denominator))
-    strict = None if denominator == 0 else numerator * 1000 < denominator
+    denominator = len(expected) if calendar_complete else None
+    numerator = len(counted_union) if calendar_complete else None
+    if denominator is None or denominator == 0 or numerator is None:
+        fraction = None
+        strict = None
+    else:
+        fraction = str(Decimal(numerator) / Decimal(denominator))
+        strict = numerator * 1000 < denominator
     if reasons:
         status = AcceptanceStatus.INDETERMINATE
     elif strict is False:
@@ -664,14 +798,49 @@ def evaluate_reference_month(
     all_keys = sorted(set(rules) | set(observed_by_rule), key=lambda item: (item[0].value, item[1]))
     for key in all_keys:
         rule = rules.get(key)
+        observed_minutes = observed_by_rule.get(key, set())
         observations.append(
             {
                 "source": key[0].value,
+                "evidence_source": (
+                    "CAUSAL_BAR_OR_TICK"
+                    if key[0] == FlagSource.CAUSAL_BAR
+                    else "RETROSPECTIVE_TICK"
+                ),
                 "flag": key[1],
                 "classification": None if rule is None else rule.classification.value,
                 "treatment": None if rule is None else rule.treatment.value,
-                "observed_bars": len(observed_by_rule.get(key, set())),
+                "observed_evidence_minutes": len(observed_minutes),
+                "observed_bar_minutes": len(observed_minutes & set(actual)),
+                "observed_tick_only_minutes": len(observed_minutes - set(actual)),
+                "observed_bars": len(observed_minutes),
                 "in_policy": rule is not None,
+            }
+        )
+
+    outside_observed: dict[tuple[FlagSource, str], set[datetime]] = defaultdict(set)
+    for minute in outside_coverage:
+        for source, flags in (
+            (FlagSource.CAUSAL_BAR, outside_causal.get(minute, ())),
+            (FlagSource.RETROSPECTIVE_TICK, outside_retrospective.get(minute, ())),
+        ):
+            for flag in flags:
+                outside_observed[source, flag].add(minute)
+    outside_observations: list[Mapping[str, object]] = []
+    for key in sorted(outside_observed, key=lambda item: (item[0].value, item[1])):
+        rule = rules.get(key)
+        outside_observations.append(
+            {
+                "source": key[0].value,
+                "evidence_source": (
+                    "CAUSAL_TICK" if key[0] == FlagSource.CAUSAL_BAR else "RETROSPECTIVE_TICK"
+                ),
+                "flag": key[1],
+                "classification": None if rule is None else rule.classification.value,
+                "policy_treatment": None if rule is None else rule.treatment.value,
+                "observed_utc_event_minutes": len(outside_observed[key]),
+                "in_policy": rule is not None,
+                "numerator_treatment": "OUTSIDE_EXPECTED_LIQUID_MINUTE_DENOMINATOR",
             }
         )
 
@@ -692,18 +861,35 @@ def evaluate_reference_month(
         calendar_days_in_month=len(days),
         calendar_days_resolved=resolved_days,
         calendar_days_missing=missing_days,
+        calendar_comparison_status=calendar_comparison_status,
         expected_liquid_minutes=denominator,
+        diagnostic_resolved_expected_liquid_minutes=len(expected),
         actual_bars_in_close_month=len(actual),
-        observed_expected_minutes=len(observed_expected),
-        missing_expected_minutes=len(missing_expected),
-        unexpected_actual_minutes=len(unexpected_actual),
+        observed_expected_minutes=(len(observed_expected) if calendar_complete else None),
+        missing_expected_minutes=(len(missing_expected) if calendar_complete else None),
+        unexpected_actual_minutes=(len(unexpected_actual) if calendar_complete else None),
+        diagnostic_observed_resolved_expected_minutes=len(observed_expected),
+        diagnostic_missing_resolved_expected_minutes=len(missing_expected),
+        diagnostic_actual_not_in_resolved_expected_minutes=len(unexpected_actual),
         tick_minutes_covered=0 if coverage is None else len(coverage),
         actual_bar_minutes_without_tick_coverage=len(uncovered_actual),
         causal_tick_flagged_minutes_without_bar=len(causal_orphans),
         retrospective_flagged_minutes_without_bar=len(retrospective_orphans),
+        outside_canonical_session_scope="UTC_EVENT_MONTH",
+        outside_canonical_session_tick_rows=outside_canonical_session_tick_rows_in_utc_month,
+        outside_canonical_session_evidence_minutes=len(outside_coverage),
+        outside_canonical_session_causal_flagged_minutes=len(
+            {minute for minute, flags in outside_causal.items() if flags}
+        ),
+        outside_canonical_session_retrospective_flagged_minutes=len(
+            {minute for minute, flags in outside_retrospective.items() if flags}
+        ),
+        outside_canonical_session_flag_observations=tuple(outside_observations),
+        canonical_session_observed_counted_evidence_minute_union=len(counted_observed_all),
         observed_counted_flag_union=len(counted_observed),
-        missing_counted_as_flagged=len(missing_counted),
+        missing_counted_as_flagged=(len(missing_counted) if calendar_complete else None),
         counted_flagged_union=numerator,
+        diagnostic_counted_resolved_expected_minute_union=len(counted_union),
         flagged_fraction=fraction,
         strict_less_than_0_1_percent=strict,
         flag_observations=tuple(observations),
@@ -898,14 +1084,18 @@ def read_clean_bar_files(paths: Sequence[Path], *, scope: ReferenceScope) -> Loa
     )
 
 
-def read_retrospective_tick_files(
+def read_clean_tick_files(
     paths: Sequence[Path], *, scope: ReferenceScope
 ) -> LoadedRetrospectiveFlags:
-    """Read future-informed tick annotations separately from causal bar flags."""
+    """Read complete causal, retrospective and outside-session clean-tick evidence."""
 
     causal_flags: dict[datetime, set[str]] = defaultdict(set)
     retrospective_flags: dict[datetime, set[str]] = defaultdict(set)
     covered: set[datetime] = set()
+    outside_causal_flags: dict[datetime, set[str]] = defaultdict(set)
+    outside_retrospective_flags: dict[datetime, set[str]] = defaultdict(set)
+    outside_covered: set[datetime] = set()
+    outside_tick_rows = 0
     evidence: list[FileEvidence] = []
     corpus_ids: set[str] = set()
     for path in sorted({item.resolve() for item in paths}, key=lambda item: item.as_posix()):
@@ -929,22 +1119,23 @@ def read_retrospective_tick_files(
                 if (row["instrument"], row["source"]) != (scope.instrument, scope.source):
                     raise ReferenceAcceptanceError("clean-tick row is outside the exact scope")
                 moment = require_utc(cast(datetime, row["ts_event"]), field="tick ts_event")
+                minute = moment.replace(second=0, microsecond=0)
+                causal = tuple(cast(list[str], row["quality_flags"]))
+                retrospective = tuple(cast(list[str], row["retrospective_flags"]))
+                if len(set(causal)) != len(causal) or len(set(retrospective)) != len(retrospective):
+                    raise ReferenceAcceptanceError("clean-tick flag lists contain duplicates")
+                for flag in causal:
+                    _nonempty(flag, "causal tick flag")
+                for flag in retrospective:
+                    _nonempty(flag, "retrospective tick flag")
                 bounds = fx_session_bounds(moment)
-                if (
-                    bounds is not None
-                    and bounds[1].astimezone(NEW_YORK).strftime("%Y-%m") == scope.reference_month
-                ):
-                    minute = moment.replace(second=0, microsecond=0)
-                    causal = tuple(cast(list[str], row["quality_flags"]))
-                    retrospective = tuple(cast(list[str], row["retrospective_flags"]))
-                    if len(set(causal)) != len(causal) or len(set(retrospective)) != len(
-                        retrospective
-                    ):
-                        raise ReferenceAcceptanceError("clean-tick flag lists contain duplicates")
-                    for flag in causal:
-                        _nonempty(flag, "causal tick flag")
-                    for flag in retrospective:
-                        _nonempty(flag, "retrospective tick flag")
+                if bounds is None:
+                    if moment.strftime("%Y-%m") == scope.reference_month:
+                        outside_tick_rows += 1
+                        outside_covered.add(minute)
+                        outside_causal_flags[minute].update(causal)
+                        outside_retrospective_flags[minute].update(retrospective)
+                elif bounds[1].astimezone(NEW_YORK).strftime("%Y-%m") == scope.reference_month:
                     covered.add(minute)
                     causal_flags[minute].update(causal)
                     retrospective_flags[minute].update(retrospective)
@@ -964,7 +1155,23 @@ def read_retrospective_tick_files(
         covered_minutes=frozenset(covered),
         files=tuple(evidence),
         corpus_ids=tuple(sorted(corpus_ids)),
+        outside_canonical_session_causal_flags_by_utc_minute={
+            minute: tuple(sorted(values)) for minute, values in outside_causal_flags.items()
+        },
+        outside_canonical_session_retrospective_flags_by_utc_minute={
+            minute: tuple(sorted(values)) for minute, values in outside_retrospective_flags.items()
+        },
+        outside_canonical_session_covered_utc_minutes=frozenset(outside_covered),
+        outside_canonical_session_tick_rows_in_utc_month=outside_tick_rows,
     )
+
+
+def read_retrospective_tick_files(
+    paths: Sequence[Path], *, scope: ReferenceScope
+) -> LoadedRetrospectiveFlags:
+    """Compatibility wrapper for the former retrospective-only reader name."""
+
+    return read_clean_tick_files(paths, scope=scope)
 
 
 def _clean_relative_path(path: str) -> str:

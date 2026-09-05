@@ -13,11 +13,12 @@ import heapq
 from collections import Counter, deque
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, tzinfo
 from decimal import Decimal
 from enum import StrEnum
 from typing import Protocol
 
+from tradebot.core.time_rules import NEW_YORK
 from tradebot.core.timestamps import require_utc
 from tradebot.core.types import QualityFlag
 from tradebot.data.bars import BarBoundary
@@ -52,7 +53,8 @@ class QualityCheckStatus(StrEnum):
 class LiquidityDayLike(Protocol):
     """Narrow view of calendar.LiquidityDay consumed by quality checks."""
 
-    expected_intervals: tuple[tuple[datetime, datetime], ...]
+    @property
+    def expected_intervals(self) -> tuple[tuple[datetime, datetime], ...]: ...
 
 
 class LiquidityCalendarLike(Protocol):
@@ -321,7 +323,13 @@ class _RollingMoments:
 
 
 class TickQualityPipeline:
-    """Apply checks 1--6 and completeness-calendar coverage in bounded memory."""
+    """Apply checks 1--6 and completeness-calendar coverage in bounded memory.
+
+    Calendar dates label the injected session's close in ``calendar_label_zone``.
+    FX defaults to the dependency-pinned New York zone, matching SPEC 3.4 and the
+    reference-month evaluator. Other session conventions must supply their label
+    zone explicitly. Calendar contents never determine or alter session boundaries.
+    """
 
     def __init__(
         self,
@@ -332,18 +340,22 @@ class TickQualityPipeline:
         thresholds: QualityThresholds | None = None,
         calendar: LiquidityCalendarLike | None = None,
         calendar_instrument: str | None = None,
+        calendar_label_zone: tzinfo = NEW_YORK,
         known_at: datetime | None = None,
     ) -> None:
         if not instrument or not source:
             raise ValueError("instrument and source must be non-empty")
         if calendar is not None and known_at is None:
             raise ValueError("known_at is required when a liquidity calendar is supplied")
+        if not isinstance(calendar_label_zone, tzinfo):
+            raise TypeError("calendar_label_zone must be a timezone")
         self._instrument = instrument
         self._source = source
         self._session_boundary = session_boundary
         self._thresholds = thresholds or QualityThresholds()
         self._calendar = calendar
         self._calendar_instrument = calendar_instrument or f"{source}/{instrument}"
+        self._calendar_label_zone = calendar_label_zone
         self._known_at = require_utc(known_at, field="known_at") if known_at is not None else None
         self._spread_history = _RollingMedian(self._thresholds.rolling_horizon)
         self._return_history = _RollingMoments(self._thresholds.rolling_horizon)
@@ -365,7 +377,7 @@ class TickQualityPipeline:
         self._finished = False
 
     def require_calendar_day(self, day: date) -> None:
-        """Declare a day required by completeness evaluation, even if it has no ticks."""
+        """Declare a close-labelled calendar date required even if it has no ticks."""
         if day in self._calendar_checked:
             return
         self._calendar_checked.add(day)
@@ -375,28 +387,41 @@ class TickQualityPipeline:
         if self._calendar.lookup(self._calendar_instrument, day, known_at=self._known_at) is None:
             self._calendar_missing.add(day)
 
-    def _calendar_day(self, instant: datetime) -> date:
-        """Map an instant to its session key without consulting the calendar itself."""
-        interval = self._session_boundary(instant)
-        return instant.date() if interval is None else interval[0].date()
+    def _calendar_day(self, instant: datetime, interval: tuple[datetime, datetime] | None) -> date:
+        """Label the boundary's close without consulting the calendar itself.
+
+        An out-of-session observation has no session close. Its local civil date
+        is used only to account for calendar coverage; OUT_OF_SESSION still makes
+        the row ineligible and this fallback never creates a trading interval.
+        """
+        label_instant = instant if interval is None else require_utc(interval[1])
+        return label_instant.astimezone(self._calendar_label_zone).date()
 
     def _calendar_gap_expected(self, start: datetime, end: datetime) -> bool | None:
         if self._calendar is None or self._known_at is None:
             return None
-        day = self._calendar_day(start)
-        final_day = self._calendar_day(end)
+        day = self._calendar_day(start, self._session_boundary(start))
+        final_day = self._calendar_day(end, self._session_boundary(end))
+        if final_day < day:
+            raise ValueError("session close-date labels regress across a forward gap")
         expected_overlap = Decimal(0)
+        fully_known = True
         while day <= final_day:
             self.require_calendar_day(day)
             entry = self._calendar.lookup(self._calendar_instrument, day, known_at=self._known_at)
             if entry is None:
-                return None
-            for interval_start, interval_end in entry.expected_intervals:
-                overlap_start = max(start, require_utc(interval_start))
-                overlap_end = min(end, require_utc(interval_end))
-                if overlap_end > overlap_start:
-                    expected_overlap += Decimal(str((overlap_end - overlap_start).total_seconds()))
+                fully_known = False
+            else:
+                for interval_start, interval_end in entry.expected_intervals:
+                    overlap_start = max(start, require_utc(interval_start))
+                    overlap_end = min(end, require_utc(interval_end))
+                    if overlap_end > overlap_start:
+                        expected_overlap += Decimal(
+                            str((overlap_end - overlap_start).total_seconds())
+                        )
             day += timedelta(days=1)
+        if not fully_known:
+            return None
         return expected_overlap > Decimal(str(self._thresholds.gap_threshold.total_seconds()))
 
     def process(self, item: QualityInput) -> tuple[CleanTickRecord, ...]:
@@ -422,9 +447,7 @@ class TickQualityPipeline:
 
         ts_event = require_utc(item.ts_event, field="ts_event")
         session_interval = self._session_boundary(ts_event)
-        self.require_calendar_day(
-            ts_event.date() if session_interval is None else session_interval[0].date()
-        )
+        self.require_calendar_day(self._calendar_day(ts_event, session_interval))
         flags: set[str] = {QualityFlag.TS_RECV_IMPUTED}
         eligible = True
         valid_mid = item.bid > 0 and item.ask > item.bid

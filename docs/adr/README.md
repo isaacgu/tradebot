@@ -18,8 +18,9 @@ records it here in the same change.
 | 0010 | Causal decision replay and observable research inputs | Core engineering preparation | implemented; no phase-gate acceptance |
 | 0011 | Engineering research controls | Core engineering preparation | implemented; no financial evaluation or phase-gate acceptance |
 | 0012 | Offline simulated execution and exact cost accounting | P2 engineering preparation | implemented as a synthetic-only increment; no phase-gate acceptance |
+| 0013 | Purpose-scoped research releases and guarded consumption | Data/research engineering preparation | implemented; no production release, trust pin or training approval activated |
 
-**Next free number: 0013.**
+**Next free number: 0014.**
 
 Reserved topics that draw a number when written, at the phase shown:
 

@@ -79,8 +79,10 @@ Open the [system overview](http://localhost:3000/d/tradebot-system), then use th
 [acquisition drilldown](http://localhost:3000/d/tradebot-acquisition) for the current data run,
 [data-quality view](http://localhost:3000/d/tradebot-data-quality) for corpus evidence, or
 [Broker & Trades](http://localhost:3000/d/tradebot-broker) for read-only terminal observations.
-[Engineering Replay](http://localhost:3000/d/tradebot-research) shows a verified completed
-decision replay: artifact state, source class, bars processed and decision-status counts.
+[Engineering Replay](http://localhost:3000/d/tradebot-research) separates saved report integrity
+from current implementation identity, alongside source class, bars processed and decision counts.
+A verified report with **HISTORICAL · code changed** is preserved evidence of earlier code,
+not validation of the current engine. An unavailable comparison remains **UNKNOWN**.
 The overview is the entry point for evaluating the whole bot: health, data, research/backtests,
 strategies/portfolio, execution/risk, evidence and operations. Sections for future modules must
 say **not implemented** or **no evidence**. A missing metric is not a healthy system, a zero
@@ -147,8 +149,12 @@ accounts in MT5, restart only the broker observer; its prior snapshot stays stal
 The Engineering Replay view verifies a published report without starting a replay or reading
 its detailed trace. Missing or rejected reports are unknown, not zero activity. Its initial
 320-bar sample is explicitly synthetic engineering evidence; forecast counts are not live calls,
-trade orders, calibrated probabilities or performance. Immutable-clean-snapshot replays also
-remain engineering-only until the relevant data, financial and strategy gates are satisfied.
+trade orders, calibrated probabilities or performance. The public replay CLI now accepts only
+synthetic engineering inputs. Non-synthetic programmatic decision/publication paths require
+an exact purpose-scoped, independently pinned release and a guard-owned snapshot stream; ordinary
+snapshot iterables are rejected before consumption. No production release or trust registry is
+supplied. Low-level snapshot reading remains available for data QA, not authorization for strategy
+training. See [ADR 0013](docs/adr/0013-purpose-scoped-research-authorization.md).
 
 Later modules connect to the same observability path: publish metrics with stable, non-sensitive
 labels; emit structured logs tied to a run; write report artifacts with code/config/data identity;

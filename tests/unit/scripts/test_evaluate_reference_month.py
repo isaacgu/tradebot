@@ -61,6 +61,56 @@ def test_build_report_without_calendar_or_inventory_is_honestly_indeterminate(
     reasons = report["result"]["reasons"]
     assert any("calendar" in reason for reason in reasons)
     assert any("producer clean-file inventory" in reason for reason in reasons)
+    assert report["result"]["calendar_comparison_status"] == "NOT_EVALUABLE_NO_CALENDAR"
+    assert report["result"]["expected_liquid_minutes"] is None
+    assert report["result"]["missing_expected_minutes"] is None
+    assert report["result"]["unexpected_actual_minutes"] is None
+    assert report["inputs"]["clean_tick_files"] == []
+
+
+@pytest.mark.parametrize(
+    ("known_at", "generated_at", "message"),
+    [
+        (
+            datetime(2025, 1, 2, tzinfo=UTC),
+            datetime(2025, 1, 1, tzinfo=UTC),
+            "known_at cannot postdate generated_at",
+        ),
+        (
+            datetime(2025, 1, 1, tzinfo=UTC),
+            datetime(9999, 1, 1, tzinfo=UTC),
+            "generated_at cannot be in the future",
+        ),
+    ],
+)
+def test_build_report_rejects_temporally_impossible_cutoffs(
+    runner: ModuleType,
+    known_at: datetime,
+    generated_at: datetime,
+    message: str,
+) -> None:
+    root = Path(__file__).resolve().parents[3]
+
+    with pytest.raises(ValueError, match=message):
+        runner.build_report(
+            scope=ReferenceScope(
+                venue="FBS",
+                source="FBS-Demo",
+                instrument="EURUSD",
+                calendar_instrument="FBS-Demo/EURUSD",
+                reference_month="2024-10",
+            ),
+            bar_root=root,
+            tick_root=None,
+            policy_path=root / "configs/calendars/reference_month_policy_draft.json",
+            calendar_path=None,
+            approval_binding_path=None,
+            producer_report_path=None,
+            producer_sidecar_path=None,
+            expected_producer_report_sha256=None,
+            known_at=known_at,
+            generated_at=generated_at,
+        )
 
 
 def test_write_report_is_checksum_published_and_never_overwritten(

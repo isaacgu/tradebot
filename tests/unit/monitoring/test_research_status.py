@@ -130,12 +130,25 @@ def test_verified_summary_is_bounded_engineering_evidence(tmp_path: Path) -> Non
     assert 'tradebot_research_artifact_state{state="verified"} 1.0' in metrics
     assert 'tradebot_research_source_kind{kind="synthetic"} 1.0' in metrics
     assert "tradebot_research_bars_processed 4.0" in metrics
+    assert "tradebot_research_implementation_current 1.0" in metrics
     assert 'tradebot_research_decisions{status="forecast"} 1.0' in metrics
     assert "never" not in metrics
     assert "run_id" not in metrics
 
     (repository / "src/tradebot/__init__.py").write_text("# changed\n", encoding="utf-8")
-    assert research_status(root, repository)["implementation_current"] is False
+    historical = research_status(root, repository)
+    assert historical["implementation_current"] is False
+    historical_registry = CollectorRegistry()
+    add_research_metrics(historical_registry, historical)
+    assert "tradebot_research_implementation_current 0.0" in (
+        generate_latest(historical_registry).decode()
+    )
+
+    unavailable_registry = CollectorRegistry()
+    add_research_metrics(unavailable_registry, {**historical, "implementation_current": None})
+    assert "tradebot_research_implementation_current" not in (
+        generate_latest(unavailable_registry).decode()
+    )
 
 
 def test_missing_and_tampered_reports_stay_unknown_without_numeric_results(
@@ -144,6 +157,11 @@ def test_missing_and_tampered_reports_stay_unknown_without_numeric_results(
     missing = research_status(tmp_path / "missing", tmp_path)
     assert missing["artifact_state"] == "missing"
     assert missing["bars_processed"] is None
+    missing_registry = CollectorRegistry()
+    add_research_metrics(missing_registry, missing)
+    assert (
+        "tradebot_research_implementation_current" not in generate_latest(missing_registry).decode()
+    )
 
     root, repository, _, pointer = publish(tmp_path)
     (root / pointer["report"]).write_text("{}", encoding="utf-8")
@@ -157,6 +175,7 @@ def test_missing_and_tampered_reports_stay_unknown_without_numeric_results(
     assert 'tradebot_research_overview_state{state="unknown"} 1.0' in metrics
     assert "tradebot_research_bars_processed" not in metrics
     assert "tradebot_research_decisions" not in metrics
+    assert "tradebot_research_implementation_current" not in metrics
 
 
 @pytest.mark.parametrize(
@@ -260,7 +279,7 @@ def test_research_dashboard_is_small_and_explicitly_not_trading() -> None:
         (repository / "deploy/grafana/dashboards/research.json").read_text(encoding="utf-8")
     )
     assert dashboard["uid"] == "tradebot-research"
-    assert len(dashboard["panels"]) == 5
+    assert len(dashboard["panels"]) == 6
     expressions = {
         target["expr"] for panel in dashboard["panels"] for target in panel.get("targets", [])
     }
@@ -269,9 +288,11 @@ def test_research_dashboard_is_small_and_explicitly_not_trading() -> None:
     assert all(target.get("range") is False for target in targets)
     assert "tradebot_research_bars_processed" in expressions
     assert "tradebot_research_decisions" in expressions
+    assert "tradebot_research_implementation_current" in expressions
     content = dashboard["panels"][0]["options"]["content"]
     assert "not live calls or trades" in content
     assert "no execution, orders, fills, costs or P&L" in content
+    assert "HISTORICAL" in content
     system = json.loads(
         (repository / "deploy/grafana/dashboards/system.json").read_text(encoding="utf-8")
     )

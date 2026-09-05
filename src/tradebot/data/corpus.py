@@ -23,7 +23,7 @@ from typing import cast
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 from tradebot.core.clock import SimClock
-from tradebot.core.time_rules import fx_session_bounds
+from tradebot.core.time_rules import NEW_YORK, fx_session_bounds
 from tradebot.core.timestamps import require_utc
 from tradebot.core.types import Bar, Tick
 from tradebot.data.acquisition_probe import (
@@ -62,7 +62,7 @@ _HEX_SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 _EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
 _SEQ_STRIDE = 1 << 40
 _CORPUS_DOMAIN = b"tradebot.fbs-clean-corpus.v1\n"
-_CORPUS_IMPLEMENTATION_VERSION = 4
+_CORPUS_IMPLEMENTATION_VERSION = 5
 
 
 class ProbeArtifactError(RuntimeError):
@@ -540,8 +540,25 @@ def corpus_identity(
     known_at: datetime | None,
     timeframes: Sequence[str],
     seal_latency: timedelta,
+    calendar_instrument: str | None = None,
 ) -> str:
     """Identify source bytes plus every input that can alter clean output."""
+
+    instruments = sorted({item.request.logical_symbol for item in artifacts})
+    sources = {item.source for item in artifacts}
+    if len(sources) != 1:
+        raise ValueError("one corpus identity must use exactly one source")
+    if calendar_instrument is not None:
+        if not calendar_instrument.strip():
+            raise ValueError("calendar_instrument must be non-empty")
+        if len(instruments) != 1:
+            raise ValueError(
+                "an explicit calendar_instrument requires exactly one source instrument"
+            )
+    source = next(iter(sources))
+    calendar_instruments = {
+        instrument: calendar_instrument or f"{source}/{instrument}" for instrument in instruments
+    }
     payload = {
         "artifacts": [
             {
@@ -554,6 +571,7 @@ def corpus_identity(
         "thresholds": _threshold_payload(thresholds),
         "calendar_id": calendar_id or "MISSING",
         "calendar_known_at": known_at.isoformat() if known_at is not None else None,
+        "calendar_instruments": calendar_instruments,
         "schemas": ["raw-tick-v1", "clean-tick-v2", "clean-bar-v2"],
         "timeframes": sorted(timeframes),
         "seal_latency": [
@@ -577,6 +595,7 @@ def build_clean_ticks(
     thresholds: QualityThresholds,
     calendar: LiquidityCalendarLike | None,
     known_at: datetime | None,
+    calendar_instrument: str | None = None,
     session_boundary: BarBoundary = fx_session_bounds,
     sort_run_rows: int = 65_536,
     output_batch_rows: int = 65_536,
@@ -597,11 +616,11 @@ def build_clean_ticks(
         session_boundary=session_boundary,
         thresholds=thresholds,
         calendar=calendar,
-        calendar_instrument=f"{venue}/{instrument}",
+        calendar_instrument=calendar_instrument or f"{source}/{instrument}",
         known_at=known_at,
     )
     for imported in imports:
-        pipeline.require_calendar_day(imported.artifact.request.session_date)
+        pipeline.require_calendar_day(imported.artifact.request.end.astimezone(NEW_YORK).date())
 
     def quality_rows() -> Iterator[Mapping[str, object]]:
         for item in _raw_quality_inputs(imports):
@@ -982,6 +1001,7 @@ def build_fbs_corpus(
     calendar: LiquidityCalendarLike | None = None,
     calendar_id: str | None = None,
     known_at: datetime | None = None,
+    calendar_instrument: str | None = None,
     seal_latency: timedelta = timedelta(0),
     batch_size: int = 65_536,
 ) -> CorpusBuildResult:
@@ -1017,6 +1037,7 @@ def build_fbs_corpus(
         calendar=calendar,
         calendar_id=calendar_id,
         known_at=known_at,
+        calendar_instrument=calendar_instrument,
         seal_latency=seal_latency,
         batch_size=batch_size,
     )
@@ -1048,6 +1069,7 @@ def rebuild_from_raw(
     calendar: LiquidityCalendarLike | None = None,
     calendar_id: str | None = None,
     known_at: datetime | None = None,
+    calendar_instrument: str | None = None,
     seal_latency: timedelta = timedelta(0),
     batch_size: int = 65_536,
 ) -> CleanCorpusResult:
@@ -1093,6 +1115,7 @@ def rebuild_from_raw(
         known_at=checked_known_at,
         timeframes=timeframes,
         seal_latency=seal_latency,
+        calendar_instrument=calendar_instrument,
     )
     by_instrument: defaultdict[str, list[RawImportResult]] = defaultdict(list)
     for item in ordered_imports:
@@ -1114,6 +1137,9 @@ def rebuild_from_raw(
             thresholds=effective_thresholds,
             calendar=calendar,
             known_at=checked_known_at,
+            calendar_instrument=(
+                calendar_instrument or f"{imports[0].artifact.source}/{instrument}"
+            ),
             session_boundary=session_boundary,
             sort_run_rows=batch_size,
             output_batch_rows=batch_size,

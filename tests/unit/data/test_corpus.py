@@ -29,6 +29,21 @@ from tradebot.data.quality import DataQualityFlag, QualityThresholds
 from tradebot.data.storage import sha256_path
 
 
+class _RecordingCalendar:
+    def __init__(self) -> None:
+        self.lookups: list[tuple[str, date, datetime]] = []
+
+    def lookup(
+        self,
+        instrument: str,
+        day: date,
+        *,
+        known_at: datetime,
+    ) -> None:
+        self.lookups.append((instrument, day, known_at))
+        return None
+
+
 def _artifact(tmp_path: Path) -> ProbeArtifact:
     session_date = date(2024, 10, 21)
     start, end = fx_session_bounds(session_date)
@@ -85,6 +100,37 @@ def _artifact(tmp_path: Path) -> ProbeArtifact:
         compressed_sha256=sha256_path(source_path),
         expected_rows=len(quotes),
         artifact_id=hashlib.sha256(b"artifact").hexdigest(),
+    )
+
+
+def _empty_artifact(tmp_path: Path, session_date: date) -> ProbeArtifact:
+    start, end = fx_session_bounds(session_date)
+    request = ChunkRequest(
+        logical_symbol="EURUSD",
+        broker_symbol="EURUSD",
+        window_id="reference-empty-target",
+        session_date=session_date,
+        index_in_window=0,
+        start=start,
+        end=end,
+    )
+    semantic = CANONICAL_TICK_HEADER
+    source_path = tmp_path / "empty-target.tsv.gz"
+    with gzip.open(source_path, "wb") as stream:
+        stream.write(semantic)
+    return ProbeArtifact(
+        request=request,
+        ordinal=18,
+        plan_hash=hashlib.sha256(b"plan").hexdigest(),
+        source="FBS-Demo",
+        run_id="fixture-run",
+        completed_at=datetime(2026, 9, 4, tzinfo=UTC),
+        raw_path=source_path,
+        checkpoint_path=tmp_path / "empty-target.checkpoint.json",
+        semantic_sha256=hashlib.sha256(semantic).hexdigest(),
+        compressed_sha256=sha256_path(source_path),
+        expected_rows=0,
+        artifact_id=hashlib.sha256(b"empty-target-artifact").hexdigest(),
     )
 
 
@@ -156,6 +202,111 @@ def test_source_position_sequence_and_corpus_settings_are_stable_and_complete(
         seal_latency=timedelta(seconds=1),
     )
     assert immediate != delayed
+
+
+def test_calendar_binding_changes_identity_and_defaults_to_source_instrument(
+    tmp_path: Path,
+) -> None:
+    artifact = _artifact(tmp_path)
+    thresholds = QualityThresholds()
+    known_at = datetime(2026, 9, 5, tzinfo=UTC)
+    default = corpus_identity(
+        (artifact,),
+        thresholds=thresholds,
+        calendar_id="a" * 64,
+        known_at=known_at,
+        timeframes=("1m",),
+        seal_latency=timedelta(0),
+    )
+    explicit_default = corpus_identity(
+        (artifact,),
+        thresholds=thresholds,
+        calendar_id="a" * 64,
+        known_at=known_at,
+        timeframes=("1m",),
+        seal_latency=timedelta(0),
+        calendar_instrument="FBS-Demo/EURUSD",
+    )
+    alternate = corpus_identity(
+        (artifact,),
+        thresholds=thresholds,
+        calendar_id="a" * 64,
+        known_at=known_at,
+        timeframes=("1m",),
+        seal_latency=timedelta(0),
+        calendar_instrument="approved/EURUSD",
+    )
+
+    assert default == explicit_default
+    assert alternate != default
+
+
+def test_rebuild_uses_source_scoped_calendar_key_and_session_close_date(
+    tmp_path: Path,
+) -> None:
+    artifact = _artifact(tmp_path)
+    imported = import_raw_artifact(
+        artifact,
+        data_root=tmp_path / "immutable-raw",
+        batch_size=2,
+    )
+    known_at = datetime(2026, 9, 5, tzinfo=UTC)
+    calendar = _RecordingCalendar()
+
+    rebuilt = rebuild_from_raw(
+        (imported,),
+        data_root=tmp_path / "clean",
+        venue="FBS",
+        timeframes=("1m",),
+        calendar=calendar,
+        calendar_id="a" * 64,
+        known_at=known_at,
+        batch_size=2,
+    )
+
+    assert set(calendar.lookups) == {("FBS-Demo/EURUSD", date(2024, 10, 22), known_at)}
+    assert rebuilt.quality[0].calendar_days_missing == ("2024-10-22",)
+
+
+def test_zero_row_reference_target_survives_import_and_rebuild_identity(
+    tmp_path: Path,
+) -> None:
+    populated = _artifact(tmp_path)
+    empty_target = _empty_artifact(tmp_path, date(2024, 10, 22))
+    populated_import = import_raw_artifact(
+        populated,
+        data_root=tmp_path / "immutable-raw",
+        batch_size=2,
+    )
+    empty_import = import_raw_artifact(
+        empty_target,
+        data_root=tmp_path / "immutable-raw",
+        batch_size=2,
+    )
+    assert empty_import.rows == 0
+    assert empty_import.files == ()
+
+    with_empty_target = rebuild_from_raw(
+        (populated_import, empty_import),
+        data_root=tmp_path / "clean-with-empty-target",
+        venue="FBS",
+        timeframes=("1m",),
+        batch_size=2,
+    )
+    without_empty_target = rebuild_from_raw(
+        (populated_import,),
+        data_root=tmp_path / "clean-without-empty-target",
+        venue="FBS",
+        timeframes=("1m",),
+        batch_size=2,
+    )
+
+    assert with_empty_target.source_rows == populated.expected_rows
+    assert with_empty_target.corpus_id != without_empty_target.corpus_id
+    assert with_empty_target.quality[0].calendar_days_missing == (
+        "2024-10-22",
+        "2024-10-23",
+    )
 
 
 def test_cached_boundary_matches_canonical_across_dst_weekends_and_backwards() -> None:

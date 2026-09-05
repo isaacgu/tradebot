@@ -8,7 +8,7 @@ import pytest
 
 REPOSITORY = Path(__file__).resolve().parents[3]
 DASHBOARD_ROOT = REPOSITORY / "deploy/grafana/dashboards"
-CURRENT_DASHBOARDS = ("acquisition", "system", "data-quality")
+CURRENT_DASHBOARDS = ("acquisition", "system", "data-quality", "research")
 
 
 def dashboard(name: str) -> dict[str, Any]:
@@ -100,6 +100,20 @@ def test_missing_calendar_report_is_unknown_and_never_a_zero_or_pass() -> None:
     assert panel["fieldConfig"]["defaults"]["mappings"][0]["options"]["-1"]["text"] == (
         "No evidence"
     )
+
+
+def test_replay_integrity_does_not_hide_historical_implementation() -> None:
+    current = panel_for_metric("research", "tradebot_research_implementation_current")
+    assert current["title"] == "Code match"
+    assert current["fieldConfig"]["defaults"]["noValue"] == "UNKNOWN"
+    assert displayed_color(current, 0) == "orange"
+    assert displayed_color(current, 1) == "blue"
+    mapping = current["fieldConfig"]["defaults"]["mappings"][0]["options"]
+    assert "HISTORICAL" in mapping["0"]["text"]
+    assert mapping["1"]["text"] == "Current code"
+    integrity = next(p for p in dashboard("research")["panels"] if p["id"] == 2)
+    assert integrity["title"] == "Report integrity"
+    assert "check Code match separately" in integrity["description"]
 
 
 @pytest.mark.parametrize("name", ("acquisition", "system"))
