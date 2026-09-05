@@ -2,18 +2,30 @@
 
 ## Current assignment and status
 
-Latest delivery: platform `e8149638373f08f38c8adcc356ae81be0fc404b9` and synthetic
-execution/accounting `670b59a5d416c6ca9941bf7248d1f61fbfb2661a` are committed and
-pushed in [PR 4](https://github.com/isaacgu/tradebot/pull/4), with required CI passing.
-Combined canonical verification passed 1,234 warnings-as-errors tests. Both the
-320-bar decision replay and the four-case execution/accounting runner were run
-from committed source; no broker orders or training eligibility were enabled.
-The latter is a MARKET/GTC synthetic foundation, not a full SimBroker or integrated
-trading system. See [the delivery record](docs/reports/platform_candidate_20260905.md).
-Gate-1 category 1 (CI) is now PROVIDED; categories 2, 4 and 5 remain FAILED. Historical
-uncommitted/no-CI descriptions below refer to the earlier snapshots they describe.
-The acquisition task owns the decision-ready calendar/counting and complete-month
-resolution plan; it is not automatically adopted or implemented by this delivery.
+Latest source delivery: `5b56316a82749a8e60a9fea3596871c69325d400` is committed and
+pushed in [draft PR 4](https://github.com/isaacgu/tradebot/pull/4). Required CI
+`quality` and `secrets` passed in run 33966725497: 1,610 warnings-as-errors tests,
+88.34% coverage. No merge to `master` occurred. The purpose-scoped admission guard,
+reference-month repairs and dashboard's separate report-integrity/code-match
+indicators are implemented. See [the exact new delivery and remaining requirements](docs/reports/guard_data_publication_20260905.md).
+
+Both the 320-bar synthetic decision replay and four-case/eight-fill synthetic
+execution/accounting runner were run twice from this source, with identical repeat
+reports and zero broker orders. The dashboard now shows Current code. This is an
+offline engineering foundation, not genuine model fitting, full financial validation
+or an always-on trading system. Real-data training was not queued or performed.
+
+The acquisition task's source-frozen verification sequence is
+`build/gate1/reference-repair-verification-20260905-v2/`, launched 12:31:33 UTC.
+Its observed log reached reference-month rebuild 1/2 after importing 25 inputs;
+no final result existed at observation. Preserve all run inputs and do not start a
+duplicate. The source-backed v4 calendar/counting definition remains a proposal
+requiring the recorded Delsa/Isaac decision, not an adopted FBS session schedule.
+
+Gate 1 remains unapproved; evidence categories 2, 4 and 5 remain FAILED. The
+register's older CI/candidate bindings and all human forms still need a final
+exact-package binding; the new CI does not transplant previous approvals.
+Historical uncommitted/no-CI descriptions below refer to their earlier snapshots.
 
 Latest September 5 preparation: the operator confirmed **USD 1,000 demo starting
 capital**, matching planned live capital; live orders remain unauthorized. See
