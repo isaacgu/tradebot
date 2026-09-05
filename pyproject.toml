@@ -12,6 +12,7 @@ license = { text = "Proprietary" }
 authors = [{ name = "Isaac" }]
 dependencies = [
   "prometheus-client>=0.21,<1",
+  "pyarrow>=21,<26",
   "pydantic>=2.10,<3",
   "PyYAML>=6.0,<7",
   "structlog>=24.4,<26",

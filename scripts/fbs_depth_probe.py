@@ -322,6 +322,9 @@ def _anchor(symbol: str, opens: list[datetime], prices: list[float]) -> dict[str
         "offset_hours_matching_bar_open": verdict.offset_hours,
         "epochs_are_true_utc": verdict.epochs_are_true_utc,
         "matches": {str(k): v for k, v in verdict.matches.items()},
+        # Per-offset denominators: how many bars actually TESTED each candidate.
+        # Without these a reader cannot tell 7-of-7 from 7-of-12.
+        "eligible": {str(k): v for k, v in verdict.eligible.items()},
         "tied_offsets": list(verdict.tied_offsets),
         "candidates_sharing_a_tick": verdict.shared_tick_discards,
         "observations_checked": verdict.observations,
@@ -381,6 +384,7 @@ def _boundary(symbol: str, *, anchor_supported: bool) -> dict[str, Any]:
                 "offset_hours_matching_bar_open": None,
                 "epochs_are_true_utc": None,
                 "matches": {},
+                "eligible": {},
                 "tied_offsets": [],
                 "candidates_sharing_a_tick": 0,
                 "observations_checked": 0,

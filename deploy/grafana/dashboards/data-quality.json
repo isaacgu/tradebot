@@ -1,0 +1,1248 @@
+{
+  "uid": "tradebot-data-quality",
+  "title": "Tradebot · Data & Quality",
+  "description": "Published Gate1 engineering evidence, separate from acquisition progress and gate approval.",
+  "tags": [
+    "tradebot",
+    "data-quality",
+    "evidence"
+  ],
+  "timezone": "Africa/Johannesburg",
+  "schemaVersion": 39,
+  "version": 2,
+  "refresh": "10s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "editable": true,
+  "links": [
+    {
+      "title": "Broker & Trades",
+      "type": "link",
+      "url": "/d/tradebot-broker",
+      "targetBlank": false
+    },
+    {
+      "title": "Trading System Overview",
+      "type": "link",
+      "url": "/d/tradebot-system",
+      "targetBlank": false
+    },
+    {
+      "title": "Acquisition Progress",
+      "type": "link",
+      "url": "/d/tradebot-acquisition",
+      "targetBlank": false
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Data & Quality evidence",
+      "type": "text",
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "noValue": "No evidence",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "## Data & Quality · Acceptance evidence\nThis page reads the published corpus report and its SHA-256 companion. [Acquisition](/d/tradebot-acquisition) records raw diagnostic history; a research-eligible dataset needs an immutable selection with source hashes, exclusions and acceptance records.\n\nA successful independent rebuild establishes reproducibility of the selected sample. Tick-quality failures, dated calendar coverage, the liquid-hours criterion, reference checks and approvals remain separate. Missing evidence stays unknown."
+      },
+      "targets": []
+    },
+    {
+      "id": 2,
+      "title": "Published report",
+      "type": "stat",
+      "description": "Reads the report path selected when the exporter was started; a matching report.sha256.json is required before measurements appear. Checksum verification establishes artifact integrity, not data acceptance.",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "No report yet",
+                  "color": "gray"
+                },
+                "1": {
+                  "text": "Awaiting checksum publication",
+                  "color": "orange"
+                },
+                "2": {
+                  "text": "Checksum verified",
+                  "color": "blue"
+                },
+                "3": {
+                  "text": "Invalid or incomplete report",
+                  "color": "red"
+                }
+              }
+            }
+          ],
+          "noValue": "No evidence",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_gate1_report_state",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Selected session days",
+      "type": "stat",
+      "description": "",
+      "gridPos": {
+        "x": 6,
+        "y": 4,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "No evidence",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "noValue": "No evidence",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_gate1_selected_days",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Selected primary ticks",
+      "type": "stat",
+      "description": "Exact primary rows selected by the published rebuild. These rows may carry quality flags; the count does not assert research eligibility.",
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "No evidence",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "noValue": "No evidence",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "locale",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_gate1_selected_primary_ticks",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Recorded reproducibility criterion",
+      "type": "stat",
+      "description": "Requires at least 30 days, independently identical rebuilds, unchanged raw files and unchanged implementation during the run. Does not approve Gate 1.",
+      "gridPos": {
+        "x": 18,
+        "y": 4,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Not satisfied",
+                  "color": "orange"
+                },
+                "1": {
+                  "text": "30-day rebuild recorded",
+                  "color": "blue"
+                },
+                "-1": {
+                  "text": "No evidence",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "noValue": "No evidence",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_gate1_reproducibility_recorded",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Independent rebuilds byte-identical",
+      "type": "stat",
+      "description": "Two separate clean-output roots rebuilt from the same immutable raw snapshot; includes complete clean file manifests.",
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "No",
+                  "color": "orange"
+                },
+                "1": {
+                  "text": "Yes · measured",
+                  "color": "blue"
+                },
+                "-1": {
+                  "text": "No evidence",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "noValue": "No evidence",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_gate1_independent_rebuilds_byte_identical",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Raw files unchanged",
+      "type": "stat",
+      "description": "",
+      "gridPos": {
+        "x": 6,
+        "y": 8,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "No",
+                  "color": "orange"
+                },
+                "1": {
+                  "text": "Yes · measured",
+                  "color": "blue"
+                },
+                "-1": {
+                  "text": "No evidence",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "noValue": "No evidence",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_gate1_raw_files_unchanged",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Implementation stable during run",
+      "type": "stat",
+      "description": "",
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "No",
+                  "color": "orange"
+                },
+                "1": {
+                  "text": "Yes · measured",
+                  "color": "blue"
+                },
+                "-1": {
+                  "text": "No evidence",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "noValue": "No evidence",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_gate1_implementation_unchanged",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Report code matches current files",
+      "type": "stat",
+      "description": "Compares the report's recorded code hashes with current repository files. Historical results remain historical if the code changes.",
+      "gridPos": {
+        "x": 18,
+        "y": 8,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "No",
+                  "color": "orange"
+                },
+                "1": {
+                  "text": "Yes · measured",
+                  "color": "blue"
+                },
+                "-1": {
+                  "text": "No evidence",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "noValue": "No evidence",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_gate1_report_code_current",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Measured tick-quality checks",
+      "type": "stat",
+      "description": "Recorded tick-quality summaries. A failure remains visible even when independent rebuilds are identical; inspect the causal flags and retrospective annotations below.",
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Indeterminate",
+                  "color": "orange"
+                },
+                "1": {
+                  "text": "Recorded checks passed",
+                  "color": "blue"
+                },
+                "2": {
+                  "text": "Issues reported",
+                  "color": "red"
+                },
+                "-1": {
+                  "text": "No evidence",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "noValue": "No evidence",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_gate1_tick_quality_state",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Expected-liquidity calendar",
+      "type": "stat",
+      "description": "Calendar evidence recorded by this report. A provisional diagnostic calendar is not an approved dated liquidity calendar.",
+      "gridPos": {
+        "x": 6,
+        "y": 12,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Indeterminate",
+                  "color": "orange"
+                },
+                "1": {
+                  "text": "Recorded checks passed",
+                  "color": "blue"
+                },
+                "2": {
+                  "text": "Issues reported",
+                  "color": "red"
+                },
+                "-1": {
+                  "text": "No evidence",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "noValue": "No evidence",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_gate1_calendar_state",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Dates missing calendar evidence",
+      "type": "stat",
+      "description": "Number of selected dates without the required liquidity-calendar evidence. Any positive count leaves the calendar-dependent acceptance criterion unresolved; -1 means the report is unavailable.",
+      "gridPos": {
+        "x": 12,
+        "y": 12,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "No evidence",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "noValue": "No evidence",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "locale",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_gate1_calendar_unknown_days",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Liquid-hours flagged-bar criterion",
+      "type": "stat",
+      "description": "No success is inferred without an approved dated calendar and a measured liquid-hours denominator.",
+      "gridPos": {
+        "x": 18,
+        "y": 12,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Indeterminate",
+                  "color": "orange"
+                },
+                "1": {
+                  "text": "Recorded checks passed",
+                  "color": "blue"
+                },
+                "2": {
+                  "text": "Issues reported",
+                  "color": "red"
+                },
+                "-1": {
+                  "text": "No evidence",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "noValue": "No evidence",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_gate1_liquid_hours_criterion_state",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Causal tick flags",
+      "type": "bargauge",
+      "description": "Flags known at the observation time and available to the causal clean/bar path.",
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "noValue": "No evidence",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_gate1_flag_rows{category=\"causal\"}",
+          "legendFormat": "{{flag}}",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "title": "Retrospective QA annotations",
+      "type": "bargauge",
+      "description": "Annotations requiring later observations. These must not alter historical trading decisions or causal bar inputs.",
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "noValue": "No evidence",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_gate1_flag_rows{category=\"retrospective\"}",
+          "legendFormat": "{{flag}}",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "title": "Report age",
+      "type": "stat",
+      "description": "Elapsed time since the producer completed this report. Age alone does not invalidate historical evidence.",
+      "gridPos": {
+        "x": 0,
+        "y": 25,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "noValue": "No evidence",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "time() - (tradebot_gate1_report_timestamp_seconds > 0)",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "title": "Current acquisition chunks",
+      "type": "stat",
+      "description": "Live acquisition may be ahead of the frozen sample used by this evidence report.",
+      "gridPos": {
+        "x": 6,
+        "y": 25,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "noValue": "No evidence",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_chunks_completed",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "title": "Remaining acceptance evidence",
+      "type": "text",
+      "description": "",
+      "gridPos": {
+        "x": 12,
+        "y": 25,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "noValue": "No evidence",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "### Evidence required before strategy use\nA checksum-verified, reproducible report can still contain quality failures. Resolve or explicitly exclude affected source partitions in a new immutable selection, record the dated liquidity calendar, and rerun the liquid-hours criterion using that selection.\n\nFive hand-verified bar checks, CI for the committed revision, independent human review and Principal approval remain separate records. This dashboard supplies observations and does not sign or approve them."
+      },
+      "targets": []
+    }
+  ]
+}

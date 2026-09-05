@@ -177,6 +177,7 @@ class AnchorVerdict:
     resolved: bool
     offset_hours: int | None
     matches: Mapping[int, int]
+    eligible: Mapping[int, int]
     tied_offsets: tuple[int, ...]
     shared_tick_discards: int
     observations: int
@@ -364,6 +365,7 @@ def score_anchor(observations: Sequence[AnchorObservation]) -> AnchorVerdict:
     evidence does not support.
     """
     scores: Counter[int] = Counter()
+    eligible: Counter[int] = Counter()
     discards = 0
     usable = 0
     incomplete = 0
@@ -385,6 +387,10 @@ def score_anchor(observations: Sequence[AnchorObservation]) -> AnchorVerdict:
             continue
         usable += 1
         for offset, tick in unique_ticks.items():
+            # Eligibility is PER OFFSET: this observation tested this candidate, whether
+            # or not it matched. Pooling it into one `usable` count lets a bar that
+            # discriminated only OTHER offsets inflate the winner's denominator.
+            eligible[offset] += 1
             if abs(tick.bid - observation.bar.open_price) <= PRICE_TOLERANCE:
                 scores[offset] += 1
 
@@ -395,6 +401,7 @@ def score_anchor(observations: Sequence[AnchorObservation]) -> AnchorVerdict:
             resolved=False,
             offset_hours=None,
             matches={},
+            eligible=dict(eligible),
             tied_offsets=(),
             shared_tick_discards=discards,
             observations=observations_checked,
@@ -412,6 +419,7 @@ def score_anchor(observations: Sequence[AnchorObservation]) -> AnchorVerdict:
             resolved=False,
             offset_hours=None,
             matches=dict(scores),
+            eligible=dict(eligible),
             tied_offsets=tied,
             shared_tick_discards=discards,
             observations=observations_checked,
@@ -425,22 +433,39 @@ def score_anchor(observations: Sequence[AnchorObservation]) -> AnchorVerdict:
         )
 
     winner = tied[0]
-    # A STRICT majority, and enough samples to have one. `top >= samples // 2` let
-    # 6/12 and even 2/5 through as "resolved", which is a coin toss dressed as a
-    # measurement. The live 10/12 and 12/12 FX results still clear this bar.
-    enough = samples >= MIN_ANCHOR_SAMPLES
-    majority = top * 2 > samples
+    # Both gates are measured against the WINNER'S OWN tested count, never the pooled
+    # usable count. An observation where the winner's tick collapsed onto another
+    # candidate tested every OTHER offset but told us nothing about this one, so
+    # counting it here would credit the winner with evidence that does not exist. That
+    # is how a 7-of-7 result presented itself as 7/12 and cleared a floor of 8.
+    #
+    # `tested - top` is therefore real contrary evidence: the winner had a clean shot
+    # and missed. A strict majority of those clean shots is the bar; the live 10/12
+    # and 12/12 FX results still clear it.
+    tested = eligible[winner]
+    enough = tested >= MIN_ANCHOR_SAMPLES
+    majority = top * 2 > tested
     resolved = enough and majority
     if not enough:
-        reason = f"only {samples} sample(s); at least {MIN_ANCHOR_SAMPLES} are needed"
+        reason = (
+            f"offset {winner} was tested in only {tested} observation(s); at least "
+            f"{MIN_ANCHOR_SAMPLES} are needed, and {usable} usable bar(s) do not supply "
+            "them when the candidate's own tick was shared elsewhere"
+        )
     elif not majority:
-        reason = f"offset {winner} led with {top}/{samples}, which is not a strict majority"
+        reason = (
+            f"offset {winner} matched {top} of the {tested} observation(s) that tested "
+            "it, which is not a strict majority"
+        )
     else:
-        reason = f"offset {winner} uniquely reproduced {top}/{samples} bar opens"
+        reason = (
+            f"offset {winner} uniquely reproduced {top} of the {tested} bar open(s) that tested it"
+        )
     return AnchorVerdict(
         resolved=resolved,
         offset_hours=winner if resolved else None,
         matches=dict(scores),
+        eligible=dict(eligible),
         tied_offsets=(),
         shared_tick_discards=discards,
         observations=observations_checked,

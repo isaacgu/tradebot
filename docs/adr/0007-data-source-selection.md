@@ -156,11 +156,28 @@ therefore remains the honest v1 scope.
   | GER40, US30, US500, US100 | no candidate reproduced a sampled bar open; 12/12 usable | **Unresolved** |
 
   The scoring rule has been tightened and the two FX rows still stand under it. A resolved
-  verdict now additionally requires at least `MIN_ANCHOR_SAMPLES = 8` **usable** samples and a strict
-  majority (`matches × 2 > usable_samples`). A bar is usable only after every candidate query has
-  completed and at least one candidate owns a non-shared first tick; discarded shared ticks and
-  incomplete queries no longer inflate the denominator. The FX rows clear both bars (10 of 12); the
-  index rows remain unresolved. A tie is never broken by candidate order.
+  verdict now additionally requires at least `MIN_ANCHOR_SAMPLES = 8` samples and a strict majority.
+  A bar is usable only after every candidate query has completed and at least one candidate owns a
+  non-shared first tick; discarded shared ticks and incomplete queries no longer inflate the
+  denominator. The FX rows clear both bars (10 of 12); the index rows remain unresolved. A tie is
+  never broken by candidate order.
+
+  **Both gates count the winner's OWN trials, not the pooled usable count.** A first attempt at this
+  measured both against a single `usable_samples` figure, which counted a bar as usable when *any*
+  candidate owned a non-shared tick. That is the wrong denominator: when the winning offset's tick
+  collapses onto a neighbour, the bar still tests every other candidate, so it inflated the winner's
+  evidence with bars that said nothing about it. Seven clean trials for offset 0 were reported as
+  `7/12` and cleared a floor of eight. The verdict now records `eligible[offset]` — how many bars
+  actually tested each candidate — and requires `eligible[winner] >= MIN_ANCHOR_SAMPLES` and
+  `matches[winner] × 2 > eligible[winner]`. `eligible − matches` is then real contrary evidence: the
+  candidate had a clean shot and missed. The probe artifact carries the per-offset `eligible` map so
+  a reader can tell 7-of-7 from 7-of-12, which neither `samples` nor `shared_tick_discards` revealed.
+
+  Note for the Principal, since SPEC §0 rule 9 reserves thresholds: a *strict majority* is a weak bar
+  for a property that is deterministic. A genuine boundary should reproduce the open on essentially
+  every bar that tests it, so `5/8` passing is arguably too permissive even though it is a majority.
+  The live FX evidence is 10/12 and 12/12, so raising the bar would not disturb it. Left as-is
+  pending your decision.
 
   **The FX conclusion, and it is a firm one.** The four-year histogram is `00:00 UTC`, i.e.
   19:00/20:00 New York, which is **not** the 17:00 New York internal FX day SPEC §3.4 mandates. The

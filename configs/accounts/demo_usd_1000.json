@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "profile_id": "fbs-demo-usd-1000",
+  "account_kind": "demo",
+  "broker_server": "FBS-Demo",
+  "currency": "USD",
+  "initial_balance": "1000.00",
+  "planned_live_initial_balance": "1000.00",
+  "execution_enabled": false,
+  "purpose": "Operator-confirmed capital baseline for future paper and cost-aware testing.",
+  "confirmation_source": "Principal confirmed a USD 1000 demo to match planned live starting capital in this task."
+}

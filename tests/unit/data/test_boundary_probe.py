@@ -516,3 +516,67 @@ def test_the_live_ten_of_twelve_result_still_resolves() -> None:
     assert verdict.matches == {0: 10}
     assert verdict.resolved
     assert verdict.offset_hours == 0
+
+
+# --- anchor denominators ---------------------------------------------------------
+
+
+def _winner_collapsed(day: int, *, collapsed: bool) -> AnchorObservation:
+    """One bar where offset 0 either has its own matching tick, or shares one with -1.
+
+    When it shares, BOTH offsets are discarded for this bar, so the bar tests every
+    other candidate but says nothing whatsoever about offset 0.
+    """
+    bar = _bar(day)
+    if not collapsed:
+        return _observation(bar, {0: (100 * day, bar.open_price)})
+    shared = (900 + day, bar.open_price)
+    return _observation(bar, {0: shared, -1: shared})
+
+
+def test_a_bar_that_could_not_test_the_winner_does_not_count_toward_its_floor() -> None:
+    """Seven clean trials must not clear a floor of eight by borrowing five others.
+
+    The five collapsed bars still test -2, -3, +1, +2 and +3, which is the ordinary
+    shape whenever the market is open after the boundary. Pooling them into a single
+    `usable` count credited offset 0 with evidence that does not exist, and reported it
+    as "7/12" against MIN_ANCHOR_SAMPLES = 8.
+    """
+    observations = [_winner_collapsed(day, collapsed=day > 7) for day in range(1, 13)]
+
+    verdict = score_anchor(observations)
+
+    assert verdict.matches == {0: 7}
+    assert verdict.eligible[0] == 7, "offset 0 was only ever tested by seven bars"
+    assert verdict.eligible[3] == 12, "the far offsets were tested by every bar"
+    assert verdict.samples == 12, "twelve bars were usable for SOME candidate"
+    assert verdict.resolved is False
+    assert verdict.offset_hours is None
+    assert "tested in only 7" in verdict.reason
+
+
+def test_eight_bars_that_genuinely_tested_the_winner_do_resolve() -> None:
+    """The floor counts real trials, so eight of them resolve where seven did not."""
+    observations = [_winner_collapsed(day, collapsed=day > 8) for day in range(1, 13)]
+
+    verdict = score_anchor(observations)
+
+    assert verdict.eligible[0] == 8
+    assert verdict.matches == {0: 8}
+    assert verdict.resolved is True
+    assert verdict.offset_hours == 0
+    assert "8 of the 8" in verdict.reason
+
+
+def test_a_clean_miss_is_contrary_evidence_against_the_winner() -> None:
+    """`eligible - matches` is a real failure: the candidate had its shot and missed."""
+    observations = [_winner_collapsed(day, collapsed=False) for day in range(1, 13)]
+    # Four bars where offset 0 has its own tick and it does NOT reproduce the open.
+    observations[:4] = [_observation(_bar(day), {0: (100 * day, 7.77)}) for day in range(1, 5)]
+
+    verdict = score_anchor(observations)
+
+    assert verdict.eligible[0] == 12
+    assert verdict.matches == {0: 8}
+    assert verdict.resolved is True, "8 of 12 is still a strict majority"
+    assert "8 of the 12" in verdict.reason
