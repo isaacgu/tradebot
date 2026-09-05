@@ -12,7 +12,7 @@ demo profile continues to have execution disabled.
   trades are not attributed to the bot.
 - Immutable data pipeline, source admission/quarantine, point-in-time calendar storage,
   reference-month evaluator, and separately preserved human approval statements.
-- Runnable causal decision replay and engineering research controls. The staged next
+- Runnable causal decision replay and engineering research controls. The additional
   increment adds synthetic execution/cost-accounting tests, not a production broker,
   portfolio/risk/OMS stack or accepted strategy.
 - All four localhost health endpoints returned HTTP 200 during this delivery check.
@@ -52,6 +52,42 @@ files; raw data and runtime artifacts remain Git-ignored.
 No historical CI result is treated as covering uncommitted source changes. A feature
 PR is not a merge or gate approval; its actual URL/SHA and results are supplied in the
 delivery message and PR checks, without claiming this pre-commit record is a signature.
+
+Initial platform candidate `e8149638373f08f38c8adcc356ae81be0fc404b9` was committed
+and pushed to [draft PR 4](https://github.com/isaacgu/tradebot/pull/4).
+[CI run 33959945323](https://github.com/isaacgu/tradebot/actions/runs/33959945323)
+passed both required jobs, `quality` and `secrets`. GitHub tested the PR merge
+`74375d2708882aa0450c82e2d39e69b4e8e1ae40` for that exact head, not the old Gate-0
+candidate. This is initial-platform evidence; later additions require fresh CI.
+The retained CI bundle verifies the downloaded artifact digest, all seven members,
+demo and metric checksums, SBOM, checkout identities and required job logs:
+`build/gate1/platform-publication-20260905/ci-33959945323/verification.json`, SHA-256
+`08ce3c96739884aea0a565369b3109450821e3c8b1b24954e5e7f3431f0250c7`.
+
+The decision replay run from that committed head completed 320 synthetic bars and
+published report SHA-256
+`3ba18eaa0b68211124b0365deee5f2d928ceaf540b0433d3bed795300b0d18bb` at
+`build/research/decision-replay/b7c8ce59884f5519d5045f828b2a76c4ed24a679520e4157416168ea104d14ec/report.json`.
+Prometheus confirmed verified artifact state and current implementation identity.
+No broker order or financial evaluation occurred.
+
+The separately reviewed [execution/accounting increment](execution-accounting-engineering.md)
+adds MARKET/GTC matching and exact supplied-cost arithmetic. Its 272 new tests and
+262 existing engine regressions passed in isolated staging, with 98.23% new-package
+branch-aware coverage. Root reviewed all three implementation modules and verified
+the exact nine-file publication manifest. Canonical full-platform verification and
+the subsequent committed-candidate CI are separate from that staging result.
+
+After byte-identical publication, canonical full-platform verification passed
+**1,234 warnings-as-errors tests**, 87.77% overall coverage, 96% core / 87% non-core
+coverage and 98.23% branch-aware coverage of the new execution package. Ruff format
+and lint, strict mypy across 108 source/test files, Bandit and diff checks passed.
+Canonical, repeat and staged synthetic reports matched; the deliberately invalid
+provenance attempt remained FAILED. Evidence:
+`build/execution-engine-canonical-verification-20260905/proof.json`, SHA-256
+`ae459d0bf66b119ed1d255897c7b34ed26b0eee9a91a8ec51713f927ccb266e4`.
+This is local integration verification, not full financial validation or CI for
+the subsequently committed execution increment.
 
 The earlier broader security review is **incomplete**, not a clean security scan.
 It raised unvalidated resource-exhaustion hypotheses for deliberately malformed

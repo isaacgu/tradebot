@@ -11,8 +11,8 @@ can show existing account activity without attributing that activity to this bot
 September 5 delivery status: the local dashboard and read-only broker observer are
 running; the decision-replay engine is runnable with the synthetic command below.
 Data admission and the reference-month evaluator are implemented, but do not approve
-training data or trading. The next engine increment is an offline simulated-fill and
-cost-accounting harness. It is not a connected paper/live broker. See the
+training data or trading. The additional engine increment is an offline simulated-fill
+and cost-accounting harness. It is not a connected paper/live broker. See the
 [current delivery record](docs/reports/platform_candidate_20260905.md) for verification,
 publication status and the remaining acceptance decisions.
 
@@ -58,7 +58,7 @@ causal features and auditable FX forecasts, without financial evaluation or exec
 | Acquisition and data | Phase 1 underway | Runner health, checkpoint progress, source coverage, raw integrity, gaps, flags and rebuild evidence |
 | Broker observation | Read-only local integration; separately verified broker delta | Actual account state, open positions, pending orders and quotes; no bot attribution or trading controls |
 | Calendars | Storage/query infrastructure; authoritative calendars still required | Field vintages, knowledge cutoffs, dated liquidity expectations, unknown/expired coverage |
-| Backtesting | Phase 2 pending | Reproducible runs, cost assumptions, fills, after-cost results and validation |
+| Backtesting | Phase 2 acceptance pending; synthetic MARKET/cost-accounting increment | Known-answer simulated fills and itemized invented cashflows now; complete cost models and financial validation later |
 | Research and strategies | Phase 3 pending; replay and synthetic research-control previews implemented | Replay provenance, engineering attempt ledger and chronological split controls now; economic trials, statistical validation and strategy gates later |
 | Portfolio, risk and execution | Phase 4 pending | Allocations, exposure, limits, halt state, order lifecycle and reconciliation |
 | Paper and live operation | Later gates pending | Actual uptime, fills, measured costs, PnL, alerts and recovery drills |
@@ -311,4 +311,25 @@ After publication, the canonical local suite passed **872 warnings-as-errors tes
 (88.40% coverage), Ruff formatting/lint, strict mypy, Bandit and the 96%/87%
 core/non-core coverage tiers. The log is `build/p3-root-verification-20260905/checks.log`.
 These are uncommitted local results, not CI or phase-gate approval; the existing
-Gate-1 evidence pack and dashboard replay pointer remain unchanged.
+Gate-1 evidence pack and dashboard replay pointer were unchanged by that increment.
+
+## Offline execution and cost-accounting preview
+
+The separate synthetic runner now tests market-order fills strictly after modelled
+latency, buy-at-ask / sell-at-bid execution, adverse slippage, supplied commissions
+and financing, and exact long/short cashflow attribution with direct FX conversion.
+It records four fixed known-answer cases, eight simulated fills, and each completed
+or failed engineering attempt. It uses no broker connection or downloaded market data.
+
+```bash
+uv run --no-sync python -m tradebot.backtest.execution_demo --output-root build/execution-smoke-local --attempt-id first --git-sha UNCOMMITTED
+```
+
+Use a new attempt ID for every retry. For committed evidence replace `UNCOMMITTED`
+with the actual full commit returned by `git rev-parse HEAD`; implementation hashes
+also bind the source bytes. This finite engineering smoke test is **not** the full
+SimBroker, an integrated strategy execution loop or profitability evidence. Its
+parameters are invented, not FBS terms or account/risk settings. The decision-replay
+dashboard does not automatically display its separate cost-accounting artifact.
+See the [execution engineering report](docs/reports/execution-accounting-engineering.md)
+for commands, known answers, checks and remaining implementation work.
