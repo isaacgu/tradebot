@@ -19,13 +19,20 @@ The reviewer and Principal must be different humans. An agent's review, a reques
 continue development, Gate-0 approval, or an unsigned form is not either signature.
 The authoritative category/status register remains [gate1_evidence.md](gate1_evidence.md).
 
+Committed source candidate `670b59a5d416c6ca9941bf7248d1f61fbfb2661a` now has
+successful `quality` and `secrets` jobs in
+[CI run 33960766304](https://github.com/isaacgu/tradebot/actions/runs/33960766304).
+CI is no longer absent. Bind this evidence to the final review package, or obtain
+new CI if the source candidate changes; the remaining technical and human checks
+are not supplied by CI.
+
 ## Remaining work before an APPROVED decision
 
 | Item | Verified position | Closure needed |
 |---|---|---|
 | Thirty-day immutable rebuild | PASSED mechanically: 6,646,477 ticks, 41,701 M1 bars, byte-identical rebuilds | Bind the preserved results to the reviewed implementation and final candidate |
 | Five venue-matched bars | Five automated Bid comparisons and five production Mid comparisons match | A human must inspect and hand-verify all five; record outcomes in the reviewer form |
-| DST and quality tests | Latest local suite: 962 warnings-as-errors tests passed, 87.20% coverage; static, dependency audit and coverage tiers passed; see [pre-use verification](preuse_preparation_20260905.md#final-local-verification) | Successful `quality` and `secrets` CI jobs on the final committed candidate; preserve relevant logs/artifacts |
+| DST and quality tests | Combined local suite: 1,234 warnings-as-errors tests, 87.77% coverage; static and coverage tiers passed. Committed-candidate `quality` and `secrets` CI now passed; see [delivery verification](platform_candidate_20260905.md#verification-and-publication) | Bind the recorded candidate CI/logs to the final package; reverify later material changes |
 | Reference-month liquid-hours quality | INDETERMINATE; October diagnostic is provisional, not the required clean-bar quality rate | Reviewed dated liquidity expectations, an explicit prospectively agreed flag-counting policy, and an actual P1 reference-month numerator/denominator proving the unchanged `<0.1%` criterion |
 | Point-in-time calendar query | Narrow query-at-T test mechanically passes | Attach its identity and current CI; do not mistake it for a historical FX liquidity calendar |
 | Observability and inherited obligations | PROVIDED | Retain the hashed exposition, screenshots and checker evidence |
@@ -90,7 +97,8 @@ to another machine. Do not upload raw broker files or personal data by implicati
 2. Review the exact commit scope, including the existing dirty-worktree changes.
    Commit the agreed candidate, submit a normal PR, and obtain both required CI jobs.
    Do not push directly to protected `master` or treat old Gate-0 CI as current evidence.
-   No commit, push or PR was made by this approval-document preparation.
+   The subsequent delivery committed the platform and synthetic execution increment
+   in PR 4 with passing CI; the original approval-document preparation made no commit.
 3. Freeze an unsigned review package: full candidate commit, SPEC hash, immutable
    evidence manifest/snapshot, dataset, calendar and counted-flag policy hashes, and
    CI URL/SHA/job results. Both people must review and cite that same package. The
@@ -114,6 +122,6 @@ to another machine. Do not upload raw broker files or personal data by implicati
 uv run --no-sync python scripts/check_evidence.py docs/reports/gate1_evidence.md
 ```
 
-The current expected result is nonzero for categories 1, 2, 4 and 5. This is intentional.
+The current expected result is nonzero for categories 2, 4 and 5. This is intentional.
 Gate 1 approval would authorize the next gated development phase only, not strategy
 financial acceptance, paper/live trading or bypassing later gates.

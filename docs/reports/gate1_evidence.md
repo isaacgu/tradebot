@@ -5,6 +5,12 @@ This pack records available artifacts and unresolved acceptance criteria; it doe
 gate, authorize strategy evaluation, or enable trading. Status `FAILED` below includes required
 evidence that is not yet supplied. Nothing is deferred past its frozen due gate.
 
+September 5 delivery update: committed source candidate
+`670b59a5d416c6ca9941bf7248d1f61fbfb2661a` now has successful required PR CI.
+Category 1 is supplied; categories 2, 4 and 5 remain FAILED. Historical passages
+below that say no candidate CI existed describe earlier snapshots, not this update.
+The synthetic execution increment does not approve Gate 1 or strategy training.
+
 For the remaining work and exact places where humans record decisions, start with the
 [Gate-1 approval guide](gate1_approval_guide.md). The
 [independent-review form](gate1_independent_review.md) and
@@ -26,11 +32,21 @@ Frozen SPEC judged against: `docs/SPEC.md` v1.0, SHA-256
 
 | # | Category | Status | Content |
 |---|---|---|---|
-| 1 | CI run on a committed git SHA | FAILED | The current P1 candidate has no attached successful committed-SHA CI run. Commit the reviewed candidate and attach its immutable CI URL and full SHA after required jobs pass. Gate-0 CI does not certify these changes. |
+| 1 | CI run on a committed git SHA | PROVIDED | [CI run 33960766304](https://github.com/isaacgu/tradebot/actions/runs/33960766304) passed `quality` and `secrets` for committed source candidate `670b59a5d416c6ca9941bf7248d1f61fbfb2661a` in [PR 4](https://github.com/isaacgu/tradebot/pull/4). The tested PR merge is `4c3a02a07f9f31d3c4d836b47802f1dab5e63144`. This supplies CI, not data acceptance, human sign-off or approval of later candidate changes. |
 | 2 | Report / manifest artifact hashes | FAILED | The replacement 30-day reproducibility report is PASSED: `build/gate1/30day-stable-b102ecdd/report.json` SHA-256 `3c7226e91d4c9a0a632ee85ed8ad273d6493256c0e0427c16e6aca5f047682bb`, independently checked against actual files. Calendar integration: `docs/reports/gate1_calendar.json` SHA-256 `f6321f15d29e8bf2a9d0aee1f8d5ccf8d92d526690f8137a33b1e937da3c1604`; broker reference bundle: `build/gate1/reference/bundle.sha256.json` SHA-256 `4805f4be4b1e13516e910697260736c8c80234130ce365b4d20089ab1e16487e`. The first run remains ineligible after code drift. A reference-month quality acceptance report is still owed; sample quality is FAILED and approved liquidity coverage is absent. |
 | 3 | Observability evidence | PROVIDED | Actual P1 capture at 2026-09-04 20:15 UTC: `build/gate1/observability/exposition-20260904T201542Z.prom` SHA-256 `058ac5c96036836a7bd92a07705d9e5b381b4c6f269e09a60e0492ae0a8b16b7`; `build/gate1/observability/verification-20260904T201542Z.json` SHA-256 `a7edf47a3cc47f47d5d37e213d71ab2dd9a3e905f79ca1c55717d2f4362eb4e5`; actual rendered `build/gate1/observability/data-quality-before-report.png` SHA-256 `50ba2948f5b51422e9dbbec4e10c1b0c1ce4a2d4344013ad7bf2a706b0dc9be6`. This proves observability/format delivery, not liquid-hours quality acceptance or Gate approval. Later broker/current-navigation verification is recorded separately. |
 | 4 | Independent reviewer sign-off | FAILED | Isaac reports Delsa Mashiki's approval; preserved in [the receipt](gate1_approval_receipt_20260905.md). Delsa's five hand checks, independence declaration and final candidate/evidence-bound [review record](gate1_independent_review.md) remain incomplete. This attributed statement and agent QA do not complete the required review. |
 | 5 | Principal sign-off | FAILED | Isaac Gumbi's APPROVE entries and direct confirmation are recorded. Final candidate/evidence/CI bindings and the signed independent-review hash in [the Principal record](gate1_principal_approval.md) remain incomplete; the statement does not establish missing technical acceptance. |
+
+## Current candidate CI receipt
+
+The successful source-candidate CI is retained and independently verified at
+`build/gate1/platform-publication-20260905/ci-33960766304/verification.json`, SHA-256
+`45db4cbeeba5157f6888d85ade8eee40e2f82a9dd81e69afaf355da70535e74d`.
+It confirms the head/merge/base identities, required jobs, 1,234 tests, artifact
+archive digest, all demo/metric checksums and SBOM. The original job logs and
+downloaded evidence remain alongside it. This is not the missing reference-month
+acceptance report or a human decision.
 
 ## Inherited obligations from Gate 0
 

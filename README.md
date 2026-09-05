@@ -162,8 +162,10 @@ human decision documents are the [independent reviewer sign-off](docs/reports/ga
 and [Principal sign-off](docs/reports/gate1_principal_approval.md#final-principal-decision).
 Isaac's approval and his report of Delsa Mashiki's approval are preserved in the
 [approval receipt](docs/reports/gate1_approval_receipt_20260905.md). The final
-evidence-bound records are incomplete: technical evidence, current committed-SHA CI
-and five documented human bar checks remain outstanding. An agent cannot complete
+evidence-bound records are incomplete: technical evidence and five documented human
+bar checks remain outstanding. CI now passes for the candidate recorded in the
+[delivery report](docs/reports/platform_candidate_20260905.md), but still needs to
+be bound to the final human review package. An agent cannot complete
 those personal checks or invent either signature.
 
 - Review the completed 30-day reproducibility evidence and investigate the quality findings
@@ -174,7 +176,8 @@ those personal checks or invent either signature.
   evidence. The automated checks are not human signatures.
 - Resolve the reference-month counted-flag definition and denominator explicitly. The live
   dashboard and inherited screenshot/checker obligations are delivered, not quantitative acceptance.
-- Obtain committed-SHA CI evidence and separate independent human and Principal sign-offs.
+- Bind the passed committed-candidate CI to the final package and complete the separate
+  independent human and Principal records.
 
 The evidence checker validates document structure, frozen SPEC identity, local artifact hashes
 and carried obligations. It cannot authenticate human signatures or approve a gate:

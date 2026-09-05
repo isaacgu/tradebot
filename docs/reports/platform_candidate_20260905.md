@@ -89,6 +89,30 @@ provenance attempt remained FAILED. Evidence:
 This is local integration verification, not full financial validation or CI for
 the subsequently committed execution increment.
 
+The execution increment was then committed as
+`670b59a5d416c6ca9941bf7248d1f61fbfb2661a` and pushed to the same draft PR.
+[CI run 33960766304](https://github.com/isaacgu/tradebot/actions/runs/33960766304)
+passed `quality` and `secrets`; the tested PR merge is
+`4c3a02a07f9f31d3c4d836b47802f1dab5e63144`. Nothing was merged to `master`.
+Retained CI verification:
+`build/gate1/platform-publication-20260905/ci-33960766304/verification.json`, SHA-256
+`45db4cbeeba5157f6888d85ade8eee40e2f82a9dd81e69afaf355da70535e74d`.
+The original metadata, job logs and checksum-verified artifact download are preserved.
+
+Two actual executions using that committed marker (`delivery-first` and
+`delivery-repeat`) completed four invented cases/eight simulated fills each and
+produced identical report bytes. Their separate ledger records two completed,
+zero failed and zero incomplete attempts; no broker orders were submitted.
+Report: `build/execution-smoke-670b59a/artifacts/f56c94658ed6d1a7f3be0eab5c8f771b37523e67fc18556301cddf26bcd6b681/report.json`,
+SHA-256 `f56c94658ed6d1a7f3be0eab5c8f771b37523e67fc18556301cddf26bcd6b681`.
+This hash differs from the staged/base-marker report because the declared commit
+changed, not because a financial result or fixture was retuned.
+
+Gate-1 category 1 now records the successful source-candidate CI. Categories 2, 4
+and 5 remain FAILED: the calendar/counting/month evidence and completed human review
+package are still required. Documentation recorded after a source commit references
+that exact tested source candidate; it does not copy human approval to a new identity.
+
 The earlier broader security review is **incomplete**, not a clean security scan.
 It raised unvalidated resource-exhaustion hypotheses for deliberately malformed
 operator-selected gzip, decimal and Parquet inputs, plus a diagnostic calendar-size

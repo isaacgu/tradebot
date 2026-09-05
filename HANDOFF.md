@@ -2,6 +2,19 @@
 
 ## Current assignment and status
 
+Latest delivery: platform `e8149638373f08f38c8adcc356ae81be0fc404b9` and synthetic
+execution/accounting `670b59a5d416c6ca9941bf7248d1f61fbfb2661a` are committed and
+pushed in [PR 4](https://github.com/isaacgu/tradebot/pull/4), with required CI passing.
+Combined canonical verification passed 1,234 warnings-as-errors tests. Both the
+320-bar decision replay and the four-case execution/accounting runner were run
+from committed source; no broker orders or training eligibility were enabled.
+The latter is a MARKET/GTC synthetic foundation, not a full SimBroker or integrated
+trading system. See [the delivery record](docs/reports/platform_candidate_20260905.md).
+Gate-1 category 1 (CI) is now PROVIDED; categories 2, 4 and 5 remain FAILED. Historical
+uncommitted/no-CI descriptions below refer to the earlier snapshots they describe.
+The acquisition task owns the decision-ready calendar/counting and complete-month
+resolution plan; it is not automatically adopted or implemented by this delivery.
+
 Latest September 5 preparation: the operator confirmed **USD 1,000 demo starting
 capital**, matching planned live capital; live orders remain unauthorized. See
 `configs/accounts/demo_usd_1000.json`, the read-only `scripts/verify_demo_baseline.py`,
