@@ -4,6 +4,28 @@ Prepared 2026-09-05. **NOT READY FOR GATE CLOSURE. Approval statements received;
 final evidence-bound sign-offs remain incomplete.**
 This is the route to closing Gate 1, not a declaration that it has passed.
 
+## Latest position — September 5, after the completed rebuilds
+
+Both source-frozen v2 rebuild jobs have finished with byte-identical outputs. The
+30-day sample now contains 7,446,824 primary ticks and 40,398 one-minute bars;
+the separate October reference month covers all 23 target sessions. These newer
+artifacts and their audits are recorded in [the current evidence pack](gate1_evidence.md).
+Earlier candidate/count/status rows below remain historical preparation context.
+
+The actual October liquid-window diagnostic is **24 / 4,410 = 0.544217687%**,
+which fails the unchanged strict `<0.1%` comparison. Its formal status is
+INDETERMINATE because the exact approval binding is absent; supplying that binding
+alone would not fix the numerical failure. The 17 gap minutes are already present
+in preserved primary captures, and seven separate price-outlier minutes also
+remain. No import defect or justified source correction has been demonstrated.
+
+Isaac's QA-definition and sign-off approvals, and his report of Delsa's bar-check
+and sign-off approvals, are preserved in [the confirmation](gate1_confirmation_20260905.md).
+Do not ask for the same general approvals again. Specific missing decision times,
+review observations and final artifact bindings remain distinct from the received
+statements. Gate 1 is still open; permission to proceed toward Gate 2 is conditional
+on actual closure, not on the mechanical rebuilds alone.
+
 Isaac's approval entries and his report of Delsa Mashiki's independent approval are
 preserved in the [approval receipt](gate1_approval_receipt_20260905.md). No personal
 check, missing evidence binding or technical acceptance is inferred from those statements.

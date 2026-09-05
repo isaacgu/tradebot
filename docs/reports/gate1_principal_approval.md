@@ -1,5 +1,17 @@
 # Gate 1 — Principal decisions and final approval
 
+Latest confirmation, 2026-09-05: Isaac explicitly approves the exact proposed QA
+definition and confirms his sign-off approval, with Delsa's bar-check and sign-off
+approval reported in the same message. See the
+[confirmation receipt and exact definition hashes](gate1_confirmation_20260905.md).
+The pre-evaluation definition decision is now received; the old NOT APPROVED
+definition rows below are historical. They do not require another general approval.
+The subsequent unbound reference-month diagnostic measures 24/4,410 flagged
+minutes (0.544217687%), above the strict <0.1% requirement; see
+[current technical evidence](gate1_evidence.md). Final evidence-manifest binding
+remains pending; reported approval does not establish technical acceptance or resolve
+historical timestamp accuracy beyond the definition's disclosed UTC QA baseline.
+
 Update 2026-09-05: Isaac's approval entries are retained below; see the
 [approval receipt](gate1_approval_receipt_20260905.md) for the statements received
 and remaining bindings. They do not establish that pending technical checks passed.

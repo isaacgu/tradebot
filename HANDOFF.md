@@ -17,15 +17,110 @@ or an always-on trading system. Real-data training was not queued or performed.
 
 The acquisition task's source-frozen verification sequence is
 `build/gate1/reference-repair-verification-20260905-v2/`, launched 12:31:33 UTC.
-Its observed log reached reference-month rebuild 1/2 after importing 25 inputs;
-no final result existed at observation. Preserve all run inputs and do not start a
-duplicate. The source-backed v4 calendar/counting definition remains a proposal
-requiring the recorded Delsa/Isaac decision, not an adopted FBS session schedule.
+The October reference-month job completed at 14:28:03 UTC with byte-identical
+rebuilds and unchanged implementation, raw files and calendar. Its report is
+`build/gate1/reference-repair-verification-20260905-v2/reference-month/report.json`,
+SHA-256 `8d65788e54ce0eabedcad2022a65624500ecc5d820b54b1221741de4ed15b684`.
+Coverage is 23 target sessions / 5,288,101 target ticks; the 5,790,990 total ticks
+and 34,736 one-minute bars include prehistory/lookahead context. These are producer
+reproducibility results, not a passing liquid-hours quality rate. The seeded
+random-30-day job completed at 16:56:55 UTC with return 0, byte-identical rebuilds
+and unchanged inputs. Its report SHA-256 is
+`a0c7e4047d9866b4fef76a072e4512452b4b2abd27f21f31bc85ae5b8ece52b3` at
+`build/gate1/reference-repair-verification-20260905-v2/random-30day/report.json`.
+The overall sequence is ENGINEERING_PASSED, with result SHA-256
+`0f3a3466ca6b04425495059131d8e36531fb3539b1045192994f1c402fce0852` at
+`build/gate1/reference-repair-verification-20260905-v2/result.json`.
+Independent final random-sample artifact audit passed 65/65 checks, covering both
+16-file inventories / 32 file hashes and footer totals of 7,446,824 ticks and
+40,398 one-minute bars per rebuild. Audit:
+`build/gate1/random-30day-root-audit-20260905-v1/audit.json`, SHA-256
+`7cb739df0d42a6fcf46efb38617afadad7a14e70d5d2b311144b18848aa20204`.
+All 34 outer pins and 29 report source pins match; the latter also match the
+report-start commit `ad58383` blobs. Neither completion nor the launcher's static
+pending-definition label supersedes the
+separate failed numerical diagnostic below. Root also verified all
+29 declared source files match committed candidate `5b56316` and all 34 launch pins
+remain unchanged. Preserve all run inputs and do not start a duplicate.
+
+The completed reference artifact's independent metadata/hash audit passed 41/41
+checks at 14:54:06 UTC, including both six-file clean inventories, all 12 file hashes
+and Parquet footer totals. Audit:
+`build/gate1/reference-month-root-audit-20260905-v1/audit.json`, SHA-256
+`1e797bfa4b22483093ca1db4c1491a52dde482de3efe28149abd3a884bc81c0c`.
+It did not decode data rows, rehash raw inputs, compute the liquid-window rate or
+perform a third rebuild.
+
+The sole unbound liquid-window diagnostic finished at 15:08:44 UTC, exit 2 as
+expected for its absent approval binding, with no timeout or changed inputs.
+Report: `build/gate1/reference-month-unbound-diagnostic-20260905-v1/report.json`,
+SHA-256 `7e1c572e5bcb9d666f4faa4d2418e46446f3299ed2e2d548dfd7a73b100d00aa`.
+It measures **24 / 4,410 flagged expected-minute bins = 0.544217687%**, so the
+unchanged strict `<0.1%` comparison is false (at most 4 bins would satisfy it).
+All 4,410 expected minutes are observed; no expected minutes are missing and the
+producer inventory verifies. Formal report status remains INDETERMINATE because
+the hash-bound approval record is absent, but completing approval metadata alone
+would not make this numerical result pass. Do not describe timestamps as the only
+remaining blocker. The completed read-only drilldowns below account for the exact
+24 bins and their flag contributions/overlaps; no threshold, window, exclusions,
+source epochs or detector parameters may be tuned to obtain acceptance. Original
+failed evidence and all completed producer inputs/outputs must remain untouched.
+
+Independent unbound-diagnostic audit passed 77/77 checks, including all 49 launched
+input pins, receipt/sidecar hashes, and calendar arithmetic (21 windows x 210
+minutes = 4,410 unique bins). Audit:
+`build/gate1/reference-unbound-root-audit-20260905-v1/audit.json`, SHA-256
+`20f126a288e1accb8e2d6758a3fb0f00a52492c512bee1bf09c7a9a7af6cadf4`.
+This verifies the diagnostic evidence and arithmetic, not Gate acceptance; no
+evaluator rerun or minute-level attribution occurred in that audit.
+
+The subsequent targeted forensic review reconciles the 24 bins to **17 GAP minutes
+and 7 retrospective PRICE_OUTLIER minutes**, with no overlap and no in-window
+SPREAD_OUTLIER contribution. All 12 forensic-bundle artifact hashes were independently
+checked by root. Bundle:
+`build/gate1/reference-minute-forensics-20260905-v1/forensic-bundle.json`, SHA-256
+`90c5651ed2c6178ccf9e769bfe455864cd6cf154771cc12c92ef8789670daf74`.
+The gap intervals are 10.22–27.367 seconds inside otherwise populated minutes.
+Targeted detector conditions were corroborated, and 186 unique neighbouring source
+rows matched imported raw sequence/time/bid/ask after all 27 raw files were rehashed.
+No counting, targeted-predicate or neighbouring raw-to-clean conversion mismatch
+was demonstrated; this is not proof that every detector flag is an economically bad
+quote or that the broker returned every possible tick. See the bundle's README
+for its fixed-config/helper and fresh-Decimal-moment limitations.
+
+The subsequent original-capture comparison is complete. All 17 gaps are present
+in 12 preserved primary gzip streams (2,566,742 rows scanned), with zero strictly
+interior ticks, matching endpoint lineage and no timestamp regressions. No
+primary-capture-to-import/clean omission was demonstrated. Bundle:
+`build/gate1/gap-capture-comparison-20260905-v1/evidence-bundle.json`, SHA-256
+`0a4577221d630f3601e62426a9ebc54e63a6d775807aa392884404f6e3b4ceb9`.
+Root verified the bundle and all six linked artifact hashes. The 12 checkpoints
+attest identical repeat sequences, but no separate identical-repeat gzip files
+were retained. Repeat agreement is recorded hash evidence, not a second direct
+row inspection; original API completeness and shared terminal-cache/broker-history
+effects remain unknown. The existing evidence does not justify clearing flags or
+re-importing unchanged data as a repair. New targeted demo recapture retaining both
+responses, or relevant broker evidence, would cross the next separately authorized
+investigation boundary; neither has occurred. Include the seven price-spike minutes
+in any proposed follow-up: those alone exceed the fixed quality budget. Preserve
+the failed result and all original bytes; no source correction, rule change or new
+month selection is authorized by these findings. Gate 1 remains open, so the user's
+conditional authorization to proceed toward Gate 2 has not taken effect.
+
+The source-backed v4 calendar/counting definition has subsequently
+received Isaac's approval and his report of Delsa's concurrence; see the
+[exact confirmation](docs/reports/gate1_confirmation_20260905.md). Preserve the
+frozen draft bytes; the data owner is preparing separately traceable reviewed
+inputs. This is a project QA definition, not an adopted FBS session schedule.
 
 Gate 1 remains unapproved; evidence categories 2, 4 and 5 remain FAILED. The
 register's older CI/candidate bindings and all human forms still need a final
 exact-package binding; the new CI does not transplant previous approvals.
-Historical uncommitted/no-CI descriptions below refer to their earlier snapshots.
+The same confirmation also records Isaac's sign-off approval and his report of
+Delsa's approval for the five bar checks and final sign-off. Do not repeat requests
+for general approval; identify any specific missing observation or new artifact
+requiring review once the final quality result exists. Historical uncommitted/no-CI
+and earlier missing-approval descriptions below refer to their earlier snapshots.
 
 Latest September 5 preparation: the operator confirmed **USD 1,000 demo starting
 capital**, matching planned live capital; live orders remain unauthorized. See

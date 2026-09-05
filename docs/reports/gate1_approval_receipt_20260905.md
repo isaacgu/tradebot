@@ -4,6 +4,16 @@ This record preserves the decisions received so far. **Gate 1 is not yet closed:
 the final candidate/evidence bindings and required technical acceptance remain incomplete.
 It does not replace either person's final, evidence-bound review form.
 
+## Subsequent confirmation — 2026-09-05
+
+Isaac has now explicitly confirmed approval of items 2 and 3: the exact proposed QA
+definition and the bar-check/sign-off approvals, with Delsa's concurrence reported
+by Isaac. The [new confirmation receipt](gate1_confirmation_20260905.md) preserves
+his exact message, attribution and definition hashes. General approval is no longer
+an unanswered request. No per-bar observations or final not-yet-produced report
+bindings are invented. The older statements and checklist below are retained as
+history; use the new receipt for the latest approval state.
+
 ## Statements and provenance
 
 | Role | Person | Statement received | Provenance and limits |

@@ -5,6 +5,142 @@ This pack records available artifacts and unresolved acceptance criteria; it doe
 gate, authorize strategy evaluation, or enable trading. Status `FAILED` below includes required
 evidence that is not yet supplied. Nothing is deferred past its frozen due gate.
 
+Latest human confirmation, 2026-09-05: Isaac approves the exact proposed v4 QA
+definition and confirms his sign-off approval; he reports Delsa's approval for the
+definition, five bar checks and final sign-off. The
+[new receipt](gate1_confirmation_20260905.md) records the exact message, attribution
+and definition hashes. General approval is received, not an unanswered request.
+At the time of that confirmation the new quality result and final evidence binding
+were absent. The subsequently completed diagnostic below fails the numerical
+criterion; final binding remains incomplete. The confirmation does not change
+Gate status or turn later checks into passes.
+Older approval descriptions below are historical; no per-bar observations or
+independently received reviewer signature are fabricated by this update.
+
+Latest reference-month milestone: the October EURUSD producer finished both
+byte-identical rebuilds at 14:28:03 UTC on September 5. Report:
+`build/gate1/reference-repair-verification-20260905-v2/reference-month/report.json`,
+SHA-256 `8d65788e54ce0eabedcad2022a65624500ecc5d820b54b1221741de4ed15b684`.
+It includes all 23 target close-dated sessions / 5,288,101 target ticks. Its
+5,790,990 total ticks and 34,736 one-minute bars include context, not only October
+targets. Independent actual-clean-file/hash/metadata audit passed 41/41 checks:
+`build/gate1/reference-month-root-audit-20260905-v1/audit.json`, SHA-256
+`1e797bfa4b22483093ca1db4c1491a52dde482de3efe28149abd3a884bc81c0c`.
+The broader producer quality summary is still FAILED and its reference acceptance
+is INDETERMINATE; neither is a computed result for the approved liquid-window
+criterion. The random-30-day job subsequently completed at 16:56:55 UTC with return
+0, byte-identical rebuilds and unchanged inputs. Its report is
+`build/gate1/reference-repair-verification-20260905-v2/random-30day/report.json`,
+SHA-256 `a0c7e4047d9866b4fef76a072e4512452b4b2abd27f21f31bc85ae5b8ece52b3`.
+The overall run's ENGINEERING_PASSED result is
+`build/gate1/reference-repair-verification-20260905-v2/result.json`, SHA-256
+`0f3a3466ca6b04425495059131d8e36531fb3539b1045192994f1c402fce0852`.
+Independent final random-sample artifact audit passed 65/65 checks: both 16-file
+inventories / 32 file hashes match, with footer totals of 7,446,824 ticks and
+40,398 one-minute bars in each rebuild. All 34 outer pins and 29 report code pins
+match current files; all 29 also match report-start commit `ad58383` blobs. Audit:
+`build/gate1/random-30day-root-audit-20260905-v1/audit.json`, SHA-256
+`7cb739df0d42a6fcf46efb38617afadad7a14e70d5d2b311144b18848aa20204`.
+No raw-row decoding, detector rerun or third rebuild was performed by that audit.
+The launcher's static pending-definition status is not an up-to-date approval decision and does
+not supersede the separate diagnostic below. These new artifacts supplement the
+historical rows without closing category 2, either final human binding, or Gate 1.
+
+### Measured liquid-window diagnostic — September 5, 15:08 UTC
+
+The completed, explicitly unbound evaluation now supplies actual counts under the
+confirmed October EURUSD definition: **24 flagged expected-minute bins / 4,410
+expected bins = 0.544217687%**. This exceeds the unchanged strict `<0.1%` criterion;
+`24 * 1000 < 4410` is false. At this denominator, no more than 4 flagged bins would
+satisfy the rule. All 4,410 expected minutes are observed; missing expected minutes
+are zero, calendar coverage is complete and producer inventory verification passes.
+
+Report: `build/gate1/reference-month-unbound-diagnostic-20260905-v1/report.json`,
+SHA-256 `7e1c572e5bcb9d666f4faa4d2418e46446f3299ed2e2d548dfd7a73b100d00aa`.
+Execution receipt:
+`build/gate1/reference-month-unbound-diagnostic-run-20260905-v1/result.json`, SHA-256
+`379dfa2d3e66ab48a64ef901d3f4144e4194891f71a060c920e4f8d7f898fb61`.
+The actual command returned 2, recorded `DIAGNOSTIC_WRITTEN_UNBOUND`, with no timeout
+or changed inputs. Formal evaluation status is INDETERMINATE due to the deliberately
+absent hash-bound approval record; the numerical comparison is nevertheless false.
+Neither the formal status nor this note is a Gate decision.
+
+Independent artifact/calendar/arithmetic audit passed 77/77 checks: all 49 launched
+input pins, exact scope and receipt hashes matched, and the calendar independently
+yielded 21 x 210 = 4,410 unique expected minutes. Audit:
+`build/gate1/reference-unbound-root-audit-20260905-v1/audit.json`, SHA-256
+`20f126a288e1accb8e2d6758a3fb0f00a52492c512bee1bf09c7a9a7af6cadf4`.
+No evaluator rerun or row-level attribution was performed by that audit.
+
+This is a minute-union metric, not flagged tick count or sum of flag categories.
+Report-wide flag observations and context-inclusive producer counts must not be
+presented as the composition of these 24 liquid-window bins. The completed
+read-only attribution and capture drilldowns below establish their limited findings.
+Missing decision timestamps remain a separate recorded question. Supplying them
+alone cannot make the measured rate pass. No threshold relaxation, result-driven
+calendar/exclusion changes, source-price edits or invented signatures are authorized.
+
+### Targeted flag attribution and raw lineage
+
+The completed forensic extraction accounts for the 24 expected-window bins as
+**17 GAP minutes + 7 retrospective PRICE_OUTLIER minutes**, without overlap.
+There are no in-window SPREAD_OUTLIER minutes. Ten price-flagged ticks contribute
+only seven minutes; category/tick counts are not substituted for the minute union.
+
+All 17 gap intervals are 10.22–27.367 seconds long, with sufficient prior positive
+cadence history and more than 10 seconds of QA-window overlap. They occur within
+minutes that still contain bars, so zero missing minute bars does not contradict
+these flags. The ten price conditions corroborate the configured jump/reversion
+predicates using fresh Decimal moments; this is not a bit-identical rolling-state
+replay. All 27 imported raw files were rehashed, and 186 unique selected neighbour
+rows matched sequence identity, event milliseconds, bid and ask in clean output.
+
+No targeted counting/predicate/neighbour-conversion mismatch was found. That does
+not prove every flag is an economically bad quote, or that the historical broker
+responses contain every market tick. The independent context review and root's
+12-artifact bundle hash check support this bounded forensic evidence, not a gate
+approval or a reason to clear the flags.
+
+Bundle: `build/gate1/reference-minute-forensics-20260905-v1/forensic-bundle.json`,
+SHA-256 `90c5651ed2c6178ccf9e769bfe455864cd6cf154771cc12c92ef8789670daf74`.
+Its README and exact 24-minute CSV are pinned within the bundle. Repeated quote
+values versus duplicate sequence
+identities are already distinguished in project policy; no deduplication defect
+was established by this review.
+
+### Original-capture comparison and remaining evidence boundary
+
+The bounded comparison of all 17 GAP windows is complete: 12 preserved primary
+gzip streams, containing 2,566,742 source rows, have zero ticks strictly inside
+each pinned gap interval. All 17 endpoint lineages match imported raw/clean data,
+and no timestamp regressions occur in these streams. Full primary-file byte and
+semantic hashes, sizes and row counts reconcile with the original checkpoints.
+No primary-capture-to-import/clean omission was demonstrated.
+
+Bundle: `build/gate1/gap-capture-comparison-20260905-v1/evidence-bundle.json`,
+SHA-256 `0a4577221d630f3601e62426a9ebc54e63a6d775807aa392884404f6e3b4ceb9`.
+Root verified this bundle and all six linked artifact hashes. Its README, summary,
+per-capture evidence and 17-window JSON/CSV preserve the exact checks and limits.
+
+All 12 checkpoints attest equal complete primary/repeat semantic sequences, but
+the acquisition probe retained no separate repeat gzip when the sequences matched.
+There are therefore zero independently re-decoded repeat files; repeat interior
+counts are unknown/null, not directly measured zero. Recorded repeat agreement is
+hash-linked acquisition evidence, not a second present-day row inspection or an
+independent venue. The original in-memory API response is not separately available.
+Shared terminal-cache/broker-history omissions, serialization before the primary
+file, and genuine lack of updates cannot be distinguished with this evidence.
+
+The existing captures do not justify re-importing unchanged data, clearing flags,
+or relaxing the quality budget. A next investigation would require separately
+authorized new evidence, such as targeted demo-terminal recapture preserving both
+responses, with explicit cache/API limitations, or relevant broker evidence.
+It should cover all 24 flagged windows: the seven price-spike minutes alone exceed
+the strict `<0.1%` limit. Any new capture needs a new identity; the failed result
+and all original bytes remain preserved. No new retrieval, source correction,
+acceptance-definition change, training or order occurred. Gate 1 remains open;
+the user's permission to proceed toward Gate 2 is conditional on its closure.
+
 September 5 delivery update: committed source candidate
 `670b59a5d416c6ca9941bf7248d1f61fbfb2661a` now has successful required PR CI.
 Category 1 is supplied; categories 2, 4 and 5 remain FAILED. Historical passages

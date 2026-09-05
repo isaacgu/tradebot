@@ -1,5 +1,16 @@
 # Gate 1 — independent human review and sign-off
 
+Latest confirmation, 2026-09-05: Isaac reports Delsa's approval of the five selected
+bar checks and final bound sign-off, alongside the proposed QA definition. See the
+[exact confirmation and material hashes](gate1_confirmation_20260905.md). This
+records reported approval, not a separately authenticated reviewer signature or
+invented per-bar calculations. Since that confirmation, the unbound diagnostic
+measured 24/4,410 flagged minutes (0.544217687%), above the strict <0.1% limit;
+see [current technical evidence](gate1_evidence.md). Final bindings remain pending,
+and the recorded approval does not make this later result pass. Earlier template/decision text
+below is preserved as historical, including Isaac's own original entry. Do not
+interpret its "not supplied" wording as absence of the newly recorded statement.
+
 Update 2026-09-05: the Principal reports Delsa Mashiki is present and has approved.
 See the [attributed receipt](gate1_approval_receipt_20260905.md). The earlier entries
 below are preserved, including the decision entered under Isaac's name; they have
