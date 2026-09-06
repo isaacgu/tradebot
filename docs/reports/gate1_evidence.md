@@ -5,6 +5,69 @@ This pack records available artifacts and unresolved acceptance criteria; it doe
 gate, authorize strategy evaluation, or enable trading. Status `FAILED` below includes required
 evidence that is not yet supplied. Nothing is deferred past its frozen due gate.
 
+## September 6 update — corrected-clock result and exact attribution
+
+The later, separately identified corrected-clock sequence completed at
+**13:48:40 UTC / 15:48:40 SAST**. Its numerical result is
+**16 / 4,410 expected liquid minutes = 0.362811791%**, which does not satisfy
+the unchanged strict `<0.1%` requirement. No expected liquid minute is missing.
+Formal `INDETERMINATE` records absent final hash-bound decisions; it is separate
+from this visible numerical failure. Approval metadata cannot make that rate pass.
+The older unchanged-UTC results below remain historical evidence, not corrected
+results. See [the completed run](source_clock_rebuild_20260906.md),
+[ADR-0014](../adr/0014-source-clock-experimental-rebuild.md), and the separately
+recorded [September 6 acceptance statements](source_clock_acceptance_receipt_20260906.md).
+Do not request the same general acceptance again or infer a signature for a future
+artifact from either receipt.
+
+- Producer: `build/gate1/source-clock-reference-rebuild-20260906-v1/report.json`,
+  SHA-256 `ce0af1e24de335d869e887a3c6911fd07b5252b3ea6d3a4433760c3ac56f41ba`.
+  Both rebuilds are byte-identical: 5,905,147 selected ticks, 35,569 one-minute
+  bars and 25 daily bars including context, from 32 immutable raw files.
+  Thirty acquisition chunks cover 23 target sessions plus two context sessions;
+  they are not themselves the random-30-day acceptance test.
+- Acceptance: `build/gate1/source-clock-reference-acceptance-20260906-v1/report.json`,
+  SHA-256 `9b0ca7ccda33d5c09f669733d48d67fa81f730561a3f22e49f5451ab81ec898f`.
+  Root independently checked its ten artifact pins, three code/SPEC pins,
+  retrospective-input equality, report hash/sidecar and strict integer comparison.
+- Wrapper: `build/gate1/source-clock-rebuild-run-20260906-v1/result.json`,
+  SHA-256 `73bb3154cd496531a5f214d0fc912e5db6a52d85b9b7bc9eb8365e981bec7ae1`.
+  Producer exit 0; acceptance exit 2; no changed launch-pinned inputs; no training
+  or execution release.
+
+The independent producer artifact audit retains **FAILED: 366/367 checks passed**.
+All actual file hashes, inventories, identities, row totals and mapped request
+coverage agree. The sole failed strict containment check is
+`src/tradebot/__init__.py`: it matches its producer pin but is absent from the
+outer launch's 82-file list. This is a provenance-record omission, not an observed
+content mismatch. Do not rewrite the launch or hide the failed audit.
+Audit: `build/gate1/source-clock-producer-root-audit-20260906-v1/audit.json`,
+SHA-256 `b06639056c5e024c0a2d02c1a6ec19ac38cf77a1cfa0b794b5ef59132a04c4e4`;
+additive `assessment.json` SHA-256
+`66758089467f73e87ae9700bf904fd621868a72fd7574c7056dc809823667be2`.
+
+The [completed bounded attribution](corrected_minute_attribution_20260906.md)
+reconciles the expected subset to **13 price-outlier, two gap and one spread-outlier
+minutes**, with no overlap. All-canonical counts are 20 price, two gap and three
+spread minutes; one overlap gives a 24-minute union. Root's independent metadata/CSV
+check verified 24 unique minutes, the exact 16-minute subset across 11 dates,
+bar presence, category membership and the three attribution/CSV/cross-reference
+hashes. It did not rerun detectors or independently establish economic correctness.
+Six current minutes have prior source-sequence/price condition reviews; ten do not.
+The data-validation owner has been asked to inspect those ten existing contexts,
+preserving all source bytes, flags, counting rules and thresholds. A detector
+annotation alone does not prove an economically erroneous quote.
+
+Prior random-30-day and August 2026 five-bar evidence is not automatically
+invalidated by an October-only optional policy. The old/new producer records pin
+identical bar-building, normalization, quality, storage and time-rule modules;
+reuse requires explicit unaffected-input/code-path provenance. Missing actual
+human observations are not filled from automated results. The corrected policy
+remains experimental and must be explicitly distinguished from the older
+no-epoch-shift baseline in any final package. Committed-candidate CI, applicable
+observability/test evidence and final evidence-bound decisions remain required.
+**Gate 1 is not approved; Phase 2, training and trading are not released.**
+
 ## September 6 update — authorized targeted recapture completed
 
 The Principal directly authorized recapture in the existing data-validation task.

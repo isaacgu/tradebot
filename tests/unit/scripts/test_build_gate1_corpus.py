@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import sys
+from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -14,7 +15,8 @@ import yaml
 
 from tradebot.data.acquisition_probe import ChunkRequest, fx_session_bounds
 from tradebot.data.corpus import ProbeArtifact
-from tradebot.data.storage import FileDigest
+from tradebot.data.source_clock import SourceClockInterval, SourceClockPolicy
+from tradebot.data.storage import FileDigest, sha256_path
 
 
 @pytest.fixture
@@ -439,6 +441,9 @@ def test_random_mode_preserves_original_defaults(runner: ModuleType, tmp_path: P
     assert args.selection_mode == "random-sample"
     assert args.days == 30
     assert args.seed == 20260904
+    assert args.source_clock_policy is None
+    assert args.source_clock_evidence == []
+    assert args.source_supplement_manifest is None
 
 
 @pytest.mark.parametrize(
@@ -589,3 +594,317 @@ def test_reference_month_report_separates_roles_and_threads_calendar(
     assert rebuild_calls[0]["calendar_instrument"] == "FBS-Demo/EURUSD"
     assert selected_minima == [thresholds.price_reversion_ticks]
     assert rebuild_calls[0]["thresholds"] is thresholds
+    assert "source_clock" not in selection
+    assert rebuild_calls[0]["source_clock"] is None
+
+
+def clock_policy(evidence_sha256: str = "a" * 64) -> SourceClockPolicy:
+    start = datetime(2024, 9, 29, 21, tzinfo=UTC)
+    end = datetime(2024, 11, 2, tzinfo=UTC)
+    return SourceClockPolicy(
+        schema_version=1,
+        policy_id="fixture-autumn-eurusd-only",
+        source="FBS-Demo",
+        instrument="EURUSD",
+        status="EXPERIMENTAL_ONLY",
+        label_start=start,
+        label_end=end,
+        evidence_sha256=(("anchor", evidence_sha256),),
+        intervals=(
+            SourceClockInterval(
+                label_start=start,
+                label_end=datetime(2024, 10, 27, 3, tzinfo=UTC),
+                offset_seconds_to_utc=-10800,
+            ),
+            SourceClockInterval(
+                label_start=datetime(2024, 10, 27, 4, tzinfo=UTC),
+                label_end=end,
+                offset_seconds_to_utc=-7200,
+            ),
+        ),
+    )
+
+
+def friday_supplements() -> tuple[ProbeArtifact, ...]:
+    result = []
+    for day in (
+        date(2024, 10, 4),
+        date(2024, 10, 11),
+        date(2024, 10, 18),
+        date(2024, 10, 25),
+        date(2024, 11, 1),
+    ):
+        # The selector consumes request attributes; the separate supplemental loader
+        # validates real short-interval request types and their captured files.
+        item = artifact(day - timedelta(days=1), window="supplement")
+        start = datetime(day.year, day.month, day.day, 21, tzinfo=UTC)
+        object.__setattr__(item.request, "session_date", day)
+        object.__setattr__(item.request, "start", start)
+        object.__setattr__(
+            item.request, "end", start + timedelta(hours=2 if day.month == 11 else 3)
+        )
+        result.append(item)
+    return tuple(result)
+
+
+def clock_artifacts() -> tuple[ProbeArtifact, ...]:
+    return reference_artifacts() + friday_supplements()
+
+
+def test_clock_month_selects_friday_tails_and_labels_acquisition_counts(runner: ModuleType) -> None:
+    selected = runner.select_clock_reference_month(
+        clock_artifacts(),
+        instrument="EURUSD",
+        reference_month="2024-10",
+        source_clock=clock_policy(),
+    )
+    assert len(selected.expected_target_close_dates) == 23
+    assert len(selected.required_windows) == 25
+    assert len(selected.chunks) == 30
+    assert {
+        item.artifact.request.session_date
+        for item in selected.chunks
+        if item.artifact.request.session_date.weekday() == 4
+    } == {
+        date(2024, 10, 4),
+        date(2024, 10, 11),
+        date(2024, 10, 18),
+        date(2024, 10, 25),
+        date(2024, 11, 1),
+    }
+    payload = runner._clock_selection_payload(selected)
+    assert payload["coverage_status"] == "MAPPED_REQUEST_COVERAGE_COMPLETE"
+    assert payload["actual_tick_completeness"] == "NOT_ESTABLISHED_BY_REQUEST_COVERAGE"
+    assert "target_primary_ticks" not in payload
+    assert "selected_target_sessions" not in payload
+    assert (
+        runner.select_clock_reference_month(
+            tuple(reversed(clock_artifacts())),
+            instrument="EURUSD",
+            reference_month="2024-10",
+            source_clock=clock_policy(),
+        )
+        == selected
+    )
+
+
+@pytest.mark.parametrize("removed", [date(2024, 10, 4), date(2024, 10, 8), date(2024, 11, 1)])
+def test_clock_month_fails_closed_for_missing_target_or_context_request(
+    runner: ModuleType, removed: date
+) -> None:
+    inputs = tuple(item for item in clock_artifacts() if item.request.session_date != removed)
+    with pytest.raises(ValueError, match="missing mapped request coverage") as error:
+        runner.select_clock_reference_month(
+            inputs, instrument="EURUSD", reference_month="2024-10", source_clock=clock_policy()
+        )
+    if removed == date(2024, 10, 4):
+        assert "2024-10-04T18:00:00+00:00, 2024-10-04T21:00:00+00:00" in str(error.value)
+    elif removed == date(2024, 11, 1):
+        assert "LOOKAHEAD/2024-11-01" in str(error.value)
+
+
+def test_clock_month_legacy_pool_reports_all_five_missing_friday_tails(runner: ModuleType) -> None:
+    with pytest.raises(ValueError, match="missing mapped request coverage") as error:
+        runner.select_clock_reference_month(
+            reference_artifacts(),
+            instrument="EURUSD",
+            reference_month="2024-10",
+            source_clock=clock_policy(),
+        )
+    assert str(error.value).count("REFERENCE_MONTH_TARGET/") == 4
+    assert str(error.value).count("LOOKAHEAD/") == 1
+
+
+def test_clock_month_does_not_bridge_an_unmapped_weekday_policy_hole(runner: ModuleType) -> None:
+    policy = clock_policy()
+    first, second = policy.intervals
+    hole_start = datetime(2024, 10, 8, 12, tzinfo=UTC)
+    hole_end = hole_start + timedelta(hours=1)
+    policy = replace(
+        policy,
+        intervals=(
+            replace(first, label_end=hole_start),
+            replace(first, label_start=hole_end),
+            second,
+        ),
+    )
+    with pytest.raises(ValueError, match="unmapped label interval"):
+        runner.select_clock_reference_month(
+            clock_artifacts(), instrument="EURUSD", reference_month="2024-10", source_clock=policy
+        )
+
+
+def test_clock_month_rejects_duplicate_acquisition_dates(runner: ModuleType) -> None:
+    inputs = clock_artifacts()
+    with pytest.raises(ValueError, match="duplicate acquisition-label start date"):
+        runner.select_clock_reference_month(
+            (*inputs, inputs[0]),
+            instrument="EURUSD",
+            reference_month="2024-10",
+            source_clock=clock_policy(),
+        )
+
+
+@pytest.mark.parametrize("instrument,source", [("GBPUSD", "FBS-Demo"), ("EURUSD", "other")])
+def test_clock_month_scope_is_exact(runner: ModuleType, instrument: str, source: str) -> None:
+    with pytest.raises(ValueError, match="exact FBS-Demo/EURUSD scope"):
+        runner.select_clock_reference_month(
+            clock_artifacts(),
+            instrument=instrument,
+            reference_month="2024-10",
+            source_clock=replace(clock_policy(), instrument=instrument, source=source),
+        )
+
+
+def test_clock_policy_requires_exact_real_evidence_bindings(
+    runner: ModuleType, tmp_path: Path
+) -> None:
+    evidence = tmp_path / "evidence.json"
+    evidence.write_text("fixture evidence")
+    path = tmp_path / "policy.json"
+    policy = clock_policy(sha256_path(evidence))
+    path.write_text(policy.to_json())
+    bound = runner.load_source_clock_inputs(path, [f"anchor={evidence}"])
+    assert bound.policy.identity == policy.identity
+    assert bound.sha256 == sha256_path(path)
+    assert bound.to_dict()["approval_status"] == "NOT_ASSESSED_BY_PRODUCER"
+    for bindings in ([], [f"wrong={evidence}"], [f"anchor={evidence}", f"anchor={evidence}"]):
+        with pytest.raises(ValueError, match="evidence"):
+            runner.load_source_clock_inputs(path, bindings)
+    evidence.write_text("changed evidence")
+    with pytest.raises(ValueError, match="policy/evidence changed"):
+        bound.verify_unchanged()
+    with pytest.raises(ValueError, match="policy/evidence changed"):
+        runner.load_source_clock_inputs(path, [f"anchor={evidence}"])
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        ["--source-clock-policy", "clock.json"],
+        ["--selection-mode", "clock-reference-month", "--reference-month", "2024-10"],
+        ["--source-clock-evidence", "anchor=evidence.json"],
+        ["--source-supplement-sha256", "a" * 64],
+    ],
+)
+def test_clock_controls_cannot_silently_alter_legacy_mode(
+    runner: ModuleType, tmp_path: Path, extra: list[str]
+) -> None:
+    with pytest.raises(SystemExit):
+        runner._arguments(["--output-dir", str(tmp_path / "output"), *extra])
+
+
+@pytest.mark.parametrize("drift", [None, "policy", "evidence", "supplement"])
+def test_clock_producer_threads_policy_and_rejects_input_drift(
+    runner: ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, drift: str | None
+) -> None:
+    evidence = tmp_path / "evidence.json"
+    evidence.write_text("fixture evidence")
+    path = tmp_path / "policy.json"
+    policy = clock_policy(sha256_path(evidence))
+    path.write_text(policy.to_json())
+    supplement_path = tmp_path / "supplement.json"
+    supplement_path.write_text("fixture supplemental manifest")
+    supplement_sha256 = sha256_path(supplement_path)
+    repository = Path(__file__).resolve().parents[3]
+    output = tmp_path / "output"
+    args = runner._arguments(
+        [
+            "--selection-mode",
+            "clock-reference-month",
+            "--reference-month",
+            "2024-10",
+            "--source-clock-policy",
+            str(path),
+            "--source-clock-evidence",
+            f"anchor={evidence}",
+            "--source-supplement-manifest",
+            str(supplement_path),
+            "--source-supplement-sha256",
+            supplement_sha256,
+            "--output-dir",
+            str(output),
+            "--plan",
+            str(repository / "configs" / "probes" / "fbs_tick_continuity_v1.json"),
+        ]
+    )
+    monkeypatch.setattr(runner, "_git_identity", lambda: {"head": "head", "status": ""})
+    monkeypatch.setattr(runner, "_code_hashes", lambda: {"code.py": "b" * 64})
+    monkeypatch.setattr(
+        runner, "load_thresholds", lambda _: SimpleNamespace(price_reversion_ticks=5)
+    )
+    monkeypatch.setattr(runner, "version", lambda _: "fixture")
+    monkeypatch.setattr(
+        runner, "sha256_path", lambda p: sha256_path(p) if p.is_file() else "a" * 64
+    )
+    monkeypatch.setattr(
+        runner, "discover_probe_artifacts", lambda *_args, **_kwargs: reference_artifacts()
+    )
+    supplement_calls: list[dict[str, object]] = []
+
+    def fake_load_supplement(manifest_path: Path, **kwargs: object) -> tuple[ProbeArtifact, ...]:
+        supplement_calls.append(kwargs)
+        if sha256_path(manifest_path) != kwargs["expected_manifest_sha256"]:
+            raise ValueError("supplement manifest changed")
+        return friday_supplements()
+
+    supplement_module = ModuleType("tradebot.data.source_supplement")
+    monkeypatch.setattr(
+        supplement_module, "load_supplement_artifacts", fake_load_supplement, raising=False
+    )
+    monkeypatch.setitem(sys.modules, "tradebot.data.source_supplement", supplement_module)
+    monkeypatch.setattr(
+        runner,
+        "import_raw_artifact",
+        lambda item, **_kwargs: SimpleNamespace(
+            artifact=item, files=(tmp_path / f"{item.request.session_date}.parquet",)
+        ),
+    )
+    monkeypatch.setattr(
+        runner,
+        "file_manifest",
+        lambda *_args, **_kwargs: (FileDigest(path="clean/file.parquet", sha256="e" * 64),),
+    )
+    calls: list[dict[str, object]] = []
+
+    def fake_rebuild(*_args: object, **kwargs: object) -> SimpleNamespace:
+        calls.append(kwargs)
+        if drift is not None:
+            {"policy": path, "evidence": evidence, "supplement": supplement_path}[drift].write_text(
+                "changed"
+            )
+        return SimpleNamespace(
+            corpus_id="f" * 64,
+            clean_tick_files=(tmp_path / "tick.parquet",),
+            clean_bar_files=(tmp_path / "bar.parquet",),
+            quality=(),
+            bar_rows_by_timeframe=(("1m", 1),),
+        )
+
+    monkeypatch.setattr("tradebot.data.corpus.rebuild_from_raw", fake_rebuild)
+    if drift is not None:
+        with pytest.raises(
+            ValueError, match=r"policy/evidence changed|supplement manifest changed"
+        ):
+            runner.run(args)
+        assert len(calls) == (2 if drift == "supplement" else 1)
+        assert not (output / "report.json").exists()
+        return
+    report = runner.run(args)
+    assert len(calls) == 2
+    assert calls[0]["source_clock"] == calls[1]["source_clock"] == policy
+    assert report["reproducibility_status"] == "PASSED"
+    assert report["gate_approved"] is False
+    assert report["source_clock_inputs_unchanged"] is True
+    assert report["source_supplement_inputs_unchanged"] is True
+    assert len(supplement_calls) == 2
+    assert all(call["expected_manifest_sha256"] == supplement_sha256 for call in supplement_calls)
+    assert all(call["artifact_root"] == supplement_path.parent for call in supplement_calls)
+    assert report["selection"]["acquisition_snapshot"]["completed_checkpoints"] == 25
+    assert report["reference_month"]["acceptance_status"] == "INDETERMINATE"
+    assert "target_primary_ticks" not in report["reference_month"]
+    chunks = report["selection"]["chunks"]
+    assert len(chunks) == 30
+    assert all(item["role"] == "ACQUISITION_LABEL_CHUNK" for item in chunks)
+    assert all("canonical_close_date" not in item and "rows" not in item for item in chunks)
+    assert report["selection"]["source_clock"]["identity"] == policy.identity

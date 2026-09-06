@@ -22,7 +22,8 @@ the October UK transition the interval is 12:00–15:30 UTC, afterwards
 
 Proposed holiday rule: the QA window is not expected to be fully liquid on a
 national German or Federal Reserve holiday, or an England/Wales bank holiday.
-Within October this excludes October 3 and October 14, as well as weekends.
+Within October this 
+excludes October 3 and October 14, as well as weekends.
 This yields 21 proposed windows and 4,410 expected minute bins, calculated from
 definitions alone. No price observations or flagged-rate calculations are inputs
 to this proposal. Regional German holidays do not automatically close the entire

@@ -2,6 +2,60 @@
 
 ## Current assignment and status
 
+### September 6 — corrected clock run complete; quality criterion not met
+
+The full sequence completed at **13:48:40 UTC / 15:48:40 SAST**. The producer
+completed both rebuilds at 13:30:32 UTC with exit 0
+and reproducibility `PASSED`; report SHA-256
+`ce0af1e24de335d869e887a3c6911fd07b5252b3ea6d3a4433760c3ac56f41ba`.
+Acceptance reports **16 / 4,410 = 0.362811791%**, failing the strict <0.1% criterion;
+zero expected liquid minutes are missing. Its formal `INDETERMINATE` status is
+due to absent final hash-bound approvals, but binding metadata cannot fix the
+visible numerical failure. Acceptance SHA-256:
+`9b0ca7ccda33d5c09f669733d48d67fa81f730561a3f22e49f5451ab81ec898f`.
+Final wrapper receipt SHA-256:
+`73bb3154cd496531a5f214d0fc912e5db6a52d85b9b7bc9eb8365e981bec7ae1`.
+It records no changed inputs and no training/execution release. The subsequent
+[bounded attribution](docs/reports/corrected_minute_attribution_20260906.md)
+reconciles the exact 16-minute union: 13 price, 2 gap and 1 spread. Six minutes
+match earlier source-ID/price condition reviews; ten lack that prior review.
+An executed three-cell notebook reproduces the attribution with zero cell errors.
+The [ten-minute arithmetic review](docs/reports/corrected_new_minute_context_20260906.md)
+now corroborates all 14 PRICE and seven SPREAD predicates. Five price events
+reach/cross baseline within five source rows, nine do not, and none exactly
+equals baseline. A separate executed notebook reproduces these findings with
+zero cell errors. Original-capture lineage remains a separate pending check;
+economic quote validity is unresolved and no flags were cleared. Do not repeat
+a full capture/evaluator or change thresholds. Preserve the independent producer audit's strict
+366/367 FAILED result: one matching inner-producer pin is absent from the outer
+launch list, with no content mismatch; its additive assessment is linked above.
+
+Isaac directly confirmed acceptance, then reported Delsa's acceptance and asked
+to proceed. Both statements are preserved in the
+[current acceptance receipt](docs/reports/source_clock_acceptance_receipt_20260906.md).
+Delsa's general decision is no longer pending; the technical result is now known,
+while final artifact binding remains unfinished. Do not duplicate these approval requests or
+turn reported concurrence into an invented direct signature.
+
+The data-validation task implemented the optional experimental FBS-Demo/EURUSD
+source-clock policy and additive Friday supplement; see
+[the current run handoff](docs/reports/source_clock_rebuild_20260906.md) and ADR-0014.
+The fixed five-window capture completed, with 114,157 primary ticks and identical
+separately retained repeats on the empty USD 1,000 demo account. The root audit
+checked 228,314 native/canonical rows including repeats; original archives remain
+unchanged. Full local verification passed 1,725 tests, 88.12% total coverage,
+Ruff/mypy/Bandit/pip-audit and the Gate-0 smoke.
+
+One background producer/acceptance sequence ran from 11:08:39 to 13:48:40 UTC:
+`build/gate1/source-clock-rebuild-run-20260906-v1/`. It built the corrected
+reference corpus twice, then ran unchanged acceptance after reproducibility
+passed. Preserve its completed `result.json` and hash-pinned inputs; no duplicate
+job or new capture was launched. The prior
+failed reports below remain historical evidence under their original timestamp
+assumptions. This run is complete, no gate approval was created, and no
+strategy fitting or execution has started. Genuine fitting and broker execution
+remain separate implementation work, not hidden behind an enable switch.
+
 ### September 6 — authorized targeted recapture
 
 Isaac subsequently authorized new evidence collection in the data-validation task

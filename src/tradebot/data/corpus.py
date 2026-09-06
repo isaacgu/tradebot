@@ -43,6 +43,8 @@ from tradebot.data.quality import (
     QualityThresholds,
     TickQualityPipeline,
 )
+from tradebot.data.source_clock import SourceClockPolicy
+from tradebot.data.source_supplement import SourceIntervalRequest
 from tradebot.data.storage import (
     CLEAN_BAR_SCHEMA,
     CLEAN_TICK_SCHEMA,
@@ -102,7 +104,7 @@ def _load_plan(path: Path) -> AcquisitionPlan:
 class ProbeArtifact:
     """A checksum-validated, atomically completed source chunk."""
 
-    request: ChunkRequest
+    request: ChunkRequest | SourceIntervalRequest
     ordinal: int
     plan_hash: str
     source: str
@@ -401,7 +403,7 @@ def _from_milliseconds(value: int) -> datetime:
     return _EPOCH + timedelta(seconds=seconds, milliseconds=milliseconds)
 
 
-def _stable_seq(request: ChunkRequest, source_row: int) -> int:
+def _stable_seq(request: ChunkRequest | SourceIntervalRequest, source_row: int) -> int:
     """Derive a source-position sequence independent of acquisition-plan ordering."""
     session_namespace = (request.start.date() - _EPOCH.date()).days
     if session_namespace < 0:
@@ -486,7 +488,11 @@ def import_raw_artifact(
     return RawImportResult(artifact=artifact, files=tuple(sorted(paths)), rows=rows)
 
 
-def _raw_quality_inputs(imports: Sequence[RawImportResult]) -> Iterator[QualityInput]:
+def _raw_quality_inputs(
+    imports: Sequence[RawImportResult],
+    *,
+    source_clock: SourceClockPolicy | None = None,
+) -> Iterator[QualityInput]:
     previous_seq: int | None = None
     for imported in imports:
         for path in imported.files:
@@ -508,11 +514,21 @@ def _raw_quality_inputs(imports: Sequence[RawImportResult]) -> Iterator[QualityI
                         str(columns["flags"][index]),
                         cast(str, columns["volume_real_text"][index]),
                     )
+                    instrument = cast(str, columns["instrument"][index])
+                    source = cast(str, columns["source"][index])
+                    label = _from_milliseconds(cast(int, columns["time_msc"][index]))
+                    # The original eight fields remain the duplicate/lineage identity.
+                    # Interpret only the event clock, before quality/session decisions.
+                    event_time = (
+                        label
+                        if source_clock is None
+                        else source_clock.apply(label, source=source, instrument=instrument)
+                    )
                     yield QualityInput(
-                        instrument=cast(str, columns["instrument"][index]),
-                        source=cast(str, columns["source"][index]),
+                        instrument=instrument,
+                        source=source,
                         seq=seq,
-                        ts_event=_from_milliseconds(cast(int, columns["time_msc"][index])),
+                        ts_event=event_time,
                         bid=Decimal(fields[2]),
                         ask=Decimal(fields[3]),
                         source_flags=cast(int, columns["flags"][index]),
@@ -532,6 +548,31 @@ def _threshold_payload(thresholds: QualityThresholds) -> Mapping[str, object]:
     }
 
 
+def _request_clock_bounds(
+    artifact: ProbeArtifact, source_clock: SourceClockPolicy
+) -> tuple[datetime, datetime]:
+    """Map a completely covered request; endpoints alone cannot exclude a policy hole."""
+    request = artifact.request
+    start = source_clock.apply(
+        request.start, source=artifact.source, instrument=request.logical_symbol
+    )
+    cursor = request.start
+    for rule in source_clock.intervals:
+        if rule.label_end <= cursor:
+            continue
+        if rule.label_start > cursor:
+            raise ProbeArtifactError("acquisition interval crosses an uncovered source-clock label")
+        cursor = min(request.end, rule.label_end)
+        if cursor == request.end:
+            end = source_clock.apply(
+                request.end - timedelta(microseconds=1),
+                source=artifact.source,
+                instrument=request.logical_symbol,
+            ) + timedelta(microseconds=1)
+            return start, end
+    raise ProbeArtifactError("acquisition interval extends beyond source-clock coverage")
+
+
 def corpus_identity(
     artifacts: Sequence[ProbeArtifact],
     *,
@@ -541,6 +582,7 @@ def corpus_identity(
     timeframes: Sequence[str],
     seal_latency: timedelta,
     calendar_instrument: str | None = None,
+    source_clock: SourceClockPolicy | None = None,
 ) -> str:
     """Identify source bytes plus every input that can alter clean output."""
 
@@ -581,6 +623,10 @@ def corpus_identity(
         ],
         "implementation_version": _CORPUS_IMPLEMENTATION_VERSION,
     }
+    if source_clock is not None:
+        # Keep legacy identities stable when no interpretation is explicitly supplied.
+        # Policy bytes, evidence and scope distinguish the experimental derived corpus.
+        payload["source_clock_policy_sha256"] = source_clock.identity
     digest = hashlib.sha256(_CORPUS_DOMAIN)
     digest.update(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8"))
     return digest.hexdigest()
@@ -599,6 +645,7 @@ def build_clean_ticks(
     session_boundary: BarBoundary = fx_session_bounds,
     sort_run_rows: int = 65_536,
     output_batch_rows: int = 65_536,
+    source_clock: SourceClockPolicy | None = None,
 ) -> CleanBuildResult:
     """Derive stable, availability-sorted clean ticks from immutable raw Parquet."""
     if not imports:
@@ -620,10 +667,15 @@ def build_clean_ticks(
         known_at=known_at,
     )
     for imported in imports:
-        pipeline.require_calendar_day(imported.artifact.request.end.astimezone(NEW_YORK).date())
+        end = imported.artifact.request.end
+        if source_clock is not None:
+            # Use the final included instant: policy intervals are half-open and the
+            # acquisition endpoint itself may equal the policy's exclusive upper bound.
+            _, end = _request_clock_bounds(imported.artifact, source_clock)
+        pipeline.require_calendar_day(end.astimezone(NEW_YORK).date())
 
     def quality_rows() -> Iterator[Mapping[str, object]]:
-        for item in _raw_quality_inputs(imports):
+        for item in _raw_quality_inputs(imports, source_clock=source_clock):
             for clean in pipeline.process(item):
                 yield clean.as_mapping()
         for clean in pipeline.finish():
@@ -665,6 +717,11 @@ def build_clean_ticks(
                                 "tradebot.instrument": instrument,
                                 "tradebot.venue": venue,
                                 "tradebot.month": f"{key[0]:04d}-{key[1]:02d}",
+                                **(
+                                    {}
+                                    if source_clock is None
+                                    else {"tradebot.source_clock_policy": source_clock.identity}
+                                ),
                             },
                         )
                     )
@@ -1004,6 +1061,7 @@ def build_fbs_corpus(
     calendar_instrument: str | None = None,
     seal_latency: timedelta = timedelta(0),
     batch_size: int = 65_536,
+    source_clock: SourceClockPolicy | None = None,
 ) -> CorpusBuildResult:
     """Run the complete immutable raw -> clean ticks -> clean bars P1 slice.
 
@@ -1040,6 +1098,7 @@ def build_fbs_corpus(
         calendar_instrument=calendar_instrument,
         seal_latency=seal_latency,
         batch_size=batch_size,
+        source_clock=source_clock,
     )
     raw_files = tuple(sorted(path for item in raw_imports for path in item.files))
     return CorpusBuildResult(
@@ -1072,6 +1131,7 @@ def rebuild_from_raw(
     calendar_instrument: str | None = None,
     seal_latency: timedelta = timedelta(0),
     batch_size: int = 65_536,
+    source_clock: SourceClockPolicy | None = None,
 ) -> CleanCorpusResult:
     """Rebuild clean ticks and bars from the same immutable raw imports.
 
@@ -1108,6 +1168,11 @@ def rebuild_from_raw(
     sources = {item.artifact.source for item in ordered_imports}
     if len(sources) != 1:
         raise ValueError("one clean corpus snapshot must use exactly one source")
+    if source_clock is not None:
+        for item in ordered_imports:
+            # Validate complete acquisition coverage before creating any clean output,
+            # including empty chunks which cannot validate their scope through rows.
+            _request_clock_bounds(item.artifact, source_clock)
     identity = corpus_identity(
         tuple(item.artifact for item in ordered_imports),
         thresholds=effective_thresholds,
@@ -1116,6 +1181,7 @@ def rebuild_from_raw(
         timeframes=timeframes,
         seal_latency=seal_latency,
         calendar_instrument=calendar_instrument,
+        source_clock=source_clock,
     )
     by_instrument: defaultdict[str, list[RawImportResult]] = defaultdict(list)
     for item in ordered_imports:
@@ -1143,6 +1209,7 @@ def rebuild_from_raw(
             session_boundary=session_boundary,
             sort_run_rows=batch_size,
             output_batch_rows=batch_size,
+            source_clock=source_clock,
         )
         clean_results.append(clean)
         bar_results.append(
@@ -1154,7 +1221,12 @@ def rebuild_from_raw(
                 source=imports[0].artifact.source,
                 corpus_id=identity,
                 boundaries=boundaries,
-                until=max(item.artifact.request.end for item in imports),
+                until=max(
+                    item.artifact.request.end
+                    if source_clock is None
+                    else _request_clock_bounds(item.artifact, source_clock)[1]
+                    for item in imports
+                ),
                 seal_latency=seal_latency,
                 output_batch_rows=batch_size,
             )

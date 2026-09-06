@@ -32,11 +32,13 @@ from tradebot.data.acquisition_probe import parse_plan
 from tradebot.data.calendar import ExpectedLiquidityCalendar
 from tradebot.data.corpus import ProbeArtifact, discover_probe_artifacts, import_raw_artifact
 from tradebot.data.quality import QualityThresholds
+from tradebot.data.source_clock import SourceClockPolicy
 from tradebot.data.storage import dataset_id, file_manifest, sha256_path
 
 _ROOT = Path(__file__).resolve().parents[1]
 _RANDOM_SAMPLE = "random-sample"
 _REFERENCE_MONTH = "reference-month"
+_CLOCK_REFERENCE_MONTH = "clock-reference-month"
 _SAMPLE_ROLE = "RANDOM_SAMPLE"
 _PREHISTORY_ROLE = "PREHISTORY"
 _TARGET_ROLE = "REFERENCE_MONTH_TARGET"
@@ -69,6 +71,51 @@ class ReferenceMonthSelection:
     @property
     def target_chunks(self) -> tuple[SelectedArtifact, ...]:
         return tuple(item for item in self.chunks if item.role == _TARGET_ROLE)
+
+
+@dataclass(frozen=True, slots=True)
+class ClockSelectedArtifact:
+    """An acquisition-label chunk, not a canonical trading session or tick count."""
+
+    artifact: ProbeArtifact
+    mapped_intervals: tuple[tuple[datetime, datetime], ...]
+    canonical_close_dates_overlapped: tuple[date, ...]
+    context_roles: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ClockReferenceMonthSelection:
+    instrument: str
+    reference_month: str
+    expected_target_close_dates: tuple[date, ...]
+    required_windows: tuple[tuple[date, str, datetime, datetime], ...]
+    chunks: tuple[ClockSelectedArtifact, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class SourceClockInputs:
+    policy: SourceClockPolicy
+    path: Path
+    sha256: str
+    evidence: tuple[tuple[str, Path, str], ...]
+
+    def verify_unchanged(self) -> None:
+        for path, digest in ((self.path, self.sha256), *((p, d) for _, p, d in self.evidence)):
+            if sha256_path(path) != digest:
+                raise ValueError(f"source-clock policy/evidence changed: {path}")
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "path": self.path,
+            "sha256": self.sha256,
+            "identity": self.policy.identity,
+            "policy": self.policy.to_dict(),
+            "evidence": [
+                {"name": name, "path": path, "sha256": digest}
+                for name, path, digest in self.evidence
+            ],
+            "approval_status": "NOT_ASSESSED_BY_PRODUCER",
+        }
 
 
 def _reference_month_days(value: str) -> tuple[date, ...]:
@@ -176,6 +223,176 @@ def select_reference_month(
         expected_target_close_dates=expected_close_dates,
         chunks=selected,
     )
+
+
+def _true_session_window(close_date: date) -> tuple[datetime, datetime]:
+    # Canonical close dates are weekdays. Their sessions open the preceding
+    # civil day, including Sunday for a Monday close, never a fixed UTC hour.
+    return acquisition_fx_session_bounds(close_date - timedelta(days=1))
+
+
+def select_clock_reference_month(
+    artifacts: Sequence[ProbeArtifact],
+    *,
+    instrument: str,
+    reference_month: str,
+    source_clock: SourceClockPolicy,
+) -> ClockReferenceMonthSelection:
+    """Cover true-UTC trading windows using piecewise-mapped acquisition requests.
+
+    Select every relevant acquisition chunk, including Friday/weekend labels.
+    Coverage means completed *request intervals*, never actual quote completeness.
+    Policy holes are not bridged merely because the request endpoints map.
+    """
+    if (source_clock.source, source_clock.instrument, instrument) != (
+        "FBS-Demo",
+        "EURUSD",
+        "EURUSD",
+    ):
+        raise ValueError("clock reference selection requires exact FBS-Demo/EURUSD scope")
+    targets = _reference_month_days(reference_month)
+    roles = (
+        (_adjacent_trading_day(targets[0], step=-1), _PREHISTORY_ROLE),
+        *((day, _TARGET_ROLE) for day in targets),
+        (_adjacent_trading_day(targets[-1], step=1), _LOOKAHEAD_ROLE),
+    )
+    required = tuple((day, role, *_true_session_window(day)) for day, role in roles)
+    selected: list[ClockSelectedArtifact] = []
+    acquisition_dates: set[date] = set()
+    for artifact in sorted(artifacts, key=lambda item: (item.request.start, item.request.chunk_id)):
+        request = artifact.request
+        if request.logical_symbol != instrument:
+            continue
+        # Artifacts outside the mapping's label scope cannot contribute.
+        if request.end <= source_clock.label_start or request.start >= source_clock.label_end:
+            continue
+        if artifact.source != source_clock.source or request.broker_symbol != instrument:
+            raise ValueError("source-clock acquisition source/symbol differs from exact scope")
+        mapped: list[tuple[datetime, datetime]] = []
+        for interval in source_clock.intervals:
+            start = max(request.start, interval.label_start)
+            end = min(request.end, interval.label_end)
+            if start >= end:
+                continue
+            mapped_start = source_clock.apply(start, source=artifact.source, instrument=instrument)
+            mapped_end = source_clock.apply(
+                end - timedelta(microseconds=1), source=artifact.source, instrument=instrument
+            ) + timedelta(microseconds=1)
+            if mapped_start >= mapped_end:
+                raise ValueError("source-clock mapped request interval is not increasing")
+            mapped.append((mapped_start, mapped_end))
+        overlapped = tuple(
+            (day, role)
+            for day, role, start, end in required
+            if any(left < end and right > start for left, right in mapped)
+        )
+        if not overlapped:
+            continue
+        if request.start < source_clock.label_start or request.end > source_clock.label_end:
+            raise ValueError("relevant acquisition chunk exceeds source-clock policy label scope")
+        label_cursor = request.start
+        for interval in source_clock.intervals:
+            left, right = (
+                max(request.start, interval.label_start),
+                min(request.end, interval.label_end),
+            )
+            if left >= right:
+                continue
+            if left != label_cursor:
+                raise ValueError(
+                    "relevant acquisition request contains an unmapped label interval: "
+                    f"{request.chunk_id}"
+                )
+            label_cursor = right
+        if label_cursor != request.end:
+            raise ValueError(
+                "relevant acquisition request contains an unmapped label interval: "
+                f"{request.chunk_id}"
+            )
+        if request.session_date in acquisition_dates:
+            raise ValueError(f"duplicate acquisition-label start date: {request.session_date}")
+        acquisition_dates.add(request.session_date)
+        selected.append(
+            ClockSelectedArtifact(
+                artifact=artifact,
+                mapped_intervals=tuple(mapped),
+                canonical_close_dates_overlapped=tuple(day for day, _ in overlapped),
+                context_roles=tuple(dict.fromkeys(role for _, role in overlapped)),
+            )
+        )
+    missing: list[str] = []
+    for day, role, start, end in required:
+        spans = sorted(
+            (max(left, start), min(right, end), item.artifact.request.chunk_id)
+            for item in selected
+            for left, right in item.mapped_intervals
+            if left < end and right > start
+        )
+        cursor = start
+        for left, right, chunk_id in spans:
+            if left < cursor:
+                raise ValueError(f"overlapping mapped acquisition requests at {chunk_id}")
+            if left > cursor:
+                missing.append(f"{role}/{day}: [{cursor.isoformat()}, {left.isoformat()})")
+            cursor = right
+        if cursor < end:
+            missing.append(f"{role}/{day}: [{cursor.isoformat()}, {end.isoformat()})")
+    if missing:
+        raise ValueError(
+            "missing mapped request coverage (not a tick-completeness verdict): "
+            + "; ".join(missing)
+        )
+    return ClockReferenceMonthSelection(
+        instrument, reference_month, targets, required, tuple(selected)
+    )
+
+
+def load_source_clock_inputs(
+    path: Path | None, evidence_arguments: Sequence[str]
+) -> SourceClockInputs | None:
+    """Bind policy bytes and every named evidence digest to actual checked files."""
+    if path is None:
+        if evidence_arguments:
+            raise ValueError("source-clock evidence requires a source-clock policy")
+        return None
+    digest = sha256_path(path)
+    policy = SourceClockPolicy.from_json(path.read_bytes())
+    supplied: dict[str, Path] = {}
+    for value in evidence_arguments:
+        name, separator, location = value.partition("=")
+        if not separator or not name or not location or name in supplied:
+            raise ValueError("source-clock evidence must be distinct NAME=PATH bindings")
+        supplied[name] = Path(location)
+    expected = dict(policy.evidence_sha256)
+    if set(supplied) != set(expected):
+        raise ValueError("source-clock evidence names must exactly match policy evidence")
+    result = SourceClockInputs(
+        policy,
+        path,
+        digest,
+        tuple((name, supplied[name], checksum) for name, checksum in sorted(expected.items())),
+    )
+    result.verify_unchanged()
+    return result
+
+
+def _clock_selection_payload(reference: ClockReferenceMonthSelection) -> dict[str, object]:
+    return {
+        "reference_month": reference.reference_month,
+        "month_label": "America/New_York true-UTC canonical session close date",
+        "expected_target_sessions": len(reference.expected_target_close_dates),
+        "target_close_dates": list(reference.expected_target_close_dates),
+        "selected_acquisition_label_chunks": len(reference.chunks),
+        "prehistory_sessions": 1,
+        "lookahead_sessions": 1,
+        "required_true_utc_windows": [
+            {"canonical_close_date": day, "role": role, "start_utc": start, "end_utc": end}
+            for day, role, start, end in reference.required_windows
+        ],
+        "coverage_status": "MAPPED_REQUEST_COVERAGE_COMPLETE",
+        "actual_tick_completeness": "NOT_ESTABLISHED_BY_REQUEST_COVERAGE",
+        "context_tick_counts": "NOT_INFERRED_FROM_ACQUISITION_CHUNK_ROW_COUNTS",
+    }
 
 
 def load_thresholds(path: Path) -> QualityThresholds:
@@ -301,8 +518,25 @@ def _utc_argument(value: str, field: str) -> datetime:
     return require_utc(parsed, field=field)
 
 
-def _chunk_payload(item: SelectedArtifact) -> dict[str, object]:
+def _chunk_payload(item: SelectedArtifact | ClockSelectedArtifact) -> dict[str, object]:
     artifact = item.artifact
+    if isinstance(item, ClockSelectedArtifact):
+        return {
+            "chunk_id": artifact.request.chunk_id,
+            "role": "ACQUISITION_LABEL_CHUNK",
+            "acquisition_label_session_date": artifact.request.session_date,
+            "request_label_start": artifact.request.start,
+            "request_label_end": artifact.request.end,
+            "acquisition_chunk_rows": artifact.expected_rows,
+            "canonical_close_dates_overlapped": list(item.canonical_close_dates_overlapped),
+            "context_roles": list(item.context_roles),
+            "mapped_request_intervals": [
+                {"start_utc": start, "end_utc": end} for start, end in item.mapped_intervals
+            ],
+            "checkpoint_sha256": sha256_path(artifact.checkpoint_path),
+            "source_sha256": artifact.compressed_sha256,
+            "semantic_sha256": artifact.semantic_sha256,
+        }
     return {
         "chunk_id": artifact.request.chunk_id,
         "role": item.role,
@@ -330,6 +564,17 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     if not isinstance(plan_payload, dict):
         raise ValueError("plan must be an object")
     plan = parse_plan(cast(Mapping[str, object], plan_payload))
+    clock_inputs = load_source_clock_inputs(
+        getattr(args, "source_clock_policy", None), getattr(args, "source_clock_evidence", ())
+    )
+    selection_mode = cast(str, getattr(args, "selection_mode", _RANDOM_SAMPLE))
+    if clock_inputs is not None and selection_mode != _CLOCK_REFERENCE_MONTH:
+        raise ValueError("source-clock policy requires clock-reference-month selection")
+    if clock_inputs is not None and (
+        clock_inputs.policy.source != plan.source
+        or clock_inputs.policy.instrument != args.instrument
+    ):
+        raise ValueError("source-clock policy does not match acquisition plan source/instrument")
 
     calendar_path = cast(Path | None, getattr(args, "calendar", None))
     calendar_known_at_text = cast(str | None, getattr(args, "calendar_known_at", None))
@@ -353,11 +598,42 @@ def run(args: argparse.Namespace) -> dict[str, object]:
 
     print("Validating saved checkpoints and source checksums...", flush=True)
     artifacts = discover_probe_artifacts(plan, work_root=args.work_dir)
-    selection_mode = cast(str, getattr(args, "selection_mode", _RANDOM_SAMPLE))
-    reference: ReferenceMonthSelection | None = None
-    selected: tuple[SelectedArtifact, ...]
+    original_artifact_count = len(artifacts)
+    supplement_path = cast(Path | None, getattr(args, "source_supplement_manifest", None))
+    supplement_digest = cast(str | None, getattr(args, "source_supplement_sha256", None))
+    supplement_artifacts: tuple[ProbeArtifact, ...] = ()
+    supplement_ordinal = max((item.ordinal for item in artifacts), default=-1) + 1
+    if supplement_path is not None:
+        from tradebot.data.source_supplement import load_supplement_artifacts
+
+        if selection_mode != _CLOCK_REFERENCE_MONTH or supplement_digest is None:
+            raise ValueError(
+                "source supplement requires clock-reference-month and its expected hash"
+            )
+        supplement_artifacts = load_supplement_artifacts(
+            supplement_path,
+            artifact_root=supplement_path.parent,
+            expected_manifest_sha256=supplement_digest,
+            ordinal_start=supplement_ordinal,
+        )
+        artifacts = (*artifacts, *supplement_artifacts)
+    elif supplement_digest is not None:
+        raise ValueError("source supplement hash requires a manifest")
+    reference: ReferenceMonthSelection | ClockReferenceMonthSelection | None = None
+    selected: tuple[SelectedArtifact | ClockSelectedArtifact, ...]
     mode_payload: dict[str, object]
-    if selection_mode == _REFERENCE_MONTH:
+    if selection_mode == _CLOCK_REFERENCE_MONTH:
+        if clock_inputs is None:
+            raise ValueError("clock-reference-month requires a source-clock policy")
+        reference = select_clock_reference_month(
+            artifacts,
+            instrument=args.instrument,
+            reference_month=args.reference_month,
+            source_clock=clock_inputs.policy,
+        )
+        selected = reference.chunks
+        mode_payload = _clock_selection_payload(reference)
+    elif selection_mode == _REFERENCE_MONTH:
         reference_month = cast(str | None, getattr(args, "reference_month", None))
         if reference_month is None:
             raise ValueError("reference_month is required in reference-month mode")
@@ -416,13 +692,24 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         "quality_config_sha256": sha256_path(args.quality_config),
         "calendar": calendar_binding,
         "acquisition_snapshot": {
-            "completed_checkpoints": len(artifacts),
+            "completed_checkpoints": original_artifact_count,
             "expected_chunks": len(plan.chunks),
-            "plan_complete": len(artifacts) == len(plan.chunks),
+            "plan_complete": original_artifact_count == len(plan.chunks),
         },
         "chunks": [_chunk_payload(item) for item in selected],
         **mode_payload,
     }
+    if clock_inputs is not None:
+        selection["source_clock"] = clock_inputs.to_dict()
+        clock_inputs.verify_unchanged()
+    if supplement_path is not None:
+        selection["source_supplement"] = {
+            "path": supplement_path,
+            "sha256": supplement_digest,
+            "artifact_root": supplement_path.parent,
+            "validated_acquisition_label_intervals": len(supplement_artifacts),
+            "approval_status": "NOT_ASSESSED_BY_PRODUCER",
+        }
     selection_path = args.output_dir / "selection.json"
     _write_new(selection_path, selection)
     imported = []
@@ -455,8 +742,11 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                 known_at=calendar_known_at,
                 calendar_instrument=calendar_instrument,
                 batch_size=args.batch_size,
+                source_clock=None if clock_inputs is None else clock_inputs.policy,
             )
         )
+        if clock_inputs is not None:
+            clock_inputs.verify_unchanged()
     raw_after = file_manifest(raw_paths, relative_to=raw_root)
     first, second = results
     # Compare both identities and complete file manifests, including bytes on disk.
@@ -474,11 +764,14 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     )
     raw_unchanged = raw_before == raw_after
     calendar_unchanged = calendar_path is None or sha256_path(calendar_path) == calendar_sha256
-    selection_scope_complete = (
-        args.days >= 30
-        if reference is None
-        else len(reference.target_chunks) == len(reference.expected_target_close_dates)
-    )
+    if isinstance(reference, ClockReferenceMonthSelection):
+        selection_scope_complete = True  # The mapped-request planner has already failed closed.
+    elif reference is not None:
+        selection_scope_complete = len(reference.target_chunks) == len(
+            reference.expected_target_close_dates
+        )
+    else:
+        selection_scope_complete = args.days >= 30
     reproducible = (
         identical
         and raw_unchanged
@@ -487,7 +780,17 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         and selection_scope_complete
     )
     reference_result: dict[str, object] | None = None
-    if reference is not None:
+    if isinstance(reference, ClockReferenceMonthSelection):
+        reference_result = {
+            **_clock_selection_payload(reference),
+            "instrument": reference.instrument,
+            "acceptance_status": "INDETERMINATE",
+            "acceptance_reason": (
+                "mapped request coverage and producer reproducibility do not establish "
+                "tick completeness or approve the source-clock policy, calendar, flags or Gate 1"
+            ),
+        }
+    elif reference is not None:
         reference_result = {
             "reference_month": reference.reference_month,
             "instrument": reference.instrument,
@@ -561,6 +864,24 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         "independent_human_review": "PENDING",
         "principal_approval": "PENDING",
     }
+    if clock_inputs is not None:
+        clock_inputs.verify_unchanged()
+        report["source_clock_inputs_unchanged"] = True
+        report["selected_primary_ticks_basis"] = "ACQUISITION_CHUNK_ROWS_NOT_TRUE_UTC_TARGET_COUNT"
+    if supplement_path is not None:
+        if supplement_digest is None:
+            raise ValueError("source supplement expected hash is missing")
+        if (
+            load_supplement_artifacts(
+                supplement_path,
+                artifact_root=supplement_path.parent,
+                expected_manifest_sha256=supplement_digest,
+                ordinal_start=supplement_ordinal,
+            )
+            != supplement_artifacts
+        ):
+            raise ValueError("source supplement inputs changed during rebuild")
+        report["source_supplement_inputs_unchanged"] = True
     _write_new(args.output_dir / "report.json", report)
     report_hash = sha256_path(args.output_dir / "report.json")
     _write_new(args.output_dir / "report.sha256.json", {"report.json": report_hash})
@@ -589,7 +910,7 @@ def _arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--venue", default="FBS")
     parser.add_argument(
         "--selection-mode",
-        choices=(_RANDOM_SAMPLE, _REFERENCE_MONTH),
+        choices=(_RANDOM_SAMPLE, _REFERENCE_MONTH, _CLOCK_REFERENCE_MONTH),
         default=_RANDOM_SAMPLE,
     )
     parser.add_argument("--reference-month")
@@ -598,11 +919,27 @@ def _arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--calendar", type=Path)
     parser.add_argument("--calendar-known-at")
     parser.add_argument("--calendar-instrument")
+    parser.add_argument("--source-clock-policy", type=Path)
+    parser.add_argument("--source-clock-evidence", action="append", default=[], metavar="NAME=PATH")
+    parser.add_argument("--source-supplement-manifest", type=Path)
+    parser.add_argument("--source-supplement-sha256")
     parser.add_argument("--batch-size", type=int, default=65536)
     parser.add_argument("--timeframes", nargs="+", choices=("1m", "1d"), default=["1m"])
     args = parser.parse_args(argv)
     if args.output_dir.exists():
         parser.error("output-dir must not already exist; evidence runs are append-only")
+    if args.selection_mode == _CLOCK_REFERENCE_MONTH:
+        if args.source_clock_policy is None:
+            parser.error("clock-reference-month requires --source-clock-policy")
+    elif args.source_clock_policy is not None or args.source_supplement_manifest is not None:
+        parser.error("source-clock policy and supplements require clock-reference-month selection")
+    if args.source_clock_evidence and args.source_clock_policy is None:
+        parser.error("source-clock evidence requires --source-clock-policy")
+    if (args.source_supplement_manifest is None) != (args.source_supplement_sha256 is None):
+        parser.error(
+            "source supplement requires both --source-supplement-manifest "
+            "and --source-supplement-sha256"
+        )
     if args.selection_mode == _RANDOM_SAMPLE:
         if args.reference_month is not None:
             parser.error("reference-month requires --selection-mode reference-month")
