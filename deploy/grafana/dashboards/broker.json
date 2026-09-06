@@ -1,0 +1,1955 @@
+{
+  "uid": "tradebot-broker",
+  "title": "Tradebot · Broker & Positions",
+  "description": "Read-only actual terminal account, positions, pending orders and bounded quotes; no bot attribution or trading controls.",
+  "tags": [
+    "tradebot",
+    "broker",
+    "read-only"
+  ],
+  "timezone": "Africa/Johannesburg",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "editable": true,
+  "links": [
+    {
+      "title": "Trading System Overview",
+      "type": "link",
+      "url": "/d/tradebot-system",
+      "targetBlank": false
+    },
+    {
+      "title": "Data & Quality",
+      "type": "link",
+      "url": "/d/tradebot-data-quality",
+      "targetBlank": false
+    },
+    {
+      "title": "Acquisition",
+      "type": "link",
+      "url": "/d/tradebot-acquisition",
+      "targetBlank": false
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Broker & Positions · read only",
+      "type": "text",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 3
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "All terminal trades are shown, including manual/external activity — **not certified bot trades**. View only; no trading controls. Check freshness before using retained values."
+      },
+      "targets": []
+    },
+    {
+      "id": 2,
+      "title": "Freshness",
+      "type": "stat",
+      "description": "A failed read, no snapshot or age over 15 seconds marks the retained snapshot stale.",
+      "gridPos": {
+        "x": 0,
+        "y": 3,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "clamp_max(max(tradebot_broker_snapshot_stale) + (time() - max(tradebot_broker_last_success_timestamp_seconds) > bool 15), 1)",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No confirmed snapshot",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Fresh",
+                  "color": "green"
+                },
+                "1": {
+                  "text": "Stale / unknown",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Age",
+      "type": "stat",
+      "description": "Age of the last fully successful account/position/order snapshot.",
+      "gridPos": {
+        "x": 4,
+        "y": 3,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "time() - (tradebot_broker_last_success_timestamp_seconds > 0)",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "No confirmed snapshot",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "title": "Positions",
+      "type": "stat",
+      "description": "All positions in the last successful terminal snapshot. Zero is shown only after a successful empty read.",
+      "gridPos": {
+        "x": 8,
+        "y": 3,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_broker_position_count",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No confirmed snapshot",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "title": "Orders",
+      "type": "stat",
+      "description": "Broker active orders in the last confirmed snapshot; an error is not zero.",
+      "gridPos": {
+        "x": 12,
+        "y": 3,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_broker_order_count",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No confirmed snapshot",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 6,
+      "title": "Observer",
+      "type": "stat",
+      "description": "Timeout or a detected account change locks this observer until its process is restarted; the prior snapshot stays stale.",
+      "gridPos": {
+        "x": 16,
+        "y": 3,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_broker_ipc_poisoned + 2 * tradebot_broker_account_changed",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No confirmed snapshot",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Observing",
+                  "color": "green"
+                },
+                "1": {
+                  "text": "IPC timeout",
+                  "color": "orange"
+                },
+                "2": {
+                  "text": "Account changed",
+                  "color": "red"
+                },
+                "3": {
+                  "text": "Restart observer",
+                  "color": "red"
+                }
+              }
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 7,
+      "title": "Account",
+      "type": "stat",
+      "description": "Actual account kind/currency from the connected terminal; demo/live is not assumed.",
+      "gridPos": {
+        "x": 20,
+        "y": 3,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_broker_account_info",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{account_kind}} · {{currency}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No confirmed snapshot",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 8,
+      "title": "Balance",
+      "type": "stat",
+      "description": "Broker-reported balance in fund currency.",
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 5,
+        "h": 3
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_broker_account_amount{field=\"balance\"}",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{currency}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "decimals": 2,
+          "noValue": "No confirmed snapshot",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 9,
+      "title": "Equity",
+      "type": "stat",
+      "description": "Broker-reported equity, not backtest equity.",
+      "gridPos": {
+        "x": 5,
+        "y": 7,
+        "w": 5,
+        "h": 3
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_broker_account_amount{field=\"equity\"}",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{currency}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "decimals": 2,
+          "noValue": "No confirmed snapshot",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 10,
+      "title": "Floating P&L",
+      "type": "stat",
+      "description": "Current account floating profit as reported by MT5; not bot-attributed.",
+      "gridPos": {
+        "x": 10,
+        "y": 7,
+        "w": 5,
+        "h": 3
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_broker_account_amount{field=\"profit\"}",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{currency}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "decimals": 2,
+          "noValue": "No confirmed snapshot",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 11,
+      "title": "Used margin",
+      "type": "stat",
+      "description": "Broker-reported margin.",
+      "gridPos": {
+        "x": 15,
+        "y": 7,
+        "w": 4,
+        "h": 3
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_broker_account_amount{field=\"margin\"}",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{currency}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "decimals": 2,
+          "noValue": "No confirmed snapshot",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 12,
+      "title": "Free margin",
+      "type": "stat",
+      "description": "Broker-reported free margin.",
+      "gridPos": {
+        "x": 19,
+        "y": 7,
+        "w": 5,
+        "h": 3
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_broker_account_amount{field=\"margin_free\"}",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{currency}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "decimals": 2,
+          "noValue": "No confirmed snapshot",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 13,
+      "title": "Last confirmed terminal detail",
+      "type": "text",
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 24,
+        "h": 3
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "Rows are last confirmed observations; failed reads retain stale data. **Account changed / IPC timeout: restart the observer.** A successful empty snapshot means no active positions/orders."
+      },
+      "targets": []
+    },
+    {
+      "id": 14,
+      "title": "Open positions · includes manual and external",
+      "type": "table",
+      "description": "Exact ticket, symbol, side, volume, entry/current prices, protection levels and broker P&L. This is a read-only last-confirmed snapshot.",
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 24,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_broker_position_volume_lots",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": "Lots",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "tradebot_broker_position_open_price",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": "Open",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "tradebot_broker_position_current_price",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": "Current",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        },
+        {
+          "refId": "D",
+          "expr": "tradebot_broker_position_stop_loss",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": "SL",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        },
+        {
+          "refId": "E",
+          "expr": "tradebot_broker_position_take_profit",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": "TP",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        },
+        {
+          "refId": "F",
+          "expr": "tradebot_broker_position_profit",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": "Profit",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        },
+        {
+          "refId": "G",
+          "expr": "tradebot_broker_position_swap",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": "Swap",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        },
+        {
+          "refId": "H",
+          "expr": "tradebot_broker_position_open_timestamp_seconds * 1000",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": "Opened",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "exclude": {
+              "names": [
+                "__name__"
+              ]
+            }
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "origin": true,
+              "job": true,
+              "instance": true
+            },
+            "indexByName": {
+              "ticket": 0,
+              "symbol": 1,
+              "side": 2,
+              "origin": 3,
+              "Value #A": 4,
+              "Value #B": 5,
+              "Value #C": 6,
+              "Value #D": 7,
+              "Value #E": 8,
+              "Value #F": 9,
+              "Value #G": 10,
+              "Value #H": 11
+            },
+            "renameByName": {
+              "ticket": "Ticket",
+              "symbol": "Symbol",
+              "side": "Side / type",
+              "origin": "Attribution",
+              "Value #A": "Lots",
+              "Value #B": "Open",
+              "Value #C": "Current",
+              "Value #D": "SL",
+              "Value #E": "TP",
+              "Value #F": "Profit",
+              "Value #G": "Swap",
+              "Value #H": "Opened"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 5,
+          "noValue": "—",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "minWidth": 50
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lots"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.width",
+                "value": 60
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Profit"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Swap"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Opened"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 185
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Placed"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Expires"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Ticket"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Symbol"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 85
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Side / type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 95
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Open"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 85
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Current"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SL"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 85
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "TP"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 85
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "id": 15,
+      "title": "Pending / active orders · read only",
+      "type": "table",
+      "description": "All active orders returned by orders_get; no order controls. A zero expiration epoch means no expiration.",
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 24,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_broker_order_volume_lots",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": "Lots",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "tradebot_broker_order_open_price",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": "Requested",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "tradebot_broker_order_current_price",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": "Current",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        },
+        {
+          "refId": "D",
+          "expr": "tradebot_broker_order_stop_loss",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": "SL",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        },
+        {
+          "refId": "E",
+          "expr": "tradebot_broker_order_take_profit",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": "TP",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        },
+        {
+          "refId": "F",
+          "expr": "tradebot_broker_order_stop_limit_price",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": "Stop limit",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        },
+        {
+          "refId": "G",
+          "expr": "tradebot_broker_order_setup_timestamp_seconds * 1000",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": "Placed",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        },
+        {
+          "refId": "H",
+          "expr": "tradebot_broker_order_expiration_timestamp_seconds * 1000",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": "Expires",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "exclude": {
+              "names": [
+                "__name__"
+              ]
+            }
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "origin": true,
+              "job": true,
+              "instance": true
+            },
+            "indexByName": {
+              "ticket": 0,
+              "symbol": 1,
+              "side": 2,
+              "origin": 3,
+              "Value #A": 4,
+              "Value #B": 5,
+              "Value #C": 6,
+              "Value #D": 7,
+              "Value #E": 8,
+              "Value #F": 9,
+              "Value #G": 10,
+              "Value #H": 11
+            },
+            "renameByName": {
+              "ticket": "Ticket",
+              "symbol": "Symbol",
+              "side": "Side / type",
+              "origin": "Attribution",
+              "Value #A": "Lots",
+              "Value #B": "Requested",
+              "Value #C": "Current",
+              "Value #D": "SL",
+              "Value #E": "TP",
+              "Value #F": "Stop limit",
+              "Value #G": "Placed",
+              "Value #H": "Expires"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 5,
+          "noValue": "—",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "minWidth": 50
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lots"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.width",
+                "value": 60
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Profit"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Swap"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Opened"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Placed"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 185
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Expires"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "No expiration"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.width",
+                "value": 185
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Ticket"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Symbol"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 85
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Side / type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 115
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Requested"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 95
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Current"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SL"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 85
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "TP"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 85
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Stop limit"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "id": 16,
+      "title": "Observed quotes for open-position symbols",
+      "type": "table",
+      "description": "Quote timestamps can be old when the market is closed. Up to 16 unique open-position symbols are queried; failures/omissions are shown below.",
+      "gridPos": {
+        "x": 0,
+        "y": 31,
+        "w": 24,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_broker_quote_bid",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": "Bid",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "tradebot_broker_quote_ask",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": "Ask",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "tradebot_broker_quote_timestamp_seconds * 1000",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": "Quote time",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "exclude": {
+              "names": [
+                "__name__"
+              ]
+            }
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true
+            },
+            "renameByName": {
+              "symbol": "Symbol",
+              "Value #A": "Bid",
+              "Value #B": "Ask",
+              "Value #C": "Quote time"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 5,
+          "custom": {
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Quote time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    },
+    {
+      "id": 17,
+      "title": "Failed quote observations",
+      "type": "stat",
+      "description": "Optional quote reads failed in the last successful core snapshot; no fabricated zero prices.",
+      "gridPos": {
+        "x": 0,
+        "y": 38,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_broker_quote_failures",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No confirmed snapshot",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 18,
+      "title": "Quote symbols omitted",
+      "type": "stat",
+      "description": "Symbols exceeding the 16-symbol optional quote cap. Positions themselves are not truncated.",
+      "gridPos": {
+        "x": 6,
+        "y": 38,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_broker_quote_symbols_omitted",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No confirmed snapshot",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 19,
+      "title": "Observer read errors",
+      "type": "stat",
+      "description": "Cumulative errors in this observer process; details in local /api/status.",
+      "gridPos": {
+        "x": 12,
+        "y": 38,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_broker_poll_errors_total",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No confirmed snapshot",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 20,
+      "title": "Successful snapshots",
+      "type": "stat",
+      "description": "Successful complete core reads since observer startup.",
+      "gridPos": {
+        "x": 18,
+        "y": 38,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_broker_poll_successes_total",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tradebot-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No confirmed snapshot",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 21,
+      "title": "Scope, privacy and execution separation",
+      "type": "text",
+      "gridPos": {
+        "x": 0,
+        "y": 42,
+        "w": 24,
+        "h": 6
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "All positions and pending orders come from the connected MT5 terminal, including manual and other external trades. **None are certified as this bot’s trades.** Broker account P&L is not strategy-performance evidence. Failed reads retain the last confirmed snapshot: always check freshness. No account number, credentials or trading controls are exposed.\n\nPositions and orders below are from the last successful snapshot; **orange freshness means retained old values, not a fresh reading**. A genuinely empty table is meaningful only when the corresponding count above is zero and freshness is green. SL/TP values of 0 mean unset. Profit/swap use the account currency shown above. All attribution is “not_bot_certified”. A detected account change locks the observer until restart; retained rows still belong to the previously confirmed account.\n\nThis observer uses only MT5 account, position, order and quote read APIs. **Bot execution configuration remains separate**—external positions can exist while the bot is disabled. No history-deal/closed-trade performance is calculated in this first view. Local Prometheus retains observations under the monitoring retention policy; do not expose ports 3000, 9090, 8765 or 8766 remotely. Exporter `/health` means the HTTP process is alive, not that the broker data is fresh."
+      },
+      "targets": []
+    }
+  ]
+}

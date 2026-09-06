@@ -1,7 +1,15 @@
 # ADR-0007: Data source selection
 
-Status: not started — blocked on Gate-0 sign-off. The Principal's practical constraints are recorded
-below and are **not** open questions; what remains is measurement and licence confirmation.
+Status: in progress — the `boundary-pass-v5` broker probe is complete and its results are recorded
+under **Measured facts** below. Four items remain open: historical tick density and two-sided
+continuity during acquisition, true broker M1 depth (as distinct from terminal-visible reach), SPEC
+§2.4's expected-liquidity calendar, and the written licence answer for any third-party source retained
+for cross-source validation. The D1 walk is complete as a terminal-visible measurement; it is
+deliberately not labelled immutable broker depth.
+
+Probe report: `docs/reports/fbs-depth-probe.json`, SHA-256
+`653a08605dc7929e6427c1e758e6708a90ecc333f1dc83e03c9f8a5942592e1d`, completed 2026-09-04
+against `FBS-Demo`, MetaTrader 5 build 6140.
 
 ## Context
 
@@ -24,7 +32,233 @@ per-broker per-symbol property** and MUST be read from the broker's own symbol s
 inferred from the underlying's denomination `[VERIFY]`. `SYMBOL_CURRENCY_MARGIN` may differ from
 `SYMBOL_CURRENCY_PROFIT`, which can introduce a third series.
 
-## Decision (to be completed)
+## Measured facts
+
+Measured 2026-09-04 on the FBS demo server. These supersede the corresponding `[VERIFY]` items;
+anything still marked `[VERIFY]` below was **not** settled by the probe.
+
+### Retrievable tick depth
+
+These are the earliest ticks retrievable from this demo terminal **as of this run**, not a claim that
+the returned floor is immutable maximum broker depth. Four index floors moved earlier as terminal
+history synchronised between runs; the report's hash makes this particular observation reproducible.
+
+| Logical | Broker symbol | Earliest tick | Span |
+|---|---|---|---|
+| GBP/USD | `GBPUSD` | 2011-12-19 | ~14.7 yr |
+| EUR/USD | `EURUSD` | 2011-12-19 | ~14.7 yr |
+| UK100 | `UK100` | 2020-11-30 | ~5.8 yr |
+| GER40 | `DE30` | 2021-03-05 | ~5.5 yr |
+| US30 | `US30` | 2023-03-06 | ~3.5 yr |
+| US500 | `US500` | 2025-02-27 | ~1.5 yr |
+| US100 | `US100` | 2025-10-13 | ~0.9 yr |
+
+**The FX result changes this ADR's shape, but does not yet discharge source acceptance.** SPEC §13
+asks for ≥ 8 years of GBP/USD and EUR/USD ticks; the earliest retrievable tick gives both pairs a
+~14.7-year date-span reach on the broker we would actually trade with. That clears the date-range
+threshold **provisionally**, subject to acquiring the range and verifying density, bid/ask continuity
+and reproducibility before Gate 3. FBS is therefore the primary FX depth candidate as well as the
+§4.1/§6.4 calibration venue. A third-party archive is not required merely to reach an early date; it
+remains a fallback if acquisition fails and an optional second source for §4.4 #7 agreement.
+
+**The index result reinforces `data_only` on measured grounds.** UK100 and GER40 have retrievable
+start dates more than five years old, so their date spans provisionally clear §13's numeric target;
+continuity is unverified. Neither can contain the complete stress set SPEC §2.1 mandates: their start
+dates permit the 2022 gilt crisis but exclude the 2016 Brexit vote, the 2016-10-07 flash crash and the
+2020 COVID crunch, while the three US indices are shallower still. The FX start dates permit all four,
+again subject to acquisition and continuity checks. Using execution-venue index history avoids a
+venue mismatch where it exists, but depth still prevents an index-strategy Gate-3 claim. `data_only`
+therefore remains the honest v1 scope.
+
+### Instrument specifications
+
+- **Cash CFDs confirmed:** every index has `expiration_time = 0` and `trade_calc_mode = 2`. No
+  expiry, no rollover logic — matching the Principal's v1 instrument-type decision.
+- **Pip arithmetic confirms SPEC §2.1's hand-calculated table exactly.** `GBPUSD` has
+  `trade_contract_size = 100000`, `point = 1e-05`, `digits = 5`, `trade_tick_value = 1.0`. One pip
+  (0.0001) on a standard lot is therefore USD 10.00, as §2.1 states. §10.2's financial-correctness
+  test now has measured broker data to assert against.
+- **Triple-swap day differs by asset class, and this is a real trap.** `swap_rollover3days` is **3
+  (Wednesday) for FX** and **5 (Friday) for every index CFD**. §2.1 states the Wednesday convention
+  with a `[VERIFY]`; it holds for FX only. A cost model applying one rule to both would mis-accrue
+  index financing on two days of every week.
+- **`trade_tick_value` is a live, FX-rate-derived number, not a constant.** The UK100 and DE30 values
+  changed slightly between live passes because they are 0.1 GBP and 0.1 EUR converted to USD at the
+  prevailing rate. The snapshot values remain in the hashed report, but they **cannot be cached in
+  `configs/instruments.yaml`**, and the §2.3 startup verification must not equality-compare them; this
+  is a live-read field per §2.4. Only the invariant inputs (contract size, point, digits, tick size)
+  are comparable.
+- **`currency_margin` differs from `currency_profit`:** `GBPUSD` margins in GBP and profits in USD.
+  Against a USD account that is a third conversion series, exactly as flagged. Index margin
+  currencies follow their profit currencies (GBP, EUR, USD).
+- **Tick fields:** `time_msc` is present, settling that `[VERIFY]`. FX ticks carry `last = 0`,
+  `volume = 0`, `volume_real = 0`, confirming there is no traded volume and that
+  `VolumeKind.TICK_COUNT` is the correct label. A 10,000-tick recent sample was 100 % two-sided with
+  zero crossed or locked quotes — recent only; historical density and two-sidedness back to 2011 are
+  still `[VERIFY]`.
+- **Suffixed variants exist:** `GBPUSDw` and `EURUSDw` alongside the unsuffixed symbols, out of 585
+  total. The probe mapped the logical names to the **unsuffixed** symbols. That mapping is now an
+  explicit decision to record, and the variants' depth and specifications are unmeasured `[VERIFY]`.
+
+### Account facts
+
+- **The account is HEDGING, not netting** (`margin_mode = 2`). This bears directly on §8.3: under
+  hedging the broker holds many positions per symbol, each with its own ticket and its own SL/TP, so
+  a per-position native stop is straightforwardly achievable. The cost is that §8.2's target-position
+  model must be imposed in software — never open an opposing ticket, always close by explicit
+  position ticket to reach target — and NN-9 reconciliation becomes a set comparison over tickets
+  rather than a scalar. Whether FBS offers a netting account type at all is `[VERIFY]`, and which
+  mode to require is a P4 broker-ADR decision.
+- Account currency USD, `FBS Markets Inc.`, server `FBS-Demo`, demo confirmed.
+- `trade_allowed = False` — algo trading is disabled in the terminal. Irrelevant to a read-only
+  probe; it blocks any order path and must be enabled before P4 contract tests.
+
+### Still open
+
+- **M1 broker depth remains unresolved; D1 terminal-visible reach is now measured.** An earlier draft
+  claimed `copy_rates_from(date, count=1)` would sidestep the `maxbars = 100000` cap the way
+  `copy_ticks_from(date, count=1)` does. **That claim was wrong and is withdrawn.** Rate calls count
+  backwards from the requested date and are bounded by terminal chart history. V5 instead makes
+  maxbars-derived, calendar-bounded requests and labels every result `terminal_visible_earliest` with
+  `is_broker_depth: false`. All M1 plans are explicitly truncated to 4,800 of the requested 7,300
+  days and stopped after only 120–140 walked days when a window returned one out-of-range bar; the
+  visible floor is in May 2026, so another identical run cannot establish true depth. The D1 walks
+  reached the full requested 7,300 days for FX (the September 2006 request floor) and 5,475 days for
+  the indices (terminal-visible bars around May/June 2013), but retain the same no-broker-depth label.
+  Resolving M1 requires a deliberate history-acquisition path, not an inference from this chart cache.
+- **The D1 trading-day boundary is resolved for FX and remains unresolved for the indices.** MT5 tick
+  and bar epochs cannot be interpreted by comparing them with our wall clock. The observable route is
+  D1 bar **open instants plus a price anchor**, which `scripts/fbs_depth_probe.py`
+  (`boundary-pass-v5`) measures. This is the input SPEC §4.3 needs for a broker-priced instrument's
+  daily bars and §6.3 needs for the financing accrual boundary.
+
+  **V5 D1 pass, measured:** 1,038 bars; UTC opens `00:00 × 1038`; New York opens
+  `19:00 × 353`, `20:00 × 685`; eight interior weeks not holding five bars, of which `2024-W43` held
+  **six** because of a short Sunday `00:00` stub bar. That Sunday stub sits inside the autumn DST
+  mismatch window (EU fell back 2024-10-27) and is exactly the anomaly SPEC §4.4 check 10(c) exists
+  to catch.
+
+  **The histogram alone remains ambiguous.** A uniform `00:00 UTC` open histogram could mean a
+  genuine UTC-midnight roll or a non-zero-offset local midnight encoded as UTC. Both produce
+  byte-identical timestamps, so the former `epochs_look_like_true_utc` inference was unsound and was
+  removed. The price anchor below is what resolves the FX case.
+
+  **What separates them is a price anchor**, and it has now been run. For a sample of D1 bars,
+  compare the bar's open price against the first tick at or after each candidate boundary instant
+  (`epoch + offset`). The offset whose first tick reproduces the bar's open price is the real
+  boundary; offset zero means the reported epoch *is* the boundary.
+
+  | Instrument | Anchor result | Reading |
+  |---|---|---|
+  | GBPUSD | offset 0, 10/12, unique | Genuine 00:00 UTC D1 boundary |
+  | EURUSD | offset 0, 10/12, unique; offset -1 matched once | Same; the non-winning match does not change the strict majority |
+  | UK100 | offsets -3 and +2 tied at 1 each; 11/12 usable | **Unresolved** — a tie is not a boundary |
+  | GER40, US30, US500, US100 | no candidate reproduced a sampled bar open; 12/12 usable | **Unresolved** |
+
+  The scoring rule has been tightened and the two FX rows still stand under it. A resolved
+  verdict now additionally requires at least `MIN_ANCHOR_SAMPLES = 8` samples and a strict majority.
+  A bar is usable only after every candidate query has completed and at least one candidate owns a
+  non-shared first tick; discarded shared ticks and incomplete queries no longer inflate the
+  denominator. The FX rows clear both bars (10 of 12); the index rows remain unresolved. A tie is
+  never broken by candidate order.
+
+  **Both gates count the winner's OWN trials, not the pooled usable count.** A first attempt at this
+  measured both against a single `usable_samples` figure, which counted a bar as usable when *any*
+  candidate owned a non-shared tick. That is the wrong denominator: when the winning offset's tick
+  collapses onto a neighbour, the bar still tests every other candidate, so it inflated the winner's
+  evidence with bars that said nothing about it. Seven clean trials for offset 0 were reported as
+  `7/12` and cleared a floor of eight. The verdict now records `eligible[offset]` — how many bars
+  actually tested each candidate — and requires `eligible[winner] >= MIN_ANCHOR_SAMPLES` and
+  `matches[winner] × 2 > eligible[winner]`. `eligible − matches` is then real contrary evidence: the
+  candidate had a clean shot and missed. The probe artifact carries the per-offset `eligible` map so
+  a reader can tell 7-of-7 from 7-of-12, which neither `samples` nor `shared_tick_discards` revealed.
+
+  Note for the Principal, since SPEC §0 rule 9 reserves thresholds: a *strict majority* is a weak bar
+  for a property that is deterministic. A genuine boundary should reproduce the open on essentially
+  every bar that tests it, so `5/8` passing is arguably too permissive even though it is a majority.
+  The live FX evidence is 10/12 and 12/12, so raising the bar would not disturb it. Left as-is
+  pending your decision.
+
+  **The FX conclusion, and it is a firm one.** The four-year histogram is `00:00 UTC`, i.e.
+  19:00/20:00 New York, which is **not** the 17:00 New York internal FX day SPEC §3.4 mandates. The
+  broker's daily bars are therefore a different object from ours. They remain **validation references
+  only** (§4.3), and internal daily bars MUST be built from ticks on the 17:00 New York boundary.
+  That makes §4.3's build-from-ticks rule load-bearing rather than stylistic, and it means the
+  reconciliation rule joining on the UTC close instant — never the label date — is mandatory here.
+
+  **Every mapped symbol reported Bid chart mode**, so the anchor's bid comparison is sound today. The
+  probe records and enforces `chart_mode`: any symbol not declared Bid-built receives an unsupported,
+  unresolved anchor rather than a Bid-based verdict.
+
+  The session-week and DST-window logic is **production code** (SPEC §4.4 check 10(c)), not probe
+  scaffolding: it lives in `src/tradebot/data/session_weeks.py`, the boundary analysis lives in
+  `src/tradebot/data/boundary_probe.py`, and the probe imports both so there is one implementation
+  under mypy and CI. Two bugs found in the first pass are fixed there: a wholly missing interior week
+  was invisible because only observed week keys were counted, and a mismatch window must contain
+  both the transition Sunday's close-labelled stub week **and** the fully affected weeks beginning the
+  following Monday. The fingerprint now audits their union rather than dropping either side.
+
+  **Neither verdict may report a pass, and both now say so in their own status.** The two questions
+  are distinct — the weekly audit asks whether sessions are missing, check 10(c) asks whether the
+  boundary is ours — so they carry separate statuses, and the evidence for each is asymmetric:
+
+  - **Excess is structural and unconditional.** A holiday can only *remove* a session, never add one,
+    so a close-labelled week holding more than five sessions is a defect no calendar and no sample
+    size can legalise. It is reported before anything else, and an expected count above five is
+    rejected as an invalid calendar rather than used to legalise a sixth session.
+  - **Shortfall is calendar-dependent.** A four-session week is a dropped session or a public
+    holiday, and nothing in the data distinguishes them. Without SPEC §2.4's expected-liquidity
+    calendar the audit returns `INDETERMINATE` — it does **not** fail open, and an empty or
+    too-short sample is `INDETERMINATE` too rather than silently clean.
+  - **Misalignment evidence needs no coverage; a clean verdict needs both seasons.** One stub bar
+    inside a mismatch window is direct evidence of a foreign boundary, so `MISALIGNED` is returned
+    even from partial coverage of that window. The converse does not hold: quiet weeks in one season
+    say nothing about the other, so `ALIGNED` requires full coverage of a spring **and** an autumn
+    window plus a supplied calendar. A sample that is quiet across both seasons but has no calendar
+    is `PROVISIONALLY_ALIGNED` — consistent with alignment, explicitly not gate-grade.
+  - **Evidence collection is separate from verdict precedence.** Duplicate, structural excess,
+    calendar excess and shortfall, uncovered weeks and ambiguous closes are all collected before a
+    status is selected. An unrelated six-bar week can therefore never hide a mismatch-window
+    shortfall. `ALIGNED` additionally requires the underlying weekly audit to be `PASSED`; a failed
+    audit outside the mismatch windows makes the fingerprint `INDETERMINATE`, never clean.
+
+  V5 therefore reads weekly audit `FAILED` and 10(c) `MISALIGNED` for both FX pairs on the
+  `2024-W43` six-session week. That conclusion needs no calendar because excess is unconditional.
+  Each index instead has a four-session `2024-W13`; without a calendar, both its weekly audit and
+  fingerprint remain `INDETERMINATE`. **§2.4's expected-liquidity calendar remains the blocker for
+  judging those index shortfalls and for any future `ALIGNED` claim**, and is an open P1 deliverable.
+
+  Session-week keying no longer invents a close. An earlier version labelled each week by
+  `open + 24h`, then another silently substituted `open + 25h` across a market gap. Consecutive opens
+  no more than 25 hours apart still provide an exact close. Across a longer gap, `session_closes`
+  retains the honest `[open + 23h, open + 25h]` interval and assigns a week only when both ends prove
+  the same close-labelled ISO week; otherwise the audit reports the close and candidate weeks as
+  ambiguous. Explicit final closes must be UTC, strictly after the open and within 25 hours.
+
+  Probe-mechanics limits were also load-bearing enough to fix in the tested module. Bar-window
+  planning applies a **calendar ceiling as well as** the `maxbars` bar-count cap — ~20 days for M1,
+  one year for D1 — because a request for 365 days of M1 data is ~525,600 bars against a 100,000-bar
+  cap and the terminal simply stops answering. The 240-step safety cap covers only ~13.1 of a
+  requested 20 M1 years, so every result now exposes requested, planned and walked spans plus
+  `plan_truncated`; it never calls that cap an exhausted full-depth walk. In v5 no safety cap was
+  exhausted: the M1 walks stopped on terminal-visible out-of-range evidence after 120–140 days, while
+  the D1 results followed the paths recorded above.
+
+  Every MT5 function call is bounded by the 90-second call limit, a five-minute symbol deadline and a
+  30-minute run deadline. The result and `last_error()` snapshot are captured together on the worker
+  thread. A blocking C call cannot be cancelled, so the **first timeout poisons the session**: the
+  probe makes no later MT5 call, does not call `shutdown()`, atomically writes and fsyncs a `PARTIAL`
+  sidecar, then exits non-zero with `os._exit()`. A partial or otherwise incomplete run never replaces
+  the requested canonical evidence file. Connected/demo/FBS identity is required before measurement,
+  and a safe complete run shuts down normally. **A timeout remains absent evidence, not a negative
+  result.** End-to-end stub tests pin the poisoned-session, canonical-preservation, chart-mode and
+  identity paths in addition to report shape.
+- **Session hours are unmeasured.** `SYMBOL_SESSION_OPEN` / `SYMBOL_SESSION_CLOSE` are session
+  open/close **prices**, not times (`GBPUSD` reports 1.35246 / 1.35224), so they do not answer the
+  question. Session times require the session-quote/session-trade calls.
+- The data-licence answer for any third-party second source.
+
+## Decision (partial; licence and calendar work remain open)
 
 Selection axes, all of which must be answered per candidate before it is chosen:
 
@@ -63,23 +297,35 @@ redistributed, whether derived aggregate reports are permitted, and whether a co
 supplementary licence is required. Until an affirmative answer arrives, P1 proceeds on a
 broker-sourced or explicitly licensed fallback so the phase is not blocked on a third party's reply.
 
-**Measurement before decision.** The broker's own retrievable depth is a one-hour probe on the demo
-account. That measurement **precedes** any decision that assumes the broker's history is too short —
-sequencing it the other way would settle the largest question in the plan on an assumption.
+**Measurement before decision.** The bounded demo probe is now complete. It disproved the assumption
+that broker FX tick history is necessarily too shallow and quantified the index shortfall before a
+source decision was made.
 
-**Two-source composition.** §4.1's pattern stands: a deep third-party archive for research history,
-the traded broker's own history for cost calibration. The broker is the *calibration* source, not the
-depth source. The two will genuinely disagree on price for the same instant — they are different
-liquidity pools — so venue is part of the instrument key (§4.2) and no merged series is produced.
+**Measured source composition.** FBS ticks are the primary deep-history **candidate** and calibration
+source for GBP/USD and EUR/USD: their ~14.7-year earliest-tick reach provisionally clears §13's date
+threshold on the venue that §6.4 requires before Gate 3. Acceptance still requires full acquisition
+and density, bid/ask-continuity and reproducibility checks. Internal D1 bars are built from accepted
+ticks on the mandated 17:00 New York boundary; the broker's midnight D1 bars are validation references
+only. A written-licence third-party FX archive is fallback depth if FBS acquisition fails and optional
+independent evidence for §4.4 #7 otherwise. If used, the two venues will genuinely disagree at the
+same instant, so venue remains part of the instrument key (§4.2) and no merged series is produced. No
+deep index-strategy source is selected in v1 while indices remain `data_only` and their measured start
+dates exclude parts of the mandatory stress set.
 
-**Discharging §6.4.** A practice account with the candidate broker is opened during P1 to measure
-retrievable depth, granularity and pacing, because §6.4 requires results to be re-run on the trading
-broker's data *before Gate 3*. Naming a candidate for data purposes does not commit the P4 broker
-decision.
+**Discharging §6.4.** The FBS demo measurement establishes the data path, but Gate 3 must still rerun
+the accepted strategy evidence on the actual trading-broker dataset as §6.4 requires. Naming FBS for
+P1 data does not by itself commit the P4 broker decision.
 
 ## Consequences
 
-To be completed when the ADR is written.
+- P1 can proceed with bounded FBS tick acquisition and continuity validation for GBP/USD and EUR/USD
+  without waiting for a third-party archive response.
+- Broker D1 FX bars cannot be the research bars; the 17:00 New York tick-built path and UTC-close
+  reconciliation are mandatory.
+- Index data may be retained, but index strategies remain outside v1 until the mandatory stress
+  history, expected-liquidity calendar and a conclusive boundary method are available.
+- A third-party source, if retained for cross-source evidence, stays separately keyed and remains
+  behind the written licence gate.
 
 ## Verification
 

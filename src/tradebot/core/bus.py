@@ -102,24 +102,30 @@ class EventBus:
         self._drain()
 
     def _validate_availability(self, event: Event, *, notify_rejection: bool) -> None:
-        """Reject events that were not observable at the current clock instant."""
+        """Reject events that were not observable at the current clock instant.
+
+        All three stamps are checked, not just the availability key. ``available_at``
+        is guaranteed to dominate the other two by each concrete type's invariant,
+        so the key alone would suffice for a well-formed event — but ``Event`` is a
+        structural protocol, so an adapter can supply an object that understates its
+        own key. Checking each stamp keeps a specific rejection reason for the
+        metrics and denies a malformed event a single field to lie about.
+        """
         event_name = type(event).__name__
         now = require_utc(self._clock.now(), field="clock.now()")
-        ts_event = require_utc(event.ts_event, field="ts_event")
-        ts_recv = require_utc(event.ts_recv, field="ts_recv")
-        if ts_event > now:
-            if notify_rejection:
-                self._notify_rejected(event_name, "ts_event")
-            raise LookAheadError(
-                f"{event_name} ts_event {ts_event.isoformat()} is later than "
-                f"clock {now.isoformat()}"
-            )
-        if ts_recv > now:
-            if notify_rejection:
-                self._notify_rejected(event_name, "ts_recv")
-            raise LookAheadError(
-                f"{event_name} ts_recv {ts_recv.isoformat()} is later than clock {now.isoformat()}"
-            )
+        for field, raw in (
+            ("ts_event", event.ts_event),
+            ("ts_recv", event.ts_recv),
+            ("available_at", event.available_at),
+        ):
+            value = require_utc(raw, field=field)
+            if value > now:
+                if notify_rejection:
+                    self._notify_rejected(event_name, field)
+                raise LookAheadError(
+                    f"{event_name} {field} {value.isoformat()} is later than "
+                    f"clock {now.isoformat()}"
+                )
 
     def _drain(self) -> None:
         self._delivering = True

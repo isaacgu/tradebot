@@ -1,0 +1,1283 @@
+{
+  "uid": "tradebot-system",
+  "title": "Tradebot · Trading System Overview",
+  "description": "Evidence-based overview of the whole trading platform; acquisition is one section.",
+  "tags": [
+    "tradebot",
+    "system",
+    "overview"
+  ],
+  "timezone": "Africa/Johannesburg",
+  "schemaVersion": 39,
+  "version": 2,
+  "refresh": "10s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "editable": true,
+  "links": [
+    {
+      "title": "Broker & Trades",
+      "type": "link",
+      "url": "/d/tradebot-broker",
+      "targetBlank": false
+    },
+    {
+      "title": "System Overview",
+      "type": "link",
+      "url": "/d/tradebot-system",
+      "targetBlank": false
+    },
+    {
+      "title": "Data & Quality",
+      "type": "link",
+      "url": "/d/tradebot-data-quality",
+      "targetBlank": false
+    },
+    {
+      "title": "Research & Backtesting",
+      "type": "link",
+      "url": "/d/tradebot-research",
+      "targetBlank": false
+    },
+    {
+      "title": "Strategies & Portfolio",
+      "type": "link",
+      "url": "/d/tradebot-system?viewPanel=13",
+      "targetBlank": false
+    },
+    {
+      "title": "Execution & Risk",
+      "type": "link",
+      "url": "/d/tradebot-system?viewPanel=14",
+      "targetBlank": false
+    },
+    {
+      "title": "Evidence & Operations",
+      "type": "link",
+      "url": "/d/tradebot-system?viewPanel=15",
+      "targetBlank": false
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Trading System Overview",
+      "type": "text",
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "## Tradebot · System overview\nA research-to-live trading platform, built through evidence gates. **Data → Backtesting → Strategies & Portfolio → Risk & Execution → Paper Operations**.\n\nThis page shows what exists across the whole bot. The current acquisition run is one part of the Data & Quality section. A component's source files do not establish readiness; gate approval is displayed only when recorded evidence matches the specification."
+      },
+      "targets": []
+    },
+    {
+      "id": 2,
+      "title": "Live execution configuration",
+      "type": "stat",
+      "description": "Observed execution_enabled field in configs/env/live.yaml. This does not query the broker or prove that trading is occurring.",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 8,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Execution disabled",
+                  "color": "blue"
+                },
+                "1": {
+                  "text": "Enabled in configuration",
+                  "color": "orange"
+                },
+                "-1": {
+                  "text": "Configuration unknown",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_platform_execution_enabled",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Data acquisition process",
+      "type": "stat",
+      "description": "Operating-system process observation. Resume validation can keep checkpoint counts unchanged.",
+      "gridPos": {
+        "x": 8,
+        "y": 4,
+        "w": 8,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Stopped · incomplete",
+                  "color": "orange"
+                },
+                "1": {
+                  "text": "Running · stage not reported",
+                  "color": "blue"
+                },
+                "2": {
+                  "text": "Retrieval complete",
+                  "color": "blue"
+                },
+                "-1": {
+                  "text": "Activity unknown",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_run_state",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Gate 0 demo evidence",
+      "type": "stat",
+      "description": "Actual build/gate0/demo-manifest.json flag. The synthetic demo is wiring evidence, not strategy or performance evidence.",
+      "gridPos": {
+        "x": 16,
+        "y": 4,
+        "w": 8,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "No P&L reported",
+                  "color": "blue"
+                },
+                "1": {
+                  "text": "P&L flag set · inspect evidence",
+                  "color": "orange"
+                },
+                "-1": {
+                  "text": "Manifest unavailable",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_platform_demo_flag{flag=\"pnl_reported\"}",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "P0 · Foundations",
+      "type": "stat",
+      "description": "Derived from source-file inventory and gate evidence. Approval recorded means the gate evidence names the current frozen specification hash; it is not certification of uncommitted code.",
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 4,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "No implementation files",
+                  "color": "gray"
+                },
+                "1": {
+                  "text": "In development",
+                  "color": "orange"
+                },
+                "2": {
+                  "text": "Approval recorded",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "Unknown",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_platform_phase_state{phase=\"P0\"}",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "P1 · Data & Quality",
+      "type": "stat",
+      "description": "Derived from source-file inventory and gate evidence. Approval recorded means the gate evidence names the current frozen specification hash; it is not certification of uncommitted code.",
+      "gridPos": {
+        "x": 4,
+        "y": 8,
+        "w": 4,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "No implementation files",
+                  "color": "gray"
+                },
+                "1": {
+                  "text": "In development",
+                  "color": "orange"
+                },
+                "2": {
+                  "text": "Approval recorded",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "Unknown",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_platform_phase_state{phase=\"P1\"}",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "P2 · Backtesting",
+      "type": "stat",
+      "description": "Derived from source-file inventory and gate evidence. Approval recorded means the gate evidence names the current frozen specification hash; it is not certification of uncommitted code.",
+      "gridPos": {
+        "x": 8,
+        "y": 8,
+        "w": 4,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "No implementation files",
+                  "color": "gray"
+                },
+                "1": {
+                  "text": "In development",
+                  "color": "orange"
+                },
+                "2": {
+                  "text": "Approval recorded",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "Unknown",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_platform_phase_state{phase=\"P2\"}",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "P3 · Strategy Research",
+      "type": "stat",
+      "description": "Derived from source-file inventory and gate evidence. Approval recorded means the gate evidence names the current frozen specification hash; it is not certification of uncommitted code.",
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 4,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "No implementation files",
+                  "color": "gray"
+                },
+                "1": {
+                  "text": "In development",
+                  "color": "orange"
+                },
+                "2": {
+                  "text": "Approval recorded",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "Unknown",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_platform_phase_state{phase=\"P3\"}",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "P4 · Risk & Execution",
+      "type": "stat",
+      "description": "Derived from source-file inventory and gate evidence. Approval recorded means the gate evidence names the current frozen specification hash; it is not certification of uncommitted code.",
+      "gridPos": {
+        "x": 16,
+        "y": 8,
+        "w": 4,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "No implementation files",
+                  "color": "gray"
+                },
+                "1": {
+                  "text": "In development",
+                  "color": "orange"
+                },
+                "2": {
+                  "text": "Approval recorded",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "Unknown",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_platform_phase_state{phase=\"P4\"}",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "P5 · Paper Operations",
+      "type": "stat",
+      "description": "Derived from source-file inventory and gate evidence. Approval recorded means the gate evidence names the current frozen specification hash; it is not certification of uncommitted code.",
+      "gridPos": {
+        "x": 20,
+        "y": 8,
+        "w": 4,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "No implementation files",
+                  "color": "gray"
+                },
+                "1": {
+                  "text": "In development",
+                  "color": "orange"
+                },
+                "2": {
+                  "text": "Approval recorded",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "Unknown",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_platform_phase_state{phase=\"P5\"}",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Data & Quality",
+      "type": "text",
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "### Inspect collection and acceptance separately\nThe bounded FBS probe records source history for diagnostic investigation. The [acquisition dashboard](/d/tradebot-acquisition) shows retrieved sessions, raw primary tick counts, empty sessions, crossed/locked quotes and checkpoint integrity.\n\nThe [Data & Quality view](/d/tradebot-data-quality) shows the published rebuild, calendar and quality evidence. Research requires an immutable eligible dataset selection with exclusions and acceptance records; raw collection totals do not establish that selection."
+      },
+      "targets": []
+    },
+    {
+      "id": 12,
+      "title": "Research & Backtesting",
+      "type": "text",
+      "description": "",
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "### Evaluate an idea before risking capital\nThis area is intended for cost-aware backtests, out-of-sample results, parameter stability, stress periods and reproducible data snapshots. The P2 status above reflects the current backtester source inventory.\n\nThe existing Gate 0 demo runs synthetic bars through the event pipeline. It has **no fill simulation, financing model, trading P&L or research conclusion**. Performance charts will appear when that evidence exists; a missing research result is not a zero return."
+      },
+      "targets": []
+    },
+    {
+      "id": 13,
+      "title": "Strategies & Portfolio",
+      "type": "text",
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "### Connect decisions to evidence\nThis area will explain active strategy signals, their reasons, forecasts, portfolio weights, correlations and the evidence supporting each approved strategy.\n\nThe P3 status above reflects the source inventory for features, strategies and portfolio components. `HelloStrategy` is a synthetic wiring example in the demo; it is not an approved trading strategy. No portfolio-performance evidence is inferred from the demo."
+      },
+      "targets": []
+    },
+    {
+      "id": 14,
+      "title": "Execution & Risk",
+      "type": "text",
+      "description": "",
+      "gridPos": {
+        "x": 12,
+        "y": 20,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "### See whether orders are permitted and why\nThis area is intended for order state, fills, positions, risk-limit usage, circuit breakers and reconciliation. The P4 status above reflects the risk, execution and broker source inventory.\n\nLive execution is observed separately from `configs/env/live.yaml`. No position, order, balance or risk-limit value is manufactured from absent trading components. Trading controls belong behind the later approved workflow and are not exposed in this read-only dashboard."
+      },
+      "targets": []
+    },
+    {
+      "id": 15,
+      "title": "Evidence & Operations",
+      "type": "text",
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 27,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "### Know which claims are supported\nPhase statuses read the gate evidence files and match their specification hash. **Approval recorded** describes the cited gate evidence, not every current working-tree change. **In development** means source files exist; it does not claim that a phase passed acceptance.\n\nThe acquisition view separately reports checkpoint integrity, report freshness, frozen-code identity and operating-system process activity. Prometheus captures history from the time monitoring starts. The dashboard itself does not certify any gate."
+      },
+      "targets": []
+    },
+    {
+      "id": 16,
+      "title": "Paper & Live Progression",
+      "type": "text",
+      "description": "",
+      "gridPos": {
+        "x": 12,
+        "y": 27,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "### Prepare for the intended account size\nThe operator confirmed USD 1,000 for the demo account and planned initial live capital. The [Broker & Trades view](/d/tradebot-broker) reports the actual observed balance and equity; this planning amount is not a live balance measurement.\n\nPaper operations follow the data, backtesting, research, risk and execution gates. P5 status reflects source inventory. Operational duration, reconciliation and performance need their own evidence before later live approval."
+      },
+      "targets": []
+    },
+    {
+      "id": 17,
+      "title": "Acquired session chunks",
+      "type": "stat",
+      "description": "Retrieved primary session requests, including empty results. The acquisition dashboard reports diagnostic defects; this is not an eligible-dataset count.",
+      "gridPos": {
+        "x": 0,
+        "y": 34,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_chunks_completed",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "title": "Planned session chunks",
+      "type": "stat",
+      "description": "",
+      "gridPos": {
+        "x": 6,
+        "y": 34,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_chunks_expected",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "title": "Empty acquired chunks",
+      "type": "stat",
+      "description": "Empty retrievals do not provide usable history.",
+      "gridPos": {
+        "x": 12,
+        "y": 34,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          },
+          "noValue": "No observation",
+          "unit": "locale",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_chunks_empty",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "title": "Data quality acceptance",
+      "type": "stat",
+      "description": "Acquisition quality evidence, independent of request completion. Research eligibility also requires a versioned selection and applicable acceptance records.",
+      "gridPos": {
+        "x": 18,
+        "y": 34,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "Indeterminate",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_quality_indeterminate",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    }
+  ]
+}

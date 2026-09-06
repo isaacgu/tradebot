@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import StrEnum
 from typing import Protocol
@@ -25,6 +25,23 @@ class Event(Protocol):
     def ts_recv(self) -> datetime:
         """Return when the platform observed the event (UTC)."""
         ...
+
+    @property
+    def available_at(self) -> datetime:
+        """Return when the platform could first have acted on the event (UTC)."""
+        ...
+
+
+class QualityFlag(StrEnum):
+    """Data-quality markers carried on events and unioned into bars (SPEC 4.4).
+
+    Members are ``str``, so they satisfy the ``tuple[str, ...]`` flag fields while
+    giving callers symbols instead of bare literals.
+    """
+
+    CLOCK_SKEW = "CLOCK_SKEW"
+    TS_RECV_IMPUTED = "TS_RECV_IMPUTED"
+    BACKFILLED = "BACKFILLED"
 
 
 class Side(StrEnum):
@@ -93,7 +110,8 @@ def _optional_nonnegative_int(value: int | None, field: str) -> None:
         raise InvalidEventError(f"{field} cannot be negative")
 
 
-def _event_times(instance: Event) -> None:
+def _normalize_event_times(instance: Event) -> tuple[datetime, datetime]:
+    """Validate and normalize both stamps to UTC in place, returning them."""
     ts_event = instance.ts_event
     ts_recv = instance.ts_recv
     if not isinstance(ts_event, datetime):
@@ -104,8 +122,39 @@ def _event_times(instance: Event) -> None:
     ts_recv = require_utc(ts_recv, field="ts_recv")
     object.__setattr__(instance, "ts_event", ts_event)
     object.__setattr__(instance, "ts_recv", ts_recv)
+    return ts_event, ts_recv
+
+
+def _platform_event_times(instance: Event) -> None:
+    """Validate stamps for an event this platform produced (ADR-0006).
+
+    Both stamps are ours — a bar builder's or a strategy's — so ``ts_recv`` earlier
+    than ``ts_event`` is our own bug and stays unconditionally fatal.
+    """
+    ts_event, ts_recv = _normalize_event_times(instance)
     if ts_recv < ts_event:
         raise InvalidEventError("ts_recv cannot be earlier than ts_event")
+
+
+def _externally_clocked_event_times(instance: Event) -> None:
+    """Validate stamps for an event stamped by a venue or broker (ADR-0006).
+
+    ``ts_event`` is on the venue's clock and ``ts_recv`` on the local host's, so an
+    ordering between them can only be MEASURED, never asserted: with sound NTP a
+    fast feed still delivers ``ts_recv`` microseconds before ``ts_event``. The
+    checkable invariant is therefore ``available_at >= max(ts_event, ts_recv)``,
+    which the platform controls. ``ts_recv`` is never normalized to satisfy it —
+    doing so would defeat the SPEC 4.5 staleness watchdog, which measures
+    ``now - ts_recv``.
+    """
+    ts_event, ts_recv = _normalize_event_times(instance)
+    available_at = instance.available_at
+    if not isinstance(available_at, datetime):
+        raise TypeError("available_at must be datetime")
+    available_at = require_utc(available_at, field="available_at")
+    object.__setattr__(instance, "available_at", available_at)
+    if available_at < ts_event or available_at < ts_recv:
+        raise InvalidEventError("available_at cannot be earlier than either ts_event or ts_recv")
 
 
 def _string_tuple(value: object, field: str) -> None:
@@ -132,20 +181,33 @@ class Tick:
     instrument: str
     ts_event: datetime
     ts_recv: datetime
+    available_at: datetime
     bid: Decimal
     ask: Decimal
     bid_size: int | None = None
     ask_size: int | None = None
+    quality_flags: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         _nonempty(self.instrument, "instrument")
-        _event_times(self)
+        _externally_clocked_event_times(self)
         _positive_decimal(self.bid, "bid")
         _positive_decimal(self.ask, "ask")
         if self.ask <= self.bid:
             raise InvalidEventError("delivered Tick requires ask > bid")
         _optional_nonnegative_int(self.bid_size, "bid_size")
         _optional_nonnegative_int(self.ask_size, "ask_size")
+        _string_tuple(self.quality_flags, "quality_flags")
+
+    @property
+    def skew_lb(self) -> timedelta:
+        """Return ``ts_event - ts_recv``: a LOWER BOUND on venue-minus-local skew.
+
+        Biased downward by network transit and blind to a local clock running
+        ahead of the venue, so it is a diagnostic and a quality signal — never on
+        its own the trigger for SPEC 7.5's broker-skew halt.
+        """
+        return self.ts_event - self.ts_recv
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -171,7 +233,7 @@ class Bar:
         if not isinstance(self.ts_open, datetime):
             raise TypeError("ts_open must be datetime")
         object.__setattr__(self, "ts_open", require_utc(self.ts_open, field="ts_open"))
-        _event_times(self)
+        _platform_event_times(self)
         if self.ts_open >= self.ts_event:
             raise InvalidEventError("ts_open must be earlier than the closed bar's ts_event")
         for field in ("open", "high", "low", "close"):
@@ -200,6 +262,16 @@ class Bar:
         """Return the bar's market close timestamp in UTC."""
         return self.ts_event
 
+    @property
+    def available_at(self) -> datetime:
+        """Return when this bar became actionable, which is when the builder sealed it.
+
+        Derived, not stored: a platform-produced event already guarantees
+        ``ts_recv >= ts_event``, so the availability maximum collapses to ``ts_recv``
+        and cannot drift from it.
+        """
+        return self.ts_recv
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Forecast:
@@ -219,7 +291,7 @@ class Forecast:
         _nonempty(self.instrument, "instrument")
         if not isinstance(self.source_event_id, str):
             raise TypeError("source_event_id must be str")
-        _event_times(self)
+        _platform_event_times(self)
         if type(self.value) is not float:
             raise TypeError("forecast value must be float")
         if not math.isfinite(self.value) or not -20.0 <= self.value <= 20.0:
@@ -235,6 +307,11 @@ class Forecast:
     def ts(self) -> datetime:
         """Return the strategy decision timestamp in UTC."""
         return self.ts_event
+
+    @property
+    def available_at(self) -> datetime:
+        """Return when this forecast became actionable (see ``Bar.available_at``)."""
+        return self.ts_recv
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -306,6 +383,8 @@ class Fill:
     git_sha: str
     ts_event: datetime
     ts_recv: datetime
+    available_at: datetime
+    quality_flags: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         for field in (
@@ -321,4 +400,14 @@ class Fill:
         _enum(self.side, Side, "side")
         _positive_decimal(self.qty, "fill qty")
         _positive_decimal(self.price, "fill price")
-        _event_times(self)
+        # A Fill is never refused for a timestamp or skew reason (ADR-0006): the
+        # execution already happened, and refusing to construct it would leave an
+        # unrecorded live position and guarantee an NN-9 mismatch over a clock
+        # offset. Attribution (NN-3) above is still unconditionally enforced.
+        _externally_clocked_event_times(self)
+        _string_tuple(self.quality_flags, "quality_flags")
+
+    @property
+    def skew_lb(self) -> timedelta:
+        """Return ``ts_event - ts_recv`` (see ``Tick.skew_lb``)."""
+        return self.ts_event - self.ts_recv

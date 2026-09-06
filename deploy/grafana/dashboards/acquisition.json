@@ -1,0 +1,1815 @@
+{
+  "uid": "tradebot-acquisition",
+  "title": "Tradebot · Acquisition",
+  "description": "Local read-only source-viability monitoring; no trading or Gate-1 acceptance claims.",
+  "tags": [
+    "tradebot",
+    "phase-1",
+    "acquisition"
+  ],
+  "timezone": "Africa/Johannesburg",
+  "schemaVersion": 39,
+  "version": 2,
+  "refresh": "10s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "links": [
+    {
+      "title": "Broker & Trades",
+      "type": "link",
+      "url": "/d/tradebot-broker",
+      "targetBlank": false
+    },
+    {
+      "title": "Trading System Overview",
+      "type": "link",
+      "url": "/d/tradebot-system",
+      "targetBlank": false
+    },
+    {
+      "title": "Data & Quality Evidence",
+      "type": "link",
+      "url": "/d/tradebot-data-quality",
+      "targetBlank": false
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Acquisition monitor",
+      "type": "text",
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 3
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "### Phase 1 · Source viability\nRead-only view of FBS demo history acquisition. Completed requests and stored raw ticks measure retrieval. Raw data includes empty sessions and quote anomalies; use the diagnostic counts below to inspect them.\n\nResearch eligibility requires a dated, immutable dataset selection and the [data acceptance evidence](/d/tradebot-data-quality). Retrieval completion alone does not establish eligibility."
+      },
+      "targets": []
+    },
+    {
+      "id": 2,
+      "title": "Runner",
+      "type": "stat",
+      "description": "Operating-system observation. Stage is not reported: unchanged checkpoint counts may reflect resume verification. Checkpoint age alone cannot establish a stalled process.",
+      "gridPos": {
+        "x": 0,
+        "y": 3,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Stopped · incomplete",
+                  "color": "orange"
+                },
+                "1": {
+                  "text": "Running",
+                  "color": "blue"
+                },
+                "2": {
+                  "text": "Retrieval complete",
+                  "color": "blue"
+                },
+                "-1": {
+                  "text": "Activity unknown",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "",
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_run_state",
+          "legendFormat": "",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Plan retrieved",
+      "type": "stat",
+      "description": "Completed session chunks / expected chunks. Empty retrieved sessions are included.",
+      "gridPos": {
+        "x": 4,
+        "y": 3,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent",
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * tradebot_acquisition_chunks_completed / tradebot_acquisition_chunks_expected",
+          "legendFormat": "",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Retrieved session chunks",
+      "type": "stat",
+      "description": "Completed primary session requests, including empty results. This count does not measure research-eligible sessions.",
+      "gridPos": {
+        "x": 8,
+        "y": 3,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "locale",
+          "noValue": "No observation",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_chunks_completed",
+          "legendFormat": "",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Stored raw primary ticks",
+      "type": "stat",
+      "description": "Exact primary-fetch row count. Includes diagnostic anomalies; repeat fetches do not inflate this total. This is not a research-eligible tick count.",
+      "gridPos": {
+        "x": 12,
+        "y": 3,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "locale",
+          "noValue": "No observation",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_ticks",
+          "legendFormat": "",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Empty sessions",
+      "type": "stat",
+      "description": "Nonzero empty sessions require calendar/source adjudication. A successfully retrieved empty session supplies no tick history.",
+      "gridPos": {
+        "x": 16,
+        "y": 3,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "locale",
+          "noValue": "No observation",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_chunks_empty",
+          "legendFormat": "",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Since last checkpoint",
+      "type": "stat",
+      "description": "Age of persisted progress; not a live-feed staleness measurement.",
+      "gridPos": {
+        "x": 20,
+        "y": 3,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s",
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "time() - (tradebot_acquisition_last_checkpoint_timestamp_seconds > 0)",
+          "legendFormat": "",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "title": "Crossed quotes · primary",
+      "type": "stat",
+      "description": "Exact count of primary source ticks with bid greater than ask. Nonzero values are structural defects requiring exclusion or adjudication before research. Repeat fetches are excluded.",
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 7,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "locale",
+          "noValue": "No observation",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(tradebot_acquisition_window_diagnostic_rows{kind=\"crossed_quotes\"})",
+          "legendFormat": "",
+          "range": false,
+          "instant": true,
+          "editorMode": "code"
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "title": "Locked quotes · primary",
+      "type": "stat",
+      "description": "Exact count of primary source ticks with bid equal to ask. Nonzero values are flagged for source-quality review; this count is separate from crossed quotes. Repeat fetches are excluded.",
+      "gridPos": {
+        "x": 7,
+        "y": 7,
+        "w": 7,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "locale",
+          "noValue": "No observation",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(tradebot_acquisition_window_diagnostic_rows{kind=\"locked_quotes\"})",
+          "legendFormat": "",
+          "range": false,
+          "instant": true,
+          "editorMode": "code"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Quality acceptance",
+      "type": "stat",
+      "description": "Expected-liquidity calendar and approved quality thresholds are still required. No observed anomaly is not a quality pass.",
+      "gridPos": {
+        "x": 14,
+        "y": 7,
+        "w": 10,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "INDETERMINATE",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "",
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_quality_indeterminate",
+          "legendFormat": "",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Retrieved requests by symbol and window",
+      "type": "bargauge",
+      "description": "Percentage of planned session chunks with valid checkpoint JSON. Includes empty sessions; not a history-quality score.",
+      "gridPos": {
+        "x": 0,
+        "y": 11,
+        "w": 14,
+        "h": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "min": 0,
+          "max": 100,
+          "unit": "percent",
+          "decimals": 0,
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "sizing": "auto",
+        "minVizHeight": 16,
+        "minVizWidth": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * tradebot_acquisition_window_chunks_completed / tradebot_acquisition_window_chunks_expected",
+          "legendFormat": "{{symbol}} · {{window}}",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Structural observations",
+      "type": "stat",
+      "description": "A red state reports structural defects in source evidence. Consult the primary crossed-quote count and diagnostic rows before dataset selection; a repeatable fetch does not repair source defects.",
+      "gridPos": {
+        "x": 14,
+        "y": 12,
+        "w": 10,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Insufficient evidence",
+                  "color": "gray"
+                },
+                "1": {
+                  "text": "No structural anomalies recorded",
+                  "color": "blue"
+                },
+                "2": {
+                  "text": "Anomalies observed",
+                  "color": "red"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "",
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(tradebot_acquisition_structural_state{state=\"clean_observed\"}) + 2 * sum(tradebot_acquisition_structural_state{state=\"anomalies\"})",
+          "legendFormat": "",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Published report",
+      "type": "stat",
+      "description": "Partial and final reports are written when the runner exits; a previous report can lag persisted progress.",
+      "gridPos": {
+        "x": 0,
+        "y": 17,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Current with checkpoints",
+                  "color": "green"
+                },
+                "1": {
+                  "text": "Stale or missing",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "",
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_report_stale",
+          "legendFormat": "",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Report session count",
+      "type": "stat",
+      "description": "",
+      "gridPos": {
+        "x": 6,
+        "y": 17,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_report_chunks",
+          "legendFormat": "",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Invalid checkpoints",
+      "type": "stat",
+      "description": "Invalid or unreadable checkpoint JSON is excluded from completed progress. Raw tick files are not scanned.",
+      "gridPos": {
+        "x": 12,
+        "y": 17,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "locale",
+          "noValue": "No observation",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_checkpoints_invalid",
+          "legendFormat": "",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Evidence code identity",
+      "type": "stat",
+      "description": "Compares checkpoint runner, analysis-module and specification hashes with files on disk. Not a complete resume authorization.",
+      "gridPos": {
+        "x": 18,
+        "y": 17,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Unknown or changed",
+                  "color": "orange"
+                },
+                "1": {
+                  "text": "Recorded hashes match",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "",
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_evidence_identity_current",
+          "legendFormat": "",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "title": "Observed diagnostic rows · primary fetches",
+      "type": "bargauge",
+      "description": "Raw diagnostic counts, not thresholded quality verdicts. Exact adjacent duplicate quotes are observations and may be legitimate repeated ticks.",
+      "gridPos": {
+        "x": 0,
+        "y": 21,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "No observation"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^(timestamp_regressions|time_field_mismatches|bid_nonpositive|ask_nonpositive|crossed_quotes|negative_volume|negative_volume_real)$"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "blue",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "locked_quotes"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "blue",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (kind) (tradebot_acquisition_window_diagnostic_rows)",
+          "legendFormat": "{{kind}}",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "title": "Largest within-session gap",
+      "type": "bargauge",
+      "description": "Maximum observed gap inside each acquired session, aggregated by historical window. Holiday/session context is not yet classified; this is not an outage verdict.",
+      "gridPos": {
+        "x": 12,
+        "y": 21,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s",
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_window_max_gap_seconds",
+          "legendFormat": "{{symbol}} · {{window}}",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "title": "Acquired corpus over time",
+      "type": "timeseries",
+      "description": "Prometheus history begins when monitoring starts. Earlier acquisition activity cannot be reconstructed as a live trace.",
+      "gridPos": {
+        "x": 0,
+        "y": 30,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_ticks",
+          "legendFormat": "Stored primary ticks",
+          "range": true,
+          "editorMode": "code",
+          "instant": false
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "title": "Broker request throughput",
+      "type": "bargauge",
+      "description": "Total returned rows / measured API request seconds for checkpointed fetches, including repeats. Excludes analysis, compression and persistence time; not end-to-end acquisition speed.",
+      "gridPos": {
+        "x": 12,
+        "y": 30,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "rps",
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_window_fetch_rows / (tradebot_acquisition_window_fetch_seconds > 0)",
+          "legendFormat": "{{symbol}} · {{window}}",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "title": "Observed positive spread · p95 (pips)",
+      "type": "bargauge",
+      "description": "Nearest-rank p95 over primary tick spread distributions. GBPUSD/EURUSD pip = 0.0001. Locked and crossed quotes are separately counted; absent samples remain absent.",
+      "gridPos": {
+        "x": 0,
+        "y": 38,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "suffix: pips",
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_window_spread_p95 * 10000",
+          "legendFormat": "{{symbol}} · {{window}}",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "title": "Repeat-fetch revisions",
+      "type": "bargauge",
+      "description": "Number of repeat comparisons whose result differs. Broker history may legitimately revise; this is not the immutable-raw rebuild test.",
+      "gridPos": {
+        "x": 12,
+        "y": 38,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          },
+          "noValue": "No observation",
+          "unit": "locale",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_window_repeat_mismatches",
+          "legendFormat": "{{symbol}} · {{window}}",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "title": "Reported acquisition failure",
+      "type": "stat",
+      "description": "Historical report outcome only. A stale report does not describe the current process.",
+      "gridPos": {
+        "x": 0,
+        "y": 46,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "None in published report",
+                  "color": "blue"
+                },
+                "1": {
+                  "text": "Failure in published report",
+                  "color": "red"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "",
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_reported_failure",
+          "legendFormat": "",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "title": "Recorded request errors",
+      "type": "stat",
+      "description": "Errors in persisted completed fetch evidence only; an interrupted request may appear only in the report.",
+      "gridPos": {
+        "x": 6,
+        "y": 46,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "locale",
+          "noValue": "No observation",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_fetch_errors",
+          "legendFormat": "",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "title": "Exporter snapshot age",
+      "type": "stat",
+      "description": "",
+      "gridPos": {
+        "x": 12,
+        "y": 46,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s",
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "time() - tradebot_acquisition_snapshot_timestamp_seconds",
+          "legendFormat": "",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "title": "Cross-source comparison",
+      "type": "stat",
+      "description": "Requires independent comparable source evidence. Retrieval and repeated fetches from the same broker do not establish cross-source validation.",
+      "gridPos": {
+        "x": 18,
+        "y": 46,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "Not evaluable",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "",
+          "noValue": "No observation"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_acquisition_cross_source_not_evaluable",
+          "legendFormat": "",
+          "range": false,
+          "editorMode": "code",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "title": "How to read this view",
+      "type": "text",
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 50,
+        "w": 24,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**Using this data:** raw files are retained as diagnostic evidence. A research-eligible dataset must identify its exact source hashes, selected partitions, exclusions and applicable acceptance records. Do not infer eligibility from the retrieved percentage, zero invalid checkpoints or byte-identical repeats.\n\nCrossed quotes are structural defects. Locked quotes and repeated quotes remain separately reported observations. Empty sessions need dated liquidity-calendar or broker evidence. No metric here counts accepted research rows.\n\nCurrent-value panels query the latest exporter snapshot; only the corpus-history chart uses time-range history. Raw hashes are checked by the acquisition/validation workflow, not rescanned by this monitor."
+      },
+      "targets": []
+    }
+  ]
+}

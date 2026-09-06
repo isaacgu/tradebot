@@ -1,4 +1,14 @@
-# Phase-1 placeholder only. No data-quality pipeline or thresholds are operational in Phase 0.
+# Prospective P1 defaults; ADR-0009. These do not assert Gate-1 acceptance.
 schema_version: 1
-status: deferred
-checks: {}
+status: prospective
+thresholds:
+  spread_multiplier: "10"
+  price_sigma: "20"
+  price_reversion_ticks: 5
+  gap_seconds: 10
+  fast_market_median_seconds: 1
+  rolling_horizon_seconds: 3600
+  minimum_history: 20
+# Without a sourced dated calendar, liquid-hours quality remains INDETERMINATE.
+# A retrospective price-spike diagnostic cannot change earlier causal bar inputs.
+# Cross-source X/Y thresholds are not calibrated; comparison is NOT_EVALUABLE.

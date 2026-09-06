@@ -1,0 +1,403 @@
+{
+  "uid": "tradebot-research",
+  "title": "Tradebot · Engineering Replay",
+  "description": "Verified summary of a completed engineering decision replay; never live calls, trades or performance.",
+  "tags": [
+    "tradebot",
+    "research",
+    "engineering-evidence"
+  ],
+  "timezone": "Africa/Johannesburg",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "editable": true,
+  "links": [
+    {
+      "title": "Trading System Overview",
+      "type": "link",
+      "url": "/d/tradebot-system",
+      "targetBlank": false
+    },
+    {
+      "title": "Data & Quality",
+      "type": "link",
+      "url": "/d/tradebot-data-quality",
+      "targetBlank": false
+    },
+    {
+      "title": "Acquisition Progress",
+      "type": "link",
+      "url": "/d/tradebot-acquisition",
+      "targetBlank": false
+    },
+    {
+      "title": "Broker & Trades",
+      "type": "link",
+      "url": "/d/tradebot-broker",
+      "targetBlank": false
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Engineering Replay",
+      "type": "text",
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "noValue": "Unknown",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**Engineering only:** no execution, orders, fills, costs or P&L; not live calls or trades.\n\n**HISTORICAL** = older code. **UNKNOWN** = unavailable evidence. No training or trading approval."
+      },
+      "targets": []
+    },
+    {
+      "id": 2,
+      "title": "Report integrity",
+      "type": "stat",
+      "description": "The pointer, saved report hash, schema, content-addressed run ID, SPEC identity and engineering-only safety fields verify. This does not establish current code, detailed trace validity, approval or performance; check Code match separately.",
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "Verified report",
+                  "color": "blue"
+                },
+                "2": {
+                  "text": "Rejected · UNKNOWN",
+                  "color": "red"
+                },
+                "3": {
+                  "text": "Missing · UNKNOWN",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "noValue": "Exporter unavailable · UNKNOWN",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(tradebot_research_artifact_state{state=\"verified\"}) + 2 * sum(tradebot_research_artifact_state{state=\"invalid\"}) + 3 * sum(tradebot_research_artifact_state{state=\"missing\"})",
+          "instant": true,
+          "range": false,
+          "editorMode": "code"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Code match",
+      "type": "stat",
+      "description": "1 = saved report implementation hashes match current source; 0 = code changed, so the preserved report is historical. Missing comparison or exporter data is UNKNOWN, never current. Matching code does not approve data, strategy training or trading.",
+      "gridPos": {
+        "x": 6,
+        "y": 6,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "HISTORICAL · code changed", "color": "orange" },
+                "1": { "text": "Current code", "color": "blue" }
+              }
+            }
+          ],
+          "noValue": "UNKNOWN",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "gray", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["last"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_research_implementation_current",
+          "instant": true,
+          "range": false,
+          "editorMode": "code"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Replay source",
+      "type": "stat",
+      "description": "Only synthetic fixtures or an explicitly selected immutable clean snapshot are supported; both remain engineering-only evidence.",
+      "gridPos": {
+        "x": 12,
+        "y": 6,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "SYNTHETIC · engineering only",
+                  "color": "purple"
+                },
+                "2": {
+                  "text": "CLEAN SNAPSHOT · engineering only",
+                  "color": "blue"
+                }
+              }
+            }
+          ],
+          "noValue": "UNKNOWN",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(tradebot_research_source_kind{kind=\"synthetic\"}) + 2 * sum(tradebot_research_source_kind{kind=\"immutable_clean_snapshot\"})",
+          "instant": true,
+          "range": false,
+          "editorMode": "code"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Bars replayed",
+      "type": "stat",
+      "description": "Input bars with a recorded engineering decision. This is volume, not P&L, trades or usable-history acceptance.",
+      "gridPos": {
+        "x": 18,
+        "y": 6,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed-color",
+            "fixedColor": "blue"
+          },
+          "mappings": [],
+          "noValue": "UNKNOWN",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_research_bars_processed",
+          "instant": true,
+          "range": false,
+          "editorMode": "code"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Engineering decisions by status",
+      "type": "bargauge",
+      "description": "Counts reconcile exactly to bars replayed. Warmup, suppression, abstention and uncalibrated forecast are research decisions—not orders or calls.",
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tradebot-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "noValue": "UNKNOWN",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tradebot_research_decisions",
+          "legendFormat": "{{status}}",
+          "instant": true,
+          "range": false,
+          "editorMode": "code"
+        }
+      ]
+    }
+  ]
+}

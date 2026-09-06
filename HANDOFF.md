@@ -1,6 +1,525 @@
-# Phase-0 Architect handoff
+# Tradebot handoff — Phase 1 in progress
 
-## Assumptions made
+## Current assignment and status
+
+### September 6 — corrected clock run complete; quality criterion not met
+
+The full sequence completed at **13:48:40 UTC / 15:48:40 SAST**. The producer
+completed both rebuilds at 13:30:32 UTC with exit 0
+and reproducibility `PASSED`; report SHA-256
+`ce0af1e24de335d869e887a3c6911fd07b5252b3ea6d3a4433760c3ac56f41ba`.
+Acceptance reports **16 / 4,410 = 0.362811791%**, failing the strict <0.1% criterion;
+zero expected liquid minutes are missing. Its formal `INDETERMINATE` status is
+due to absent final hash-bound approvals, but binding metadata cannot fix the
+visible numerical failure. Acceptance SHA-256:
+`9b0ca7ccda33d5c09f669733d48d67fa81f730561a3f22e49f5451ab81ec898f`.
+Final wrapper receipt SHA-256:
+`73bb3154cd496531a5f214d0fc912e5db6a52d85b9b7bc9eb8365e981bec7ae1`.
+It records no changed inputs and no training/execution release. The subsequent
+[bounded attribution](docs/reports/corrected_minute_attribution_20260906.md)
+reconciles the exact 16-minute union: 13 price, 2 gap and 1 spread. Six minutes
+match earlier source-ID/price condition reviews; ten lack that prior review.
+An executed three-cell notebook reproduces the attribution with zero cell errors.
+The [ten-minute arithmetic review](docs/reports/corrected_new_minute_context_20260906.md)
+now corroborates all 14 PRICE and seven SPREAD predicates. Five price events
+reach/cross baseline within five source rows, nine do not, and none exactly
+equals baseline. A separate executed notebook reproduces these findings with
+zero cell errors. Original-capture lineage remains a separate pending check;
+economic quote validity is unresolved and no flags were cleared. Do not repeat
+a full capture/evaluator or change thresholds. Preserve the independent producer audit's strict
+366/367 FAILED result: one matching inner-producer pin is absent from the outer
+launch list, with no content mismatch; its additive assessment is linked above.
+
+Isaac directly confirmed acceptance, then reported Delsa's acceptance and asked
+to proceed. Both statements are preserved in the
+[current acceptance receipt](docs/reports/source_clock_acceptance_receipt_20260906.md).
+Delsa's general decision is no longer pending; the technical result is now known,
+while final artifact binding remains unfinished. Do not duplicate these approval requests or
+turn reported concurrence into an invented direct signature.
+
+The data-validation task implemented the optional experimental FBS-Demo/EURUSD
+source-clock policy and additive Friday supplement; see
+[the current run handoff](docs/reports/source_clock_rebuild_20260906.md) and ADR-0014.
+The fixed five-window capture completed, with 114,157 primary ticks and identical
+separately retained repeats on the empty USD 1,000 demo account. The root audit
+checked 228,314 native/canonical rows including repeats; original archives remain
+unchanged. Full local verification passed 1,725 tests, 88.12% total coverage,
+Ruff/mypy/Bandit/pip-audit and the Gate-0 smoke.
+
+One background producer/acceptance sequence ran from 11:08:39 to 13:48:40 UTC:
+`build/gate1/source-clock-rebuild-run-20260906-v1/`. It built the corrected
+reference corpus twice, then ran unchanged acceptance after reproducibility
+passed. Preserve its completed `result.json` and hash-pinned inputs; no duplicate
+job or new capture was launched. The prior
+failed reports below remain historical evidence under their original timestamp
+assumptions. This run is complete, no gate approval was created, and no
+strategy fitting or execution has started. Genuine fitting and broker execution
+remain separate implementation work, not hidden behind an enable switch.
+
+### September 6 — authorized targeted recapture
+
+Isaac subsequently authorized new evidence collection in the data-validation task
+`01a06abf-3353-74e3-b156-aa1b07a58ef6`. The exact-message receipt is
+`build/gate1/reference-recapture-plan-20260906-v1/authorization.json`, SHA-256
+`f38f7cd94b0cf2893de020d9556df604a3ed59ff60c63e8f6a65c63db4b8e78f`.
+This resolves the prior recapture-permission question, not missing human review
+times, final evidence-bound decisions or numeric acceptance. Do not ask for the
+same recapture authorization again. Preserve the existing user edit in
+`docs/reports/reference_definition_proposal.md`; no old approval is rebound to it.
+
+The data-validation owner completed exactly 24 planned windows in two sweeps
+(48 responses) from 06:59:07 to 07:00:52 UTC. Each 71-minute window includes 65
+minutes before its flagged minute and six minutes after that minute's start.
+Both responses are separately retained as NumPy arrays and canonical eight-field
+gzip streams, even if identical. Plan SHA-256:
+`e864c902ffded738a7b02c4272f9f3a5172a742995121173a16210355526e982`.
+Capture result: `build/gate1/reference-recapture-20260906-v1/result.json`, SHA-256
+`95fac20ae3eecf06e25af7748e08bc95aacc12d81b73faf29cd23aaa4a471a22`.
+The outer launch receipt reports return 0, no timeout and no changed reviewed
+inputs. The capture records 97 stable demo-identity checks and USD 1,000 balance.
+That establishes fresh-run account stability, not identity with the original
+acquisition account or an independent broker/quote source. Account identifiers
+are deliberately not persisted.
+
+The owner's completed comparison reports all 24 full contexts and target minutes
+identical in both new responses. All 17 gap endpoint pairs reproduce with zero
+interior ticks; all ten price-target neighbourhoods reproduce across the seven
+spike minutes. Comparison summary:
+`build/gate1/reference-recapture-comparison-20260906-v1/summary.json`, SHA-256
+`3a749fa54f42235d05056ce2f6797bfb09b5f980d61e3a61f590e2981cc02878`.
+The 316,177 original context rows are summed across overlapping windows, not a
+unique new dataset. Root verified the summary/target/window artifact hashes;
+the independent capture-artifact audit passed 614/614 checks at 07:13:21 UTC.
+Audit: `build/gate1/reference-recapture-root-audit-20260906-v1/audit.json`, SHA-256
+`03fa212d7e1608eb821e3e05395d9c3e902f49731761166ce7235923eefd77b1`.
+It accounts for all 244 capture files, checks 95 capture / 92 plan / six launch
+pins, and independently reconciles native/canonical fields, ordering, schema and
+counts. All 48 native/canonical file pairs verify; 632,354 rows include both sweeps
+and overlapping contexts, not unique ticks. Fresh timestamp/range/time-field
+checks pass. The separate automated comparator-method review found no concrete
+contradiction and reconciled 120
+equality comparisons / 27 targets in metadata. It did not recompare raw rows.
+The comparator carries forward the old 24/4,410 result and capture time counters;
+it does not recompute acceptance or those counters. Reopened NumPy responses are
+encoded using the same production canonical encoder, not an independent codec.
+
+No source correction is justified by this matching evidence. The one requested
+full-month, explicitly unbound acceptance rerun completed at 07:13:04 UTC on the
+unchanged original corpus, with recapture supplementary only. It again measured
+**24 / 4,410 = 0.544217687%, zero missing expected minutes, strict comparison false**.
+Report: `build/gate1/reference-month-postrecapture-diagnostic-20260906-v1/report.json`,
+SHA-256 `767ee4967f1c67914f9f33b545d1d608af9e23dc0bd9a8c33956e644847a1237`.
+Run result: `build/gate1/reference-month-postrecapture-diagnostic-run-20260906-v1/result.json`,
+SHA-256 `6580547a2dbc43b655d3797bab8283bc0a5a2a54c7785037d6f3d5fe953e92fc`.
+Actual exit 2 / DIAGNOSTIC_WRITTEN_UNBOUND, no timeout and no changed inputs;
+formal INDETERMINATE remains due to absent final definition-approval binding,
+not because the numerical rate is unknown. Adding approval metadata cannot make
+the failed rate pass. Root's independent completed-report artifact audit passed
+44/44 checks: all 52 launch pins matched, the original 49 baseline pins were
+preserved, and independent calendar arithmetic again yielded 4,410 minutes.
+Audit: `build/gate1/reference-postrecapture-root-audit-20260906-v1/audit.json`,
+SHA-256 `eb6d7a925c548211e37579bef03d6c5490ce5f017a767ecee88b97b6b2ca5e44`.
+This is metadata/hash/arithmetic verification, not another detector run, human
+approval, proof of market-history completeness or passing quality acceptance.
+
+Final additive handoff: `build/gate1/reference-recapture-comparison-20260906-v1/evidence-bundle.json`,
+SHA-256 `32aa42079c6b6c239e5024bacbf21ecc789cc2f200d8c169c6adbf6be79c9484`.
+Root verified all 22 linked artifact hashes. Its README explains the outcome and
+limitations; `approval-readiness.md` identifies missing human facts without
+inventing them, and `broker-inquiry-draft.md` plus the gap/price CSVs are prepared
+but unsent. A separately hashed `evidence-audit-addendum.json` in that directory
+links the unchanged sealed bundle, the 614-check capture audit and the post-run
+14/14 demo-baseline verification. Addendum SHA-256:
+`13b6e2ecfd446b665ca5d718ab9acbd92b062431a4430ec39fcb664984220538`;
+root checked all three links. No more recapture or evaluation jobs are queued.
+Do not duplicate retrieval, comparison or evaluation. The targeted capture
+does not replace the complete reference-month corpus or denominator. Any requested
+acceptance rerun must retain the full producer linkage and unchanged counting
+rules; no interpolation, cleared flags or synthetic source repair is permitted.
+Gate 1 remains open, and no Phase 2 handoff, training or orders have occurred.
+September 5 findings and permission-boundary statements below remain historical.
+
+### September 5 — source delivery and completed validation
+
+Latest source delivery: `5b56316a82749a8e60a9fea3596871c69325d400` is committed and
+pushed in [draft PR 4](https://github.com/isaacgu/tradebot/pull/4). Required CI
+`quality` and `secrets` passed in run 33966725497: 1,610 warnings-as-errors tests,
+88.34% coverage. No merge to `master` occurred. The purpose-scoped admission guard,
+reference-month repairs and dashboard's separate report-integrity/code-match
+indicators are implemented. See [the exact new delivery and remaining requirements](docs/reports/guard_data_publication_20260905.md).
+
+Both the 320-bar synthetic decision replay and four-case/eight-fill synthetic
+execution/accounting runner were run twice from this source, with identical repeat
+reports and zero broker orders. The dashboard now shows Current code. This is an
+offline engineering foundation, not genuine model fitting, full financial validation
+or an always-on trading system. Real-data training was not queued or performed.
+
+The acquisition task's source-frozen verification sequence is
+`build/gate1/reference-repair-verification-20260905-v2/`, launched 12:31:33 UTC.
+The October reference-month job completed at 14:28:03 UTC with byte-identical
+rebuilds and unchanged implementation, raw files and calendar. Its report is
+`build/gate1/reference-repair-verification-20260905-v2/reference-month/report.json`,
+SHA-256 `8d65788e54ce0eabedcad2022a65624500ecc5d820b54b1221741de4ed15b684`.
+Coverage is 23 target sessions / 5,288,101 target ticks; the 5,790,990 total ticks
+and 34,736 one-minute bars include prehistory/lookahead context. These are producer
+reproducibility results, not a passing liquid-hours quality rate. The seeded
+random-30-day job completed at 16:56:55 UTC with return 0, byte-identical rebuilds
+and unchanged inputs. Its report SHA-256 is
+`a0c7e4047d9866b4fef76a072e4512452b4b2abd27f21f31bc85ae5b8ece52b3` at
+`build/gate1/reference-repair-verification-20260905-v2/random-30day/report.json`.
+The overall sequence is ENGINEERING_PASSED, with result SHA-256
+`0f3a3466ca6b04425495059131d8e36531fb3539b1045192994f1c402fce0852` at
+`build/gate1/reference-repair-verification-20260905-v2/result.json`.
+Independent final random-sample artifact audit passed 65/65 checks, covering both
+16-file inventories / 32 file hashes and footer totals of 7,446,824 ticks and
+40,398 one-minute bars per rebuild. Audit:
+`build/gate1/random-30day-root-audit-20260905-v1/audit.json`, SHA-256
+`7cb739df0d42a6fcf46efb38617afadad7a14e70d5d2b311144b18848aa20204`.
+All 34 outer pins and 29 report source pins match; the latter also match the
+report-start commit `ad58383` blobs. Neither completion nor the launcher's static
+pending-definition label supersedes the
+separate failed numerical diagnostic below. Root also verified all
+29 declared source files match committed candidate `5b56316` and all 34 launch pins
+remain unchanged. Preserve all run inputs and do not start a duplicate.
+
+The completed reference artifact's independent metadata/hash audit passed 41/41
+checks at 14:54:06 UTC, including both six-file clean inventories, all 12 file hashes
+and Parquet footer totals. Audit:
+`build/gate1/reference-month-root-audit-20260905-v1/audit.json`, SHA-256
+`1e797bfa4b22483093ca1db4c1491a52dde482de3efe28149abd3a884bc81c0c`.
+It did not decode data rows, rehash raw inputs, compute the liquid-window rate or
+perform a third rebuild.
+
+The sole unbound liquid-window diagnostic finished at 15:08:44 UTC, exit 2 as
+expected for its absent approval binding, with no timeout or changed inputs.
+Report: `build/gate1/reference-month-unbound-diagnostic-20260905-v1/report.json`,
+SHA-256 `7e1c572e5bcb9d666f4faa4d2418e46446f3299ed2e2d548dfd7a73b100d00aa`.
+It measures **24 / 4,410 flagged expected-minute bins = 0.544217687%**, so the
+unchanged strict `<0.1%` comparison is false (at most 4 bins would satisfy it).
+All 4,410 expected minutes are observed; no expected minutes are missing and the
+producer inventory verifies. Formal report status remains INDETERMINATE because
+the hash-bound approval record is absent, but completing approval metadata alone
+would not make this numerical result pass. Do not describe timestamps as the only
+remaining blocker. The completed read-only drilldowns below account for the exact
+24 bins and their flag contributions/overlaps; no threshold, window, exclusions,
+source epochs or detector parameters may be tuned to obtain acceptance. Original
+failed evidence and all completed producer inputs/outputs must remain untouched.
+
+Independent unbound-diagnostic audit passed 77/77 checks, including all 49 launched
+input pins, receipt/sidecar hashes, and calendar arithmetic (21 windows x 210
+minutes = 4,410 unique bins). Audit:
+`build/gate1/reference-unbound-root-audit-20260905-v1/audit.json`, SHA-256
+`20f126a288e1accb8e2d6758a3fb0f00a52492c512bee1bf09c7a9a7af6cadf4`.
+This verifies the diagnostic evidence and arithmetic, not Gate acceptance; no
+evaluator rerun or minute-level attribution occurred in that audit.
+
+The subsequent targeted forensic review reconciles the 24 bins to **17 GAP minutes
+and 7 retrospective PRICE_OUTLIER minutes**, with no overlap and no in-window
+SPREAD_OUTLIER contribution. All 12 forensic-bundle artifact hashes were independently
+checked by root. Bundle:
+`build/gate1/reference-minute-forensics-20260905-v1/forensic-bundle.json`, SHA-256
+`90c5651ed2c6178ccf9e769bfe455864cd6cf154771cc12c92ef8789670daf74`.
+The gap intervals are 10.22–27.367 seconds inside otherwise populated minutes.
+Targeted detector conditions were corroborated, and 186 unique neighbouring source
+rows matched imported raw sequence/time/bid/ask after all 27 raw files were rehashed.
+No counting, targeted-predicate or neighbouring raw-to-clean conversion mismatch
+was demonstrated; this is not proof that every detector flag is an economically bad
+quote or that the broker returned every possible tick. See the bundle's README
+for its fixed-config/helper and fresh-Decimal-moment limitations.
+
+The subsequent original-capture comparison is complete. All 17 gaps are present
+in 12 preserved primary gzip streams (2,566,742 rows scanned), with zero strictly
+interior ticks, matching endpoint lineage and no timestamp regressions. No
+primary-capture-to-import/clean omission was demonstrated. Bundle:
+`build/gate1/gap-capture-comparison-20260905-v1/evidence-bundle.json`, SHA-256
+`0a4577221d630f3601e62426a9ebc54e63a6d775807aa392884404f6e3b4ceb9`.
+Root verified the bundle and all six linked artifact hashes. The 12 checkpoints
+attest identical repeat sequences, but no separate identical-repeat gzip files
+were retained. Repeat agreement is recorded hash evidence, not a second direct
+row inspection; original API completeness and shared terminal-cache/broker-history
+effects remain unknown. The existing evidence does not justify clearing flags or
+re-importing unchanged data as a repair. New targeted demo recapture retaining both
+responses, or relevant broker evidence, would cross the next separately authorized
+investigation boundary; neither has occurred. Include the seven price-spike minutes
+in any proposed follow-up: those alone exceed the fixed quality budget. Preserve
+the failed result and all original bytes; no source correction, rule change or new
+month selection is authorized by these findings. Gate 1 remains open, so the user's
+conditional authorization to proceed toward Gate 2 has not taken effect.
+
+The source-backed v4 calendar/counting definition has subsequently
+received Isaac's approval and his report of Delsa's concurrence; see the
+[exact confirmation](docs/reports/gate1_confirmation_20260905.md). Preserve the
+frozen draft bytes; the data owner is preparing separately traceable reviewed
+inputs. This is a project QA definition, not an adopted FBS session schedule.
+
+Gate 1 remains unapproved; evidence categories 2, 4 and 5 remain FAILED. The
+register's older CI/candidate bindings and all human forms still need a final
+exact-package binding; the new CI does not transplant previous approvals.
+The same confirmation also records Isaac's sign-off approval and his report of
+Delsa's approval for the five bar checks and final sign-off. Do not repeat requests
+for general approval; identify any specific missing observation or new artifact
+requiring review once the final quality result exists. Historical uncommitted/no-CI
+and earlier missing-approval descriptions below refer to their earlier snapshots.
+
+Latest September 5 preparation: the operator confirmed **USD 1,000 demo starting
+capital**, matching planned live capital; live orders remain unauthorized. See
+`configs/accounts/demo_usd_1000.json`, the read-only `scripts/verify_demo_baseline.py`,
+and [FBS permission scope](docs/reports/fbs_data_permission.md). Isaac reports FBS
+allows account-holder data use for his personal project without further verification.
+Do not send a duplicate permission request. Historical liquidity/timestamp evidence
+and gate acceptance are separate, still unresolved technical requirements.
+
+The [pre-use preparation report](docs/reports/preuse_preparation_20260905.md) records
+the dashboard repairs, actual broker-baseline checks and final additive source
+disposition at `docs/reports/fbs-data-admission-v2.json`: 10 QUARANTINED partitions
+and 180 QA_ONLY, with all strategy/execution eligibility false. V1 and original raw
+artifacts remain preserved. Quarantine is an evidence manifest, not a new access
+control in the engineering SnapshotBarFeed. Do not describe all collected data as
+ready for strategy training or merge these findings with the separate reference month.
+
+Approval statements from Isaac and his report of Delsa's approval have been received;
+see [the receipt](docs/reports/gate1_approval_receipt_20260905.md). Prior descriptions
+below of unsigned templates are historical; final evidence-bound decisions and the
+five documented human bar checks are still incomplete, not silently granted.
+
+The user requested Gate-1 finalization and explicit human approval documents. Start with
+[the approval guide](docs/reports/gate1_approval_guide.md); the
+[independent reviewer form](docs/reports/gate1_independent_review.md) and
+[Principal form](docs/reports/gate1_principal_approval.md) remain unsigned and not ready
+for approval. Required reference-month policy/calendar/evaluator evidence, human bar
+checks and current committed-SHA CI are still owed. The previous sealed Gate-1 pack
+was preserved at `build/gate1/approval-preparation-20260905/pre-signoff-evidence.md`
+before updating links and dated status notes. Neither sign-off was fabricated and
+no criterion, threshold, source report or checker was changed.
+
+Parallel core-engine preparation is documented in
+[the core-engine handoff](docs/core-engine-handoff.md). Its synthetic decision
+replay is engineering evidence only; it does not change P1 status or certify a
+strategy. The UI/data task and core-engine task have established direct coordination.
+
+The September 5 research-control increment is now published as eight new, uncommitted
+files: three modules, three test modules, ADR 0011 and an engineering report. It adds
+immutable engineering declarations, failed/incomplete attempt evidence and chronological
+split controls with denied lockbox execution. See
+[the P3 engineering report](docs/reports/p3-research-controls-engineering.md).
+Root canonical verification passed 872 warnings-as-errors tests in 99.33s, 88.40%
+coverage, Ruff formatting/lint, strict mypy on 90 files, Bandit and 96%/87% coverage
+tiers. The log is `build/p3-root-verification-20260905/checks.log`. This is local
+software evidence only. No existing runtime entry point, dashboard report pointer,
+frozen pipeline source, HEAD or Gate-1 evidence-pack bytes were changed by publication.
+The README/HANDOFF status update is separate from that sealed evidence pack.
+
+At 2026-09-05 06:50:41 UTC, the local acquisition exporter reported 190/190
+checkpoints, 42,796,598 ticks, zero invalid checkpoints/fetch errors and retrieval
+complete with the worker stopped. Final report/sidecar validation remains owned by
+the acquisition task; this observation alone does not approve source viability or Gate 1.
+
+Gate 0 remains approved. Phase 1 data engineering and the whole-system Grafana overview,
+acquisition, data-quality, read-only broker and engineering-replay views are implemented candidates. Gate 1 is
+**not approved**; its [incomplete evidence pack](docs/reports/gate1_evidence.md) lists the missing
+CI, actual reference-month quality acceptance and human approvals. The completed 30-day
+reproducibility check passes, but the corpus quality summary is FAILED. Live exposition and
+rendered screenshots now discharge the inherited screenshot-format obligation, not quantitative
+quality acceptance. Post-baseline broker hardening has separate targeted verification.
+
+Implemented P1 building blocks include the shared timestamp normalizer/deferral path,
+checksummed resumable FBS acquisition, immutable Parquet raw/clean storage, quality diagnostics,
+bar construction/rebuild tooling, field-vintage calendar storage, explicit liquidity-calendar
+lookup and the gate evidence checker. A captured local baseline passed 530 warnings-as-errors
+tests, Ruff/mypy/Bandit and both coverage tiers; this is not committed CI or a full test claim for
+later broker/research edits. The September 5 final current-candidate rerun passed 704 tests
+with warnings as errors, 88.24% overall coverage, strict mypy and core/non-core tiers of
+96%/87%. The later provisional-diagnostic snapshot passed 735 tests and the same
+coverage tiers; both runs remain local evidence, not CI or Gate-1 acceptance.
+
+The source-backed calendar example is real: the Fed's November 7, 2024 release was captured,
+four fields were imported, and reopened cutoff queries and an offline replay passed. Original
+historical vintages are unproven, so these fields use retrieval availability and
+`AS_OF_UNVERIFIED`. Separate synthetic revisions test mechanics only. The calendar report
+retains source URLs, timestamps, hashes and database artifacts. No historical FX liquidity
+dates have been approved; calendar-dependent quality remains indeterminate. The October 2024
+Sunday-open discrepancy may involve historical timestamp/session alignment or coverage; its
+cause is not diagnosed. Rebuild determinism cannot certify historical UTC interpretation.
+
+The system dashboard is the entry point for the whole bot, not only downloads. Data/run health
+and completed engineering-replay summaries are available now; economic backtests, accepted
+strategies, portfolio, risk, execution and bot PnL remain explicitly not implemented/no evidence
+until their owning phases deliver them. Index CFDs stay
+`data_only`. There are no trading orders, real fills, strategy-performance results or gate
+approvals implied by dashboard visibility.
+
+The immediate next steps are to review the completed reproducibility evidence and 34 retrospective
+price-outlier findings, resolve the reference-month counted-flag policy explicitly, source approved
+dated liquidity expectations, hand-verify the five
+prepared venue-matched references, run CI on a committed candidate, and obtain the separate
+required human sign-offs. Five automated broker Bid matches and five actual production Mid
+matches are recorded, but none is a human signature.
+The evidence checker reports unresolved requirements; it cannot authenticate signatures or
+approve a gate. Use the README for whole-system concepts and reproducible commands.
+
+## September 5 parallel clarification and provisional diagnostics
+
+The Principal authorized both contacting FBS and continuing bounded offline engineering
+without waiting for a reply. This does not approve a provisional liquidity calendar,
+rewrite source timestamps, select a gate-counted flag policy or waive any Gate-1 requirement.
+The [prepared technical inquiry](docs/reports/fbs-historical-calendar-inquiry.md) remains
+**NOT SUBMITTED**: the official contact form contains a prepared draft but requires a chosen
+name and email, which have been requested from the Principal. No contact details were entered,
+no CAPTCHA completed and no Submit pressed. No reply or case number exists.
+The form screenshot is `build/gate1/support-contact-20260905/contact-fields-required.png`,
+SHA-256 `368cd46ee4cdf2d6702efe6999f32421f923af91370880ead4a0b0caf1848165`.
+No account identifier or raw tick file is included in the prepared inquiry.
+
+The new diagnostic is complete at `build/gate1/reference-diagnostics-v1/report.json`,
+SHA-256 `f30dd82b88f70d5b72296c36de6c326f12cdea2f4968446d93b530ea1c1dc07b`.
+It preserves the candidate's acquisition **open-date** view and separately computes SPEC §3.4
+canonical session **close-dates**. The true October view includes September 30 open / October 1
+close and excludes November 1 close. Its frozen manifest adds the two existing September 30
+boundary observations to the candidate's 46: 48 checkpoint/raw pairs, 11,128,900 scanned ticks.
+The close-date month itself contains 5,288,101 EURUSD and 5,335,980 GBPUSD ticks.
+
+Against 33,060 provisionally advertised minutes per symbol, the UTC baseline observes ticks
+in 32,056 EURUSD / 32,143 GBPUSD minutes, leaving 1,004 / 917 evaluable minutes without
+observations. These are not proven market outages or liquid-hours quality rates. The -2h/-3h
+counterfactuals retain 480/720 unknown minutes per symbol; neither is selected as a correction.
+An independent stream reviewer reproduced all 12 close/open-view scenario aggregates and
+semantic hashes. A separate 40-check audit rehashed all 96 checkpoint/raw files, reconciled
+the close-month counts, and checked the retained outlier drilldown arithmetic.
+No approved calendar, gate-counted flag definition or reference-month P1 clean-flag result
+is supplied; source-checkpoint flags are not relabelled as P1 quality flags.
+
+The 34-case recorded price-outlier drilldown retains five stored neighbors each side and
+shows absolute prior-stored-tick Mid changes of 1.15–6.65 pips, without adjudicating bad
+quotes or changing data/policy. Its artifact and limits are attached in the Gate-1 pack.
+The older sealed 704-test evidence remains historical. The new final local snapshot passed
+735 warnings-as-errors tests in 87.10s, 88.24% coverage, Ruff formatting/lint, strict mypy
+on 84 files, Bandit and 96%/87% coverage tiers. Log:
+`build/gate1/reference-diagnostic-final-20260905.log`, SHA-256
+`bdb7904fe5cbddc4f92f63d70fefc15697fe51930e32453b50e53c4bce8eb016`.
+All 27 corpus dependencies and the completed corpus report remained unchanged.
+
+## Active run and verification handoff
+
+- Acquisition resumed through its owning task at 2026-09-05 05:31 UTC: launcher PID 15124,
+  worker PID 206676 and existing terminal PID 203900. The worker was CPU-active revalidating
+  saved data at 128/190 chunks and 27,704,840 ticks; this was not yet a new-download count.
+  Resume logs are `build/fbs-tick-continuity-v1/resume.stdout.log` and `resume.stderr.log`.
+  This task did not launch a duplicate. The earlier 2026-09-04 stopped observation is historical;
+  its cause remains unconfirmed. Inspect current process/checkpoint state before acting.
+  At 06:34:11 UTC (08:34 SAST), new fetch/checkpoint work had reached 166/190 and
+  36,444,994 primary ticks, zero recorded invalid rows/fetch errors; retrieval remained incomplete.
+- The first offline acceptance rebuild at `build/gate1/30day` was stopped by its owner
+  after a dependency-hash mismatch; it cannot satisfy the unchanged-code criterion. Its frozen
+  selection contains 30 EURUSD dates, seed 20260904, timeframe 1m, batch size 16384 and
+  6,719,590 primary ticks. Selection SHA-256:
+  `e98315febcd4fe6c064302069a790b5aa0e3bd0b0f6dd3a885d3ba65f6b0962c`.
+  Imports produced 32 immutable raw files; first rebuild work was interrupted, not completed.
+  Its owner sent Ctrl-C only to owned Codex execution session `70573` (a task session, not an
+  OS PID), which returned exit 1. Do not start another job into this existing append-only
+  output directory. Raw and intermediate artifacts remain preserved.
+  The exact launched command was:
+
+  ```powershell
+  wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/isaac.gumbi/Documents/ChatGPT/Bot && PYTHONTZPATH= .venv/bin/python scripts/build_gate1_corpus.py --days 30 --batch-size 16384 --output-dir build/gate1/30day'
+  ```
+
+  It uses the pinned WSL `.venv` Python 3.12.14, not the Windows monitoring interpreter.
+  At 2026-09-04 21:28 UTC, the first sort had approximately 200 scratch Parquet runs;
+  this is historical intermediate work, not completed-bar or gate progress.
+- A read-only drift audit at 21:53 UTC found 26/27 declared code files and the quality
+  config unchanged. `src/tradebot/data/boundary_probe.py` changed from
+  `a0160ed5717fcf1610a111747f90dac7730e4cb82905ea883f6867f66724f712` to
+  `b102ecdd76aa4d3342b9be04be50ad5012e22866c9c93715fadea15f8802708e`, with file mtime
+  20:53:26 UTC. Authorship is not established. `build/gate1/corpus-drift-20260904T215338Z.json`
+  and its separate current-source snapshot preserve the failure; restoring a file later
+  would not erase it. The later 530-test baseline captured the changed hash both before
+  and after its own run, so that separate historical test result remains correctly scoped.
+  The owner's exact-process check found no surviving old worker before recovery.
+- The replacement completed in `build/gate1/30day-stable-b102ecdd` at
+  2026-09-04 23:30:06 UTC (September 5 01:30 SAST), after approximately 94 minutes 32 seconds.
+  Its historical execution session was `64411` (not an OS PID). The actual launch command was:
+
+  ```powershell
+  wsl -d Ubuntu -- bash -o pipefail -lc 'cd /mnt/c/Users/isaac.gumbi/Documents/ChatGPT/Bot && PYTHONTZPATH= .venv/bin/python scripts/build_gate1_corpus.py --days 30 --batch-size 16384 --output-dir build/gate1/30day-stable-b102ecdd 2>&1 | tee build/gate1/30day-stable-b102ecdd.log'
+  ```
+
+  The new selection SHA-256 is `ff7465412af8834cc4b1634671e49e036ad8751b34c4483a6fae8cde12fddbf1`:
+  30 distinct EURUSD dates, 6,646,477 primary ticks, seed 20260904, 1m and batch 16384.
+  The candidate pool grew, so the same plan/seed produced different days from the original;
+  do not reuse the old 6,719,590 count. The 21:59 UTC recovery-start audit matched all 27
+  code hashes and the quality config. Both rebuilds now contain 14 matching clean files,
+  6,646,477 ticks and 41,701 one-minute bars from 31 immutable raw files. The producer reports
+  reproducibility PASSED, unchanged raw/code and byte-identical clean outputs. An independent
+  read-only audit passed all 25 checks against actual files, counts, identities and current hashes.
+  Report SHA-256: `3c7226e91d4c9a0a632ee85ed8ad273d6493256c0e0427c16e6aca5f047682bb`.
+  Audit: `build/gate1/completed-corpus-verification-20260905T054036Z.json`, SHA-256
+  `6728e346aa3884ff3ae935f5a15eb36dbd0d177caad895ebdc4aa510cf4aeea2`.
+  This does not certify historical UTC interpretation or Gate acceptance.
+- Preserve completed raw, clean, selection and report artifacts. Later implementation changes
+  need their own evidence rather than relabelling this completed snapshot. Frozen CLI SHA-256:
+  `4c605bbcef8416f9f385ccd44f69e955f13b3edc986768d44f2b72cf3a976918`.
+  Quality remains FAILED specifically because of 34 retrospective PRICE_OUTLIER annotations;
+  all 6,646,477 rows remain causally eligible and 1,465 adjacent repeated payloads are retained.
+  All 30 selected dates lack approved liquidity calendars. The 7,589 GAP_CALENDAR_UNKNOWN
+  tick events are not proven missing market data. The mixed-date sample is not a reference
+  month's approved liquid-hours denominator. The original run remains ineligible.
+- Local baseline evidence is under `build/gate1/local-verification/20260904T205444Z-exl46rvi/`.
+  The 530-test snapshot has core coverage 96%, noncore 87%, total 88.29%, plus passing locked
+  dependency checks, Ruff, mypy, Bandit and Linux dependency audit. `stage-baseline.json` records
+  unchanged code/HEAD before later source edits; `remaining-scope.json` separately proves all
+  three timezone replays and six identical demo manifests/canonical metric digests. These are
+  local uncommitted evidence, not CI or approval.
+- The additional Windows observer audit found advisories in seeded pip 24.2. That failure is
+  preserved; upgrading only the observer environment to pip 26.2 was independently re-audited
+  successfully in `windows-observer-reaudit.json`. Acquisition/corpus environments were not
+  changed by this remediation. Broker/research changes after the baseline require their own
+  scoped results and must not be described as covered by the original 530-test whole-tree run.
+- The post-baseline broker Python delta passed 64 tests, Ruff formatting/lint, strict mypy
+  and Bandit. Final table/query artifacts and hashes are in the Gate-1 pack. Native smoke
+  observed a fresh demo snapshot with zero positions/orders and foreign-Host HTTP 403;
+  account switches were tested with unit fakes, not by switching the live terminal.
+  After an intentional MT5 account switch, selectively restart the observer. The launcher
+  table-display cast was a separate one-line delta that passed PowerShell parsing.
+- The additive Engineering Replay consumer has separate 36-test/static-check verification.
+  `/d/tradebot-research` has five panels: caveats, artifact state, source class, bars replayed
+  and decision-status counts. The initial verified synthetic artifact contains 320 bars,
+  256 warmups, 2 suppressed decisions, 0 abstentions and 62 forecasts, not trades or live calls.
+  It verifies completed reports read-only; missing/invalid artifacts remain unknown. The
+  separate core-engine handoff records that producer's own verification snapshot; do not
+  merge its test counts with either the 530-test baseline or this later consumer delta.
+  Combined monitoring verification before the final JSON freshness patch passed 101 tests with warnings as errors and no
+  coverage collection (5.13s; actual command retained in task history). The restarted observer
+  and Prometheus both exposed the expected verified synthetic 320-bar summary. This is not
+  another full-repository run. After the final instant-query/layout fix, 13 focused research
+  tests passed. All four targets matched direct Prometheus, Grafana proxy and Grafana frames
+  at the same instant; the final research screenshot passed at 1280x720 with no console issues.
+  The actual idempotent launcher displayed four service rows. Its later optional `-Gate1Report`
+  parameter passed PowerShell parsing; use the selective exporter restart in the runbook
+  to follow `build/gate1/30day-stable-b102ecdd/report.json` without changing exporter defaults.
+  A final post-fix combined monitoring run also passed all 101 tests in 5.00s with warnings
+  as errors/no coverage collection (task-history evidence, not a new whole-repository run).
+  After selective observer restart, native command-line verification confirmed the exact
+  replacement report argument; its report was missing at that historical observation.
+  The resumed 2026-09-05 observer now exposes the completed reproducibility PASS separately
+  from quality FAILED, calendar UNKNOWN and Gate 1 false. Research remains verified.
+- The four dashboard services were restored on September 5. Grafana's cold start took about
+  4m20s; the first 15-second readiness error was premature, not a stopped process. The launcher
+  now defaults to 300 seconds (`-StartupTimeoutSeconds`, allowed 15–600). PowerShell parsing
+  and an actual idempotent retry passed with the same four service processes, no duplicate.
+- Final September 5 verification passed 704 warnings-as-errors tests in 70.30s, strict mypy
+  on 82 source files, 88.24% overall coverage, core 96% and non-core 87%. The retained log is
+  `build/gate1/resume-final-20260905.log`, SHA-256
+  `c70fc11018d5a1c32dc6d2fa898a0dbab1c3ce3d83a3d3d57ea5db5b90445d94`.
+  It supersedes the earlier same-day 703-test snapshot after the test-only assertion delta;
+  Ruff format/check and Bandit also passed locally. All 27 corpus code hashes and the
+  completed report still matched. Keep this separate from missing committed-SHA CI.
+  The final 54-query/frame audit and actual quality/Broker screenshots are attached in
+  the Gate-1 pack; the UI shows reproducibility PASS separately from FAILED quality.
+- The current evidence checker intentionally exits nonzero for categories 1, 2, 4 and 5.
+  Categories/obligations already supplied are not a gate approval. No monitoring automation
+  has been created implicitly; further scheduled follow-up needs the user's request.
+
+## Original Phase-0 assumptions (historical provenance)
 
 - Submission of the document authorizes creation of a reviewable P0 candidate, but does not
   silently change its draft status or authorize Gate 0/P1.
@@ -57,10 +576,11 @@ Gate 0 is approved. The spec is frozen, Isaac Gumbi recorded Principal approval 
 committed-SHA CI is green, and the §12.3 `master-release-gate` ruleset is active. The Principal
 authorised temporary public visibility to make GitHub enforcement available without a Pro
 subscription. Delsa Mashiki independently reviewed the committed candidate and CI evidence and
-approved on 2026-09-04. Every required evidence category reads `PROVIDED`. Phase 1 has not started;
-begin it only under a separate assignment.
+approved on 2026-09-04. Every Gate-0 evidence category reads `PROVIDED`. Phase 1 has since started
+under its separate assignment. Its current implementation and unresolved gate requirements are
+recorded above and in `docs/reports/gate1_evidence.md`; Gate-0 approvals do not carry into Gate 1.
 
-**Read ADR-0006 first; it blocks the first adapter.** When P1 begins: preserve both `ts_event` and
+**Preserve ADR-0006's adapter contract.** Throughout P1: preserve both `ts_event` and
 `ts_recv`, add `available_at` and never normalise the raw local stamp, publish in
 `(available_at, source, seq)` order behind a single head-of-line deferral queue, and use one shared
 normaliser for both the historical and live paths (NN-1). Synthesise `seq` where the source has none

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "policy_id": "fbs-eurusd-october-2024-wall-label-experiment-v1",
+  "source": "FBS-Demo",
+  "instrument": "EURUSD",
+  "status": "EXPERIMENTAL_ONLY",
+  "label_start": "2024-09-29T21:00:00Z",
+  "label_end": "2024-11-02T00:00:00Z",
+  "intervals": [
+    {
+      "label_start": "2024-09-29T21:00:00Z",
+      "label_end": "2024-10-27T03:00:00Z",
+      "offset_seconds_to_utc": -10800
+    },
+    {
+      "label_start": "2024-10-27T04:00:00Z",
+      "label_end": "2024-11-02T00:00:00Z",
+      "offset_seconds_to_utc": -7200
+    }
+  ],
+  "excluded_intervals": [
+    {
+      "label_start": "2024-10-27T03:00:00Z",
+      "label_end": "2024-10-27T04:00:00Z",
+      "reason": "Repeated seasonal wall-clock hour: no fold chosen and no retained tick observed; encountering a row here must stop the experiment."
+    }
+  ],
+  "evidence_sha256": {
+    "four_release_anchors": "451a6990b4bf53fd0facb30c31ffa0a577ac58f377f6e617e5cae11b7bd504e4",
+    "seven_date_holdout": "5491ad96390b9620952796dece6bfdd116a5814784e5217b02cf0b5c47707823"
+  }
+}

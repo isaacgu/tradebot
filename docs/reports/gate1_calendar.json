@@ -1,0 +1,218 @@
+{
+  "artifacts": [
+    {
+      "path": "build/gate1/calendar/source-import-t43f4i4v/official-calendar.sqlite3",
+      "sha256": "62fb65701bfdf31c77fb612aedabc801a567dd558c3a298beb6198e963d72d71"
+    },
+    {
+      "path": "build/gate1/calendar/source-import-t43f4i4v/synthetic-calendar.sqlite3",
+      "sha256": "f4fcbe981b7b6dd52d34939983e8af297d0f185189ce8f6d610fc1a1da697284"
+    }
+  ],
+  "code_and_spec_sha256": {
+    "docs/SPEC.md": "dccdcbd9a237009116b4b3219860f371a3bc51700f20b1199746479921689f37",
+    "scripts/validate_gate1_calendar.py": "8fbd173023a82dabcb49bf50da841214269a5a1ff3a4ef02123f8d60b0361f24",
+    "src/tradebot/data/calendar.py": "a427b1917184f0e1969aff57ba2bfa4b371b6ca87473c1374ed22dbc719a312c"
+  },
+  "evidence_class": "BOUNDED_SOURCE_BACKED_CALENDAR_INTEGRATION",
+  "expected_liquidity_assessment": {
+    "approved_entries": 0,
+    "findings": [
+      "Source captures retain the October holiday notice, current trading conditions and current server-time policy; marker checks expose changed source content.",
+      "Current general schedules do not prove their effective policy for these demo FX symbols in October 2024.",
+      "No FX exception in a notice is not evidence that every date had FULL expected liquidity."
+    ],
+    "instrument_scope": [
+      "FBS-Demo/EURUSD",
+      "FBS-Demo/GBPUSD"
+    ],
+    "reference_month": "2024-10",
+    "remaining_evidence": [
+      "A dated broker-specific 2024 schedule and holiday policy for EURUSD/GBPUSD, including DST treatment.",
+      "A sourced definition of expected liquid intervals and explicit FULL/PARTIAL/CLOSED date classification.",
+      "Publication/effective timestamps and revision provenance for the intended historical knowledge cutoff."
+    ],
+    "sources": [
+      {
+        "bytes": 208352,
+        "content_type": "text/html; charset=UTF-8",
+        "final_url": "https://fbs.com/news/trading-schedule-changes-in-october",
+        "http_date": "Fri, 04 Sep 2026 19:52:47 GMT",
+        "http_last_modified": "Fri, 04 Sep 2026 07:34:17 GMT",
+        "http_status": 200,
+        "retrieved_at_utc": "2026-09-04T19:52:48.174809+00:00",
+        "reviewed_source_markers_present": {
+          "2024": true,
+          "HK50": true,
+          "October": true
+        },
+        "sha256": "950954bd8645efffd67343ae50c53d77fdd9b72bf6b2aab076ef0663fcb35e12",
+        "snapshot_path": "build/gate1/calendar/source-import-t43f4i4v/950954bd8645efffd67343ae50c53d77fdd9b72bf6b2aab076ef0663fcb35e12.html",
+        "url": "https://fbs.com/news/trading-schedule-changes-in-october"
+      },
+      {
+        "bytes": 230569,
+        "content_type": "text/html; charset=UTF-8",
+        "final_url": "https://fbs.com/trading/conditions?euRedirect=true",
+        "http_date": "Fri, 04 Sep 2026 19:52:48 GMT",
+        "http_last_modified": "Fri, 04 Sep 2026 07:34:12 GMT",
+        "http_status": 200,
+        "retrieved_at_utc": "2026-09-04T19:52:48.718960+00:00",
+        "reviewed_source_markers_present": {
+          "EET": true,
+          "Friday 23:59:59": true,
+          "Monday 00:00:00": true
+        },
+        "sha256": "5c3c68a029f3cb0daabe6360e06519c67b5824dbc1d4ba0ea9310775ff0b0472",
+        "snapshot_path": "build/gate1/calendar/source-import-t43f4i4v/5c3c68a029f3cb0daabe6360e06519c67b5824dbc1d4ba0ea9310775ff0b0472.html",
+        "url": "https://fbs.com/trading/conditions?euRedirect=true"
+      },
+      {
+        "bytes": 148171,
+        "content_type": "text/html; charset=UTF-8",
+        "final_url": "https://fbs.com/trading/trading-hours?lang=en",
+        "http_date": "Fri, 04 Sep 2026 19:52:49 GMT",
+        "http_last_modified": "Fri, 04 Sep 2026 07:34:13 GMT",
+        "http_status": 200,
+        "retrieved_at_utc": "2026-09-04T19:52:49.372250+00:00",
+        "reviewed_source_markers_present": {
+          "last Sunday in March": true,
+          "last Sunday in October": true
+        },
+        "sha256": "6b806a463dc0c2e4a4a517a50899482bed4f9b52ab433e1ac7a9fc033bf8d2bc",
+        "snapshot_path": "build/gate1/calendar/source-import-t43f4i4v/6b806a463dc0c2e4a4a517a50899482bed4f9b52ab433e1ac7a9fc033bf8d2bc.html",
+        "url": "https://fbs.com/trading/trading-hours?lang=en"
+      }
+    ],
+    "status": "INDETERMINATE"
+  },
+  "gate_1_approved": false,
+  "generated_at_utc": "2026-09-04T19:52:49.678143+00:00",
+  "limitations": [
+    "One actual official release is imported; this is not broad event/calendar coverage.",
+    "The source header declares a release time, not our historical receipt time or proof of immutable vintages.",
+    "No original consensus, previous, revision sequence or actual observed release-time history was supplied.",
+    "Official fields therefore use retrieval availability and AS_OF_UNVERIFIED; no historical backdating occurs.",
+    "Synthetic revisions live in a separate database and are not official historical evidence.",
+    "No expected-liquidity dates were approved or inferred; reference-month quality remains indeterminate."
+  ],
+  "official_source_import": {
+    "all_checks_passed": true,
+    "database_file": "official-calendar.sqlite3",
+    "field_cutoff_checks": [
+      {
+        "absent_before_available_at": true,
+        "exact_value_visible_after_available_at": true,
+        "exact_value_visible_at_available_at": true,
+        "field": "declared_release_at"
+      },
+      {
+        "absent_before_available_at": true,
+        "exact_value_visible_after_available_at": true,
+        "exact_value_visible_at_available_at": true,
+        "field": "target_rate_lower_percent"
+      },
+      {
+        "absent_before_available_at": true,
+        "exact_value_visible_after_available_at": true,
+        "exact_value_visible_at_available_at": true,
+        "field": "target_rate_upper_percent"
+      },
+      {
+        "absent_before_available_at": true,
+        "exact_value_visible_after_available_at": true,
+        "exact_value_visible_at_available_at": true,
+        "field": "target_rate_change_percentage_points"
+      }
+    ],
+    "fields": [
+      {
+        "available_at": "2026-09-04T19:52:46.280439+00:00",
+        "field": "declared_release_at",
+        "ingested_at": "2026-09-04T19:52:46.280439+00:00",
+        "quality_flags": [
+          "AS_OF_UNVERIFIED"
+        ],
+        "record_id": "FOMC-2024-11-07",
+        "source_citation": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20241107a.htm",
+        "ts_event": "2024-11-07T19:00:00+00:00",
+        "ts_recv": "2026-09-04T19:52:46.280439+00:00",
+        "value": "2024-11-07T19:00:00+00:00",
+        "vintage": "retrieved-source-snapshot"
+      },
+      {
+        "available_at": "2026-09-04T19:52:46.280439+00:00",
+        "field": "target_rate_lower_percent",
+        "ingested_at": "2026-09-04T19:52:46.280439+00:00",
+        "quality_flags": [
+          "AS_OF_UNVERIFIED"
+        ],
+        "record_id": "FOMC-2024-11-07",
+        "source_citation": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20241107a.htm",
+        "ts_event": "2024-11-07T19:00:00+00:00",
+        "ts_recv": "2026-09-04T19:52:46.280439+00:00",
+        "value": "4.5",
+        "vintage": "retrieved-source-snapshot"
+      },
+      {
+        "available_at": "2026-09-04T19:52:46.280439+00:00",
+        "field": "target_rate_upper_percent",
+        "ingested_at": "2026-09-04T19:52:46.280439+00:00",
+        "quality_flags": [
+          "AS_OF_UNVERIFIED"
+        ],
+        "record_id": "FOMC-2024-11-07",
+        "source_citation": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20241107a.htm",
+        "ts_event": "2024-11-07T19:00:00+00:00",
+        "ts_recv": "2026-09-04T19:52:46.280439+00:00",
+        "value": "4.75",
+        "vintage": "retrieved-source-snapshot"
+      },
+      {
+        "available_at": "2026-09-04T19:52:46.280439+00:00",
+        "field": "target_rate_change_percentage_points",
+        "ingested_at": "2026-09-04T19:52:46.280439+00:00",
+        "quality_flags": [
+          "AS_OF_UNVERIFIED"
+        ],
+        "record_id": "FOMC-2024-11-07",
+        "source_citation": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20241107a.htm",
+        "ts_event": "2024-11-07T19:00:00+00:00",
+        "ts_recv": "2026-09-04T19:52:46.280439+00:00",
+        "value": "-0.25",
+        "vintage": "retrieved-source-snapshot"
+      }
+    ],
+    "historical_as_of_status": "UNPROVEN_RETRIEVAL_AVAILABILITY_ONLY",
+    "known_at_declared_release": [],
+    "reopened_store_verified": true,
+    "source_backed": true
+  },
+  "offline_reproduce_command": "uv run --no-sync python scripts/validate_gate1_calendar.py --replay-report docs/reports/gate1_calendar.json --output build/gate1/calendar-replay.json",
+  "reproduce_command": "uv run --no-sync python scripts/validate_gate1_calendar.py",
+  "schema_version": 1,
+  "source": {
+    "bytes": 82289,
+    "content_type": "text/html",
+    "final_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20241107a.htm",
+    "http_date": "Fri, 04 Sep 2026 19:52:46 GMT",
+    "http_last_modified": "Thu, 26 Feb 2026 22:24:36 GMT",
+    "http_status": 200,
+    "retrieved_at_utc": "2026-09-04T19:52:46.280439+00:00",
+    "sha256": "098ac3402d7a4a747c7bf7e9346ebabb9f8ed3e933398929bdcf58deaf0d0ee9",
+    "snapshot_path": "build/gate1/calendar/source-import-t43f4i4v/098ac3402d7a4a747c7bf7e9346ebabb9f8ed3e933398929bdcf58deaf0d0ee9.html",
+    "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20241107a.htm"
+  },
+  "source_capture_mode": "NETWORK",
+  "status": "PASSED",
+  "synthetic_revision_checks": {
+    "absent_before_first_print": true,
+    "all_checks_passed": true,
+    "both_vintages_retained": true,
+    "database_file": "synthetic-calendar.sqlite3",
+    "evidence_class": "SYNTHETIC_REVISION_MECHANICS_ONLY",
+    "first_print_visible_before_revision": true,
+    "revision_visible_at_own_availability": true,
+    "source_backed": false
+  }
+}
