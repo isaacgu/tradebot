@@ -2,6 +2,91 @@
 
 ## Current assignment and status
 
+### September 6 — authorized targeted recapture
+
+Isaac subsequently authorized new evidence collection in the data-validation task
+`01a06abf-3353-74e3-b156-aa1b07a58ef6`. The exact-message receipt is
+`build/gate1/reference-recapture-plan-20260906-v1/authorization.json`, SHA-256
+`f38f7cd94b0cf2893de020d9556df604a3ed59ff60c63e8f6a65c63db4b8e78f`.
+This resolves the prior recapture-permission question, not missing human review
+times, final evidence-bound decisions or numeric acceptance. Do not ask for the
+same recapture authorization again. Preserve the existing user edit in
+`docs/reports/reference_definition_proposal.md`; no old approval is rebound to it.
+
+The data-validation owner completed exactly 24 planned windows in two sweeps
+(48 responses) from 06:59:07 to 07:00:52 UTC. Each 71-minute window includes 65
+minutes before its flagged minute and six minutes after that minute's start.
+Both responses are separately retained as NumPy arrays and canonical eight-field
+gzip streams, even if identical. Plan SHA-256:
+`e864c902ffded738a7b02c4272f9f3a5172a742995121173a16210355526e982`.
+Capture result: `build/gate1/reference-recapture-20260906-v1/result.json`, SHA-256
+`95fac20ae3eecf06e25af7748e08bc95aacc12d81b73faf29cd23aaa4a471a22`.
+The outer launch receipt reports return 0, no timeout and no changed reviewed
+inputs. The capture records 97 stable demo-identity checks and USD 1,000 balance.
+That establishes fresh-run account stability, not identity with the original
+acquisition account or an independent broker/quote source. Account identifiers
+are deliberately not persisted.
+
+The owner's completed comparison reports all 24 full contexts and target minutes
+identical in both new responses. All 17 gap endpoint pairs reproduce with zero
+interior ticks; all ten price-target neighbourhoods reproduce across the seven
+spike minutes. Comparison summary:
+`build/gate1/reference-recapture-comparison-20260906-v1/summary.json`, SHA-256
+`3a749fa54f42235d05056ce2f6797bfb09b5f980d61e3a61f590e2981cc02878`.
+The 316,177 original context rows are summed across overlapping windows, not a
+unique new dataset. Root verified the summary/target/window artifact hashes;
+the independent capture-artifact audit passed 614/614 checks at 07:13:21 UTC.
+Audit: `build/gate1/reference-recapture-root-audit-20260906-v1/audit.json`, SHA-256
+`03fa212d7e1608eb821e3e05395d9c3e902f49731761166ce7235923eefd77b1`.
+It accounts for all 244 capture files, checks 95 capture / 92 plan / six launch
+pins, and independently reconciles native/canonical fields, ordering, schema and
+counts. All 48 native/canonical file pairs verify; 632,354 rows include both sweeps
+and overlapping contexts, not unique ticks. Fresh timestamp/range/time-field
+checks pass. The separate automated comparator-method review found no concrete
+contradiction and reconciled 120
+equality comparisons / 27 targets in metadata. It did not recompare raw rows.
+The comparator carries forward the old 24/4,410 result and capture time counters;
+it does not recompute acceptance or those counters. Reopened NumPy responses are
+encoded using the same production canonical encoder, not an independent codec.
+
+No source correction is justified by this matching evidence. The one requested
+full-month, explicitly unbound acceptance rerun completed at 07:13:04 UTC on the
+unchanged original corpus, with recapture supplementary only. It again measured
+**24 / 4,410 = 0.544217687%, zero missing expected minutes, strict comparison false**.
+Report: `build/gate1/reference-month-postrecapture-diagnostic-20260906-v1/report.json`,
+SHA-256 `767ee4967f1c67914f9f33b545d1d608af9e23dc0bd9a8c33956e644847a1237`.
+Run result: `build/gate1/reference-month-postrecapture-diagnostic-run-20260906-v1/result.json`,
+SHA-256 `6580547a2dbc43b655d3797bab8283bc0a5a2a54c7785037d6f3d5fe953e92fc`.
+Actual exit 2 / DIAGNOSTIC_WRITTEN_UNBOUND, no timeout and no changed inputs;
+formal INDETERMINATE remains due to absent final definition-approval binding,
+not because the numerical rate is unknown. Adding approval metadata cannot make
+the failed rate pass. Root's independent completed-report artifact audit passed
+44/44 checks: all 52 launch pins matched, the original 49 baseline pins were
+preserved, and independent calendar arithmetic again yielded 4,410 minutes.
+Audit: `build/gate1/reference-postrecapture-root-audit-20260906-v1/audit.json`,
+SHA-256 `eb6d7a925c548211e37579bef03d6c5490ce5f017a767ecee88b97b6b2ca5e44`.
+This is metadata/hash/arithmetic verification, not another detector run, human
+approval, proof of market-history completeness or passing quality acceptance.
+
+Final additive handoff: `build/gate1/reference-recapture-comparison-20260906-v1/evidence-bundle.json`,
+SHA-256 `32aa42079c6b6c239e5024bacbf21ecc789cc2f200d8c169c6adbf6be79c9484`.
+Root verified all 22 linked artifact hashes. Its README explains the outcome and
+limitations; `approval-readiness.md` identifies missing human facts without
+inventing them, and `broker-inquiry-draft.md` plus the gap/price CSVs are prepared
+but unsent. A separately hashed `evidence-audit-addendum.json` in that directory
+links the unchanged sealed bundle, the 614-check capture audit and the post-run
+14/14 demo-baseline verification. Addendum SHA-256:
+`13b6e2ecfd446b665ca5d718ab9acbd92b062431a4430ec39fcb664984220538`;
+root checked all three links. No more recapture or evaluation jobs are queued.
+Do not duplicate retrieval, comparison or evaluation. The targeted capture
+does not replace the complete reference-month corpus or denominator. Any requested
+acceptance rerun must retain the full producer linkage and unchanged counting
+rules; no interpolation, cleared flags or synthetic source repair is permitted.
+Gate 1 remains open, and no Phase 2 handoff, training or orders have occurred.
+September 5 findings and permission-boundary statements below remain historical.
+
+### September 5 — source delivery and completed validation
+
 Latest source delivery: `5b56316a82749a8e60a9fea3596871c69325d400` is committed and
 pushed in [draft PR 4](https://github.com/isaacgu/tradebot/pull/4). Required CI
 `quality` and `secrets` passed in run 33966725497: 1,610 warnings-as-errors tests,

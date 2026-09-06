@@ -4,6 +4,19 @@ Prepared 2026-09-05. **NOT READY FOR GATE CLOSURE. Approval statements received;
 final evidence-bound sign-offs remain incomplete.**
 This is the route to closing Gate 1, not a declaration that it has passed.
 
+## September 6 — recapture permission received and retrieval complete
+
+The authorized recapture fetched all 24 affected windows twice and retained all
+48 responses. The comparison reports the same original quote sequences, all 17
+gaps and ten price-target neighbourhoods across seven minutes. No source repair
+is justified by those identical results. The independent capture audit passed
+614/614 checks. The actual full-month rerun again measured **24/4,410 = 0.544217687%**,
+above the strict `<0.1%` limit; missing approval binding separately leaves formal
+status INDETERMINATE. See
+[the September 6 evidence update](gate1_evidence.md#september-6-update--authorized-targeted-recapture-completed).
+Do not ask for recapture permission again or interpret retrieval completion as
+Gate 1 approval. Earlier findings and human-approval attribution remain preserved.
+
 ## Latest position — September 5, after the completed rebuilds
 
 Both source-frozen v2 rebuild jobs have finished with byte-identical outputs. The

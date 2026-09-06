@@ -5,6 +5,98 @@ This pack records available artifacts and unresolved acceptance criteria; it doe
 gate, authorize strategy evaluation, or enable trading. Status `FAILED` below includes required
 evidence that is not yet supplied. Nothing is deferred past its frozen due gate.
 
+## September 6 update — authorized targeted recapture completed
+
+The Principal directly authorized recapture in the existing data-validation task.
+The exact request and attribution are preserved in
+`build/gate1/reference-recapture-plan-20260906-v1/authorization.json`, SHA-256
+`f38f7cd94b0cf2893de020d9556df604a3ed59ff60c63e8f6a65c63db4b8e78f`.
+Its recording time is not a supplied human decision timestamp. This is permission
+to collect evidence and investigate, not approval of unseen results or a Gate pass.
+
+All 24 originally flagged minute windows were fetched twice, completing 48 responses
+at 07:00:52 UTC on September 6. The fixed plan uses 71-minute contexts, preserving
+65 minutes before each target and six minutes after its start. Both actual responses
+are retained separately as NumPy arrays and canonical eight-field gzip streams.
+Plan: `build/gate1/reference-recapture-plan-20260906-v1/plan.json`, SHA-256
+`e864c902ffded738a7b02c4272f9f3a5172a742995121173a16210355526e982`.
+Result: `build/gate1/reference-recapture-20260906-v1/result.json`, SHA-256
+`95fac20ae3eecf06e25af7748e08bc95aacc12d81b73faf29cd23aaa4a471a22`.
+The completed wrapper records return 0, no timeout and unchanged reviewed inputs.
+The run records 97 stable FBS-demo identity checks, with account identifiers withheld.
+It does not prove identity with the original acquisition account or an independent
+quote source; repeated calls may still share terminal cache and broker history.
+
+The completed comparison reports all 24 full contexts and flagged minutes
+identical in both new fetches. All 17 gap endpoint pairs reproduce with zero fresh
+interior ticks, as do all ten price-target neighbourhoods across seven minutes.
+Summary: `build/gate1/reference-recapture-comparison-20260906-v1/summary.json`,
+SHA-256 `3a749fa54f42235d05056ce2f6797bfb09b5f980d61e3a61f590e2981cc02878`.
+Root verified the summary and its linked target/window artifact hashes. The
+316,177-row context total includes overlapping windows and is not a distinct
+dataset row count. A separate automated comparator-method review found no concrete
+contradiction and reconciled 120 equality comparisons / 27 targets in metadata;
+it did not repeat raw-row comparisons. The independent capture-artifact audit
+passed 614/614 checks at 07:13:21 UTC:
+`build/gate1/reference-recapture-root-audit-20260906-v1/audit.json`, SHA-256
+`03fa212d7e1608eb821e3e05395d9c3e902f49731761166ce7235923eefd77b1`.
+It accounts for all 244 capture files, verifies 95 capture / 92 plan / six launch
+pins and independently reconciles native/canonical fields, ordering, schemas and
+counts for all 48 responses. The 632,354 rows include repeated and overlapping
+windows, not unique market ticks. Timestamp/range/time-field checks pass.
+The comparator's 24/4,410 is carried forward, not reevaluated; its time counters
+come from capture receipts, and reopened NumPy canonicalization reuses the same
+production encoder rather than an independent codec. Equality corroborates
+previously observed detector inputs, not that each flagged movement is economically
+invalid or all market updates were supplied.
+
+No source correction was justified by the recapture. One requested, explicitly
+unbound full-month baseline evaluation completed at 07:13:04 UTC on the original
+unchanged producer inputs, with the comparison linked as supplementary evidence.
+Report: `build/gate1/reference-month-postrecapture-diagnostic-20260906-v1/report.json`,
+SHA-256 `767ee4967f1c67914f9f33b545d1d608af9e23dc0bd9a8c33956e644847a1237`.
+Run receipt: `build/gate1/reference-month-postrecapture-diagnostic-run-20260906-v1/result.json`,
+SHA-256 `6580547a2dbc43b655d3797bab8283bc0a5a2a54c7785037d6f3d5fe953e92fc`.
+It again measures **24 / 4,410 = 0.544217687%**, with zero missing expected minutes
+and strict `<0.1%` comparison false. Actual return code 2 records
+DIAGNOSTIC_WRITTEN_UNBOUND; there was no timeout or changed input. Formal status
+is INDETERMINATE solely because the exact definition-approval binding is absent;
+valid binding would not turn this numeric failure into a pass. Root's independent
+completed-report audit passed 44/44 checks, including all 52 launch pins, retention
+of all 49 baseline pins, original full-month input linkage, and independently
+derived 4,410-minute denominator. Audit:
+`build/gate1/reference-postrecapture-root-audit-20260906-v1/audit.json`, SHA-256
+`eb6d7a925c548211e37579bef03d6c5490ce5f017a767ecee88b97b6b2ca5e44`.
+It verified metadata, hashes and arithmetic, without a detector rerun, raw-row
+attribution, source-completeness claim or human approval authentication. The full
+October producer, 4,410-minute denominator and acceptance definition remain
+separate; targeted recapture alone is not a replacement accepted dataset. Previous
+failed evidence and original source bytes are preserved. No broker orders, training,
+Phase 2 handoff or final human decision binding occurred.
+
+The final additive handoff is
+`build/gate1/reference-recapture-comparison-20260906-v1/evidence-bundle.json`,
+SHA-256 `32aa42079c6b6c239e5024bacbf21ecc789cc2f200d8c169c6adbf6be79c9484`.
+Root verified all 22 linked artifact hashes. Its
+[README](../../build/gate1/reference-recapture-comparison-20260906-v1/README.md)
+explains the completed investigation, and the
+[unsigned readiness checklist](../../build/gate1/reference-recapture-comparison-20260906-v1/approval-readiness.md)
+identifies the actual missing human observations/times/final bindings.
+A separate `evidence-audit-addendum.json` in the same directory links the unchanged
+sealed bundle, capture audit and post-run 14/14 demo-baseline verification;
+SHA-256 `13b6e2ecfd446b665ca5d718ab9acbd92b062431a4430ec39fcb664984220538`.
+Root verified all three linked artifact hashes without rewriting the sealed bundle.
+A broker-inquiry draft and exact gap/price review CSVs are prepared but **unsent**.
+No further retrieval or evaluation is queued; repeated identical downloads are
+not evidence of a repair. Gate 1 remains NOT APPROVED.
+
+The September 5 discussion below is preserved as dated history, including the
+then-unanswered recapture question. Recapture permission is now received and should
+not be requested again. Final human evidence binding and numeric acceptance remain
+distinct unresolved requirements.
+
+## September 5 evidence and approvals
+
 Latest human confirmation, 2026-09-05: Isaac approves the exact proposed v4 QA
 definition and confirms his sign-off approval; he reports Delsa's approval for the
 definition, five bar checks and final sign-off. The
