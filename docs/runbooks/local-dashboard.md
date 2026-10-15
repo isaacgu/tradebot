@@ -23,7 +23,7 @@ mock P&L values, positions, fills, or trading controls.
 From the repository root in PowerShell:
 
 ```powershell
-./scripts/start_dashboard.ps1
+./scripts/start_dashboard.ps1 -OpenBrowser
 ./scripts/stop_dashboard.ps1
 ```
 
@@ -45,9 +45,22 @@ run, stop that observer and pass its new report path:
 The replacement report is now complete and its reproducibility checks pass, while tick quality
 is FAILED and calendar acceptance remains unknown. For future builds, the report need not
 exist while a rebuild is active; missing evidence stays unknown.
-`-Gate1Report` defaults to `build/gate1/30day/report.json`. Supplying a different path
-does not reconfigure an already-running observer, so the selective stop is necessary.
-Keep supplying the desired path when starting that observer after a reboot. These
+`-Gate1Report` defaults to `build/gate1/30day-stable-b102ecdd/report.json`.
+`-ReferenceReport` separately defaults to
+`build/gate1/source-clock-reference-acceptance-20260906-v1/report.json`.
+The corrected-clock producer is not a substitute for the older 30-day report: the
+two have different schemas and purposes. The reference adapter checks bounded
+report bytes, checksum, internal counting consistency and producer-code identity;
+it does not reopen/revalidate the source corpus or authorize data use. Its panels
+separate the formal binding status from the measured strict threshold outcome,
+and show the selected path, report timestamp and scope. Missing or invalid evidence
+is unavailable, never a passing rate of zero. Training fields describe the saved
+diagnostic only, not an inventory of arbitrary external processes.
+
+Supplying different paths does not reconfigure an already-running observer, so the
+selective stop is necessary. Preserve any custom paths when restarting after a reboot.
+`-OpenBrowser` opens the local overview after service readiness; omit it for a
+headless start. These
 commands do not stop or restart the historical acquisition worker or offline rebuild.
 The original `build/gate1/30day` run was stopped after code drift and remains preserved,
 not reclassified as passing evidence.

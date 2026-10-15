@@ -138,3 +138,50 @@ def test_dashboard_panels_do_not_obscure_neighboring_evidence(name: str) -> None
             overlap_x = left["x"] < right["x"] + right["w"] and right["x"] < (left["x"] + left["w"])
             overlap_y = left["y"] < right["y"] + right["h"] and right["y"] < (left["y"] + left["h"])
             assert not (overlap_x and overlap_y), (panel["id"], other["id"])
+
+
+@pytest.mark.parametrize("name", ("system", "data-quality"))
+def test_reference_report_displays_failure_and_incomplete_approval_separately(name: str) -> None:
+    integrity = panel_for_metric(name, "tradebot_reference_report_state")
+    approval = panel_for_metric(name, "tradebot_reference_acceptance_state")
+    rate = panel_for_metric(name, "tradebot_reference_flagged_fraction")
+    assert displayed_color(integrity, 0) == "gray"
+    assert displayed_color(integrity, 3) == "red"
+    assert displayed_color(approval, 0) == "orange"
+    assert displayed_color(approval, 1) == "red"
+    assert rate["fieldConfig"]["defaults"]["unit"] == "percentunit"
+    assert rate["targets"][0]["legendFormat"] == "{{numerator}} / {{denominator}}"
+    assert rate["options"]["textMode"] == "value_and_name"
+    assert rate["fieldConfig"]["defaults"]["thresholds"]["steps"][1] == {
+        "color": "red",
+        "value": 0.001,
+    }
+    assert rate["fieldConfig"]["defaults"]["noValue"] == "Unavailable"
+
+
+def test_reference_scope_path_and_saved_timestamp_are_visible() -> None:
+    timestamp = panel_for_metric(
+        "data-quality", "tradebot_reference_report_timestamp_seconds * 1000"
+    )
+    assert timestamp["fieldConfig"]["defaults"]["unit"] == "dateTimeAsIso"
+    identity = next(p for p in dashboard("data-quality")["panels"] if p["id"] == 26)
+    assert identity["targets"][0]["instant"] is True
+    assert identity["targets"][0]["range"] is False
+    fields = identity["transformations"][0]["options"]["renameByName"]
+    assert set(fields) == {"source", "instrument", "reference_month", "report_path"}
+
+
+def test_launcher_defaults_select_retained_reports_without_rewriting_evidence() -> None:
+    script = (REPOSITORY / "scripts/start_dashboard.ps1").read_text(encoding="utf-8")
+    assert "[string]$Gate1Report = 'build/gate1/30day-stable-b102ecdd/report.json'" in script
+    assert "source-clock-reference-acceptance-20260906-v1/report.json" in script
+    assert "'--reference-report'" in script
+    assert "[switch]$OpenBrowser" in script
+
+
+@pytest.mark.parametrize(("name", "panel_id"), [("system", 12), ("data-quality", 1)])
+def test_reference_explanations_have_real_markdown_line_breaks(name: str, panel_id: int) -> None:
+    panel = next(p for p in dashboard(name)["panels"] if p["id"] == panel_id)
+    content = panel["options"]["content"]
+    assert chr(10) in content
+    assert chr(92) + "n" not in content

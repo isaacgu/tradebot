@@ -2,7 +2,11 @@ param(
     [string]$BrokerTerminal = 'C:\Program Files\MetaTrader 5\terminal64.exe',
     [ValidateNotNullOrEmpty()]
     [ValidatePattern('^[^\x00-\x1F"]+$')]
-    [string]$Gate1Report = 'build/gate1/30day/report.json',
+    [string]$Gate1Report = 'build/gate1/30day-stable-b102ecdd/report.json',
+    [ValidateNotNullOrEmpty()]
+    [ValidatePattern('^[^\x00-\x1F"]+$')]
+    [string]$ReferenceReport = 'build/gate1/source-clock-reference-acceptance-20260906-v1/report.json',
+    [switch]$OpenBrowser,
     [ValidateRange(15, 600)]
     [int]$StartupTimeoutSeconds = 300
 )
@@ -112,6 +116,7 @@ $definitions = @(
         '--work-dir', 'build/fbs-tick-continuity-v1',
         '--report', 'docs/reports/fbs-tick-continuity-v1-candidate.json',
         '--gate1-report', ('"' + $Gate1Report + '"'),
+        '--reference-report', ('"' + $ReferenceReport + '"'),
         '--host', '127.0.0.1', '--port', '8765')},
     @{name='broker'; executable=$pythonPath; port=8766; health='http://127.0.0.1:8766/health'; arguments=@(
         '-m', 'tradebot.monitoring.broker_exporter',
@@ -195,3 +200,7 @@ foreach ($definition in $definitions) {
 }
 $services.Values | ForEach-Object { [pscustomobject]$_ } | Sort-Object name | Format-Table name,pid
 Write-Output 'Dashboard: http://localhost:3000/d/tradebot-system'
+Write-Output 'Selected report paths are shown in the dashboard. Existing observers retain their startup paths.'
+if ($OpenBrowser) {
+    Start-Process 'http://localhost:3000/d/tradebot-system'
+}

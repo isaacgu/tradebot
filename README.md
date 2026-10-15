@@ -8,13 +8,15 @@ can show existing account activity without attributing that activity to this bot
 
 ## Current gate status
 
-September 5 delivery status: the local dashboard and read-only broker observer are
-running; the decision-replay engine is runnable with the synthetic command below.
-Data admission and the reference-month evaluator are implemented, but do not approve
-training data or trading. The additional engine increment is an offline simulated-fill
-and cost-accounting harness. It is not a connected paper/live broker. See the
-[current delivery record](docs/reports/platform_candidate_20260905.md) for verification,
-publication status and the remaining acceptance decisions.
+October 15 readiness: the data jobs completed in September; no market-data training
+is running. The latest corrected-clock reference assessment flags 16 / 4,410 liquid
+minutes (0.362811791%), exceeding the unchanged strict less-than-0.1% criterion.
+Gate 1 is not approved. The local dashboard is read-only; start it with the command
+below. Synthetic decision replay and market-fill/cost-accounting previews exist, but
+they are not fitted models or connected paper/live trading. See the
+[current readiness assessment](docs/reports/readiness_20261015.md) for the exact
+blockers and smallest first-fit proposal. The [September delivery record](
+docs/reports/platform_candidate_20260905.md) remains historical implementation evidence.
 
 Gate 0 is **APPROVED**. The specification is frozen at **v1.0** (SHA-256
 `dccdcbd9…1689f37`, errata enumerated in [ADR-0004](docs/adr/0004-freeze-errata.md), supplied draft
@@ -72,7 +74,7 @@ availability timestamps per field and vintage, so a past query cannot see a late
 Start the local observability stack from PowerShell:
 
 ```powershell
-.\scripts\start_dashboard.ps1 -Gate1Report 'build/gate1/30day-stable-b102ecdd/report.json'
+.\scripts\start_dashboard.ps1 -OpenBrowser
 ```
 
 Open the [system overview](http://localhost:3000/d/tradebot-system), then use the
@@ -83,6 +85,10 @@ Open the [system overview](http://localhost:3000/d/tradebot-system), then use th
 from current implementation identity, alongside source class, bars processed and decision counts.
 A verified report with **HISTORICAL · code changed** is preserved evidence of earlier code,
 not validation of the current engine. An unavailable comparison remains **UNKNOWN**.
+The default inputs now include the stable 30-day rebuild and, separately, the latest
+corrected-clock reference diagnostic. The reference panels show its path, timestamp,
+formal binding status and measured threshold result. A verified report checksum is
+not approval of its source data, Gate 1 or training.
 The overview is the entry point for evaluating the whole bot: health, data, research/backtests,
 strategies/portfolio, execution/risk, evidence and operations. Sections for future modules must
 say **not implemented** or **no evidence**. A missing metric is not a healthy system, a zero

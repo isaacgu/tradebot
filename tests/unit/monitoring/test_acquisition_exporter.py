@@ -142,6 +142,8 @@ def test_missing_and_empty_evidence_never_means_quality_pass(monitor: Acquisitio
     assert missing["chunks_expected"] == 3
     assert missing["chunks_completed"] == 0
     assert missing["structural_state"] == "unknown"
+    assert missing["reference"]["report_state"] == 0
+    assert "tradebot_reference_report_state" in render_metrics(missing).decode()
     checkpoint(monitor, 0, 0)
     empty = monitor.snapshot()
     assert empty["chunks_completed"] == 1

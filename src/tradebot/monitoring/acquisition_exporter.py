@@ -26,6 +26,11 @@ from typing import Any, cast
 
 from prometheus_client import CONTENT_TYPE_LATEST, CollectorRegistry, Gauge, generate_latest
 
+from tradebot.monitoring.reference_status import (
+    DEFAULT_REFERENCE_REPORT,
+    add_reference_metrics,
+    reference_status,
+)
 from tradebot.monitoring.research_status import add_research_metrics, research_status
 
 PREFIX = "tradebot_acquisition_"
@@ -475,6 +480,7 @@ class AcquisitionMonitor:
         process_observer: Callable[[], str] | None = None,
         cache_seconds: float = 5,
         gate1_report: Path | None = None,
+        reference_report: Path | None = None,
         research_root: Path | None = None,
     ) -> None:
         self.plan = read_plan(plan_path)
@@ -482,8 +488,9 @@ class AcquisitionMonitor:
         self.report = report.resolve()
         self.repository = repository.resolve()
         self.gate1_report = (
-            gate1_report or (self.repository / "build/gate1/30day/report.json")
+            gate1_report or (self.repository / "build/gate1/30day-stable-b102ecdd/report.json")
         ).resolve()
+        self.reference_report = reference_report or (self.repository / DEFAULT_REFERENCE_REPORT)
         self.research_root = research_root or (self.repository / "build/research/decision-replay")
         self.process_observer = process_observer or (
             lambda: observe_process(self.work_dir, self.repository)
@@ -725,6 +732,7 @@ class AcquisitionMonitor:
             "windows": [asdict(item) for item in stats],
             "platform": platform_status(self.repository, self.json),
             "gate1": gate1_status(self.gate1_report, self.repository, self.plan.plan_hash),
+            "reference": reference_status(self.reference_report, self.repository),
             "research": research_status(self.research_root, self.repository),
             "limitations": [
                 "Source-viability monitoring only; no trading or Gate-1 acceptance claim.",
@@ -898,6 +906,7 @@ def render_metrics(snapshot: Mapping[str, Any]) -> bytes:
         for flag, count in counts.items():
             flag_rows.labels(category, flag).set(count)
     add_research_metrics(registry, snapshot["research"])
+    add_reference_metrics(registry, snapshot["reference"])
     return generate_latest(registry)
 
 
@@ -946,7 +955,10 @@ def main(argv: list[str] | None = None) -> None:
         "--report", type=Path, default=Path("docs/reports/fbs-tick-continuity-v1-candidate.json")
     )
     parser.add_argument("--host", default="127.0.0.1", choices=("127.0.0.1", "localhost"))
-    parser.add_argument("--gate1-report", type=Path, default=Path("build/gate1/30day/report.json"))
+    parser.add_argument(
+        "--gate1-report", type=Path, default=Path("build/gate1/30day-stable-b102ecdd/report.json")
+    )
+    parser.add_argument("--reference-report", type=Path, default=Path(DEFAULT_REFERENCE_REPORT))
     parser.add_argument(
         "--research-root", type=Path, default=Path("build/research/decision-replay")
     )
@@ -969,6 +981,7 @@ def main(argv: list[str] | None = None) -> None:
         paths[2],
         repository,
         gate1_report=gate1_report,
+        reference_report=args.reference_report,
         research_root=research_root,
     )
     server = ThreadingHTTPServer((args.host, args.port), make_handler(monitor))
