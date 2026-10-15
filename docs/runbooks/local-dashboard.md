@@ -92,6 +92,13 @@ Once this returns `database: ok`, rerun the launcher with the desired `-Gate1Rep
 path to verify all four services. It reuses the recorded, identity-checked processes. Do not
 blindly kill/relaunch Grafana or start another copy after a cold-start timeout.
 
+The launcher verifies both HTTP readiness and an actual listener owned by the
+recorded process (or its verified Python worker). On Windows hosts that misreport
+socket states/PID-0 entries through the general TCP query, it uses the native
+listener-only ownership table for IPv4 and IPv6. Unknown ownership still fails
+closed; this fallback does not accept any responding process or disable PID,
+executable-path or creation-time checks.
+
 ## Runtime setup
 
 The supplied runtime lives entirely under ignored `build/monitoring/`. For a fresh

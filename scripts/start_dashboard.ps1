@@ -45,6 +45,86 @@ function Get-OwnedService($entry) {
     return $existing
 }
 
+function Get-NativeDashboardListeners([int]$Port) {
+    # Windows can misreport states in OWNER_PID_ALL (including Get-NetTCPConnection).
+    # Query OWNER_PID_LISTENER directly: this still proves actual socket ownership.
+    # https://learn.microsoft.com/windows/win32/api/iphlpapi/nf-iphlpapi-getextendedtcptable
+    if (-not ('TradebotDashboardTcpTable' -as [type])) {
+        Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class TradebotDashboardTcpTable {
+    [DllImport("iphlpapi.dll", SetLastError = true)]
+    public static extern uint GetExtendedTcpTable(IntPtr table, ref int size,
+        bool sorted, int family, int tableClass, uint reserved);
+}
+'@
+    }
+    foreach ($layout in @(
+        @{family=2; rowSize=24; addressSize=4; addressOffset=4; portOffset=8; stateOffset=0; pidOffset=20},
+        @{family=23; rowSize=56; addressSize=16; addressOffset=0; portOffset=20; stateOffset=48; pidOffset=52}
+    )) {
+        $size = 0
+        $result = [TradebotDashboardTcpTable]::GetExtendedTcpTable(
+            [IntPtr]::Zero, [ref]$size, $false, $layout.family, 3, 0)
+        if ($result -ne 122) { throw "Cannot size TCP listener ownership table: $result." }
+        $completed = $false
+        for ($attempt=0; $attempt -lt 3; $attempt++) {
+            if ($size -lt 4 -or $size -gt 16777216) { throw 'Invalid TCP listener table size.' }
+            $allocated = $size
+            $buffer = [Runtime.InteropServices.Marshal]::AllocHGlobal($allocated)
+            try {
+                $result = [TradebotDashboardTcpTable]::GetExtendedTcpTable(
+                    $buffer, [ref]$size, $false, $layout.family, 3, 0)
+                if ($result -eq 122) { continue }
+                if ($result -ne 0) { throw "Cannot read TCP listener ownership table: $result." }
+                $count = [Runtime.InteropServices.Marshal]::ReadInt32($buffer)
+                if ($count -lt 0 -or 4 + ([long]$count * $layout.rowSize) -gt $allocated) {
+                    throw 'Invalid TCP listener table row count.'
+                }
+                for ($index=0; $index -lt $count; $index++) {
+                    $row = [IntPtr]::Add($buffer, 4 + $index * $layout.rowSize)
+                    $rawPort = [Runtime.InteropServices.Marshal]::ReadInt32($row, $layout.portOffset)
+                    $localPort = (($rawPort -band 255) -shl 8) -bor (($rawPort -shr 8) -band 255)
+                    if ($localPort -ne $Port) { continue }
+                    if ([Runtime.InteropServices.Marshal]::ReadInt32($row, $layout.stateOffset) -ne 2) {
+                        throw 'Listener-only table returned an unrecognized socket state.'
+                    }
+                    $address = New-Object byte[] $layout.addressSize
+                    [Runtime.InteropServices.Marshal]::Copy(
+                        [IntPtr]::Add($row, $layout.addressOffset), $address, 0, $address.Length)
+                    [pscustomobject]@{LocalAddress=([Net.IPAddress]::new($address)).ToString();
+                        LocalPort=$localPort; State='Listen';
+                        OwningProcess=[Runtime.InteropServices.Marshal]::ReadInt32($row, $layout.pidOffset)}
+                }
+                $completed = $true
+                break
+            } finally {
+                [Runtime.InteropServices.Marshal]::FreeHGlobal($buffer)
+            }
+        }
+        if (-not $completed) { throw 'TCP listener ownership table changed repeatedly; retry later.' }
+    }
+}
+
+function Get-DashboardListeners([int]$Port) {
+    $reported = @(Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue)
+    $shaped = @($reported | Where-Object {
+        $_.RemotePort -eq 0 -and $_.RemoteAddress -in @('0.0.0.0', '::')
+    })
+    $reliable = @($shaped | Where-Object { $_.State -eq 'Listen' -and $_.OwningProcess -gt 0 })
+    if ($reliable.Count -gt 0 -and $reliable.Count -eq $shaped.Count) { return $reliable }
+    # Missing/unmapped states or PID-0 ghosts are not ownership evidence. The
+    # native listener-only table is authoritative; a read failure must not mean free.
+    return @(Get-NativeDashboardListeners -Port $Port)
+}
+
+function Test-DashboardOwnedListener($Listener, [int[]]$OwnedIds, [int]$Port) {
+    return ($Listener.LocalAddress -eq '127.0.0.1' -and $Listener.LocalPort -eq $Port -and
+        $Listener.State -eq 'Listen' -and $Listener.OwningProcess -gt 0 -and
+        $Listener.OwningProcess -in $OwnedIds)
+}
+
 function Save-ServiceState($entries) {
     $temporary = Join-Path $runtimeRoot ('services-' + [guid]::NewGuid().ToString('N') + '.tmp')
     try {
@@ -156,7 +236,7 @@ foreach ($definition in $definitions) {
         $liveChildren = @($entry.children | Where-Object { $null -ne (Get-OwnedService $_) })
     }
     if ($null -eq $process -and $liveChildren.Count -eq 0) {
-        $listener = Get-NetTCPConnection -State Listen -LocalPort $definition.port -ErrorAction SilentlyContinue
+        $listener = @(Get-DashboardListeners -Port $definition.port)
         if ($listener) { throw "Port $($definition.port) is already occupied by another service." }
         $stamp = Get-Date -Format 'yyyyMMdd-HHmmss-fff'
         $logBase = Join-Path $runtimeRoot "logs/$($definition.name)-$stamp"
@@ -188,8 +268,10 @@ foreach ($definition in $definitions) {
         }
         try {
             $response = Invoke-WebRequest -UseBasicParsing -Uri $definition.health -TimeoutSec 1
-            $listeners = @(Get-NetTCPConnection -State Listen -LocalPort $definition.port -ErrorAction SilentlyContinue)
-            $ownedListener = @($listeners | Where-Object { $_.OwningProcess -in $liveIds })
+            $listeners = @(Get-DashboardListeners -Port $definition.port)
+            $ownedListener = @($listeners | Where-Object {
+                Test-DashboardOwnedListener -Listener $_ -OwnedIds $liveIds -Port $definition.port
+            })
             if ($response.StatusCode -eq 200 -and $ownedListener.Count -gt 0) { $ready = $true; break }
         } catch {
             # Startup migrations/imports can precede the local readiness endpoint.
