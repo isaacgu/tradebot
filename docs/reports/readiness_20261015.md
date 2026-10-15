@@ -11,6 +11,32 @@ approval does not resolve a failed measurement.
 This is a status and implementation plan, not a gate receipt, fitted-model artifact,
 data-release authorization, or retrospective preregistration.
 
+## October maintenance and GUI verification
+
+- The October dependency-audit failure was repaired through [PR 5](
+  https://github.com/isaacgu/tradebot/pull/5), merged as `cdccfb0d55081dab74e4043a46f73c185e74a69b`.
+  Its [master CI](https://github.com/isaacgu/tradebot/actions/runs/38692519923) passed.
+- The read-only reference dashboard and Windows startup corrections are published
+  on `codex/p1-data-pipeline` in [PR 4](https://github.com/isaacgu/tradebot/pull/4).
+  Candidate `f63a16e` passed [quality, secrets and Windows-monitoring CI](
+  https://github.com/isaacgu/tradebot/actions/runs/38694443014).
+- The complete local Python suite passed 1,760 tests: 88.19% aggregate branch
+  coverage, 96% core and 87% non-core. The separate 90%/80% floors passed, as did
+  strict typing, formatting/lint, Bandit, dependency audit and the smoke demo.
+  These are engineering checks, not data acceptance or financial results.
+- Independent agent reviews checked the dependency change, reference adapter,
+  panels and launcher. Two display/parser findings were corrected and tested.
+  These reviews do not substitute for an independent human gate decision.
+- The dashboard skill guided explicit report provenance and unavailable-state
+  presentation. A saved checksum is distinguished from source-data validity;
+  the completed diagnostic is distinguished from training or a currently running job.
+
+Use `./scripts/start_dashboard.ps1 -OpenBrowser` from PowerShell and the
+[local runbook](../runbooks/local-dashboard.md) for runtime details. CI does not
+attest that services on a particular workstation are currently running. The
+observer requires an already-open MT5 terminal for broker snapshots; it never
+starts the terminal or places orders.
+
 ## Completed work and remaining evidence
 
 | Area | Evidence-backed position |
