@@ -7,7 +7,8 @@ $tokens = $null
 $ast = [Management.Automation.Language.Parser]::ParseFile(
     (Resolve-Path $scriptPath), [ref]$tokens, [ref]$parseErrors)
 if ($parseErrors.Count) { throw 'Launcher contains parse errors.' }
-$wanted = @('Get-DashboardListeners', 'Test-DashboardOwnedListener', 'Get-OwnedService')
+$wanted = @('Get-DashboardListeners', 'Test-DashboardOwnedListener', 'Get-OwnedService',
+    'ConvertFrom-DashboardListenerTable')
 $definitions = $ast.FindAll({param($node)
     $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -in $wanted
 }, $true)
@@ -75,4 +76,56 @@ $script:process.StartTime = $started.AddSeconds(1)
 $mismatch = $false
 try { $null = Get-OwnedService $saved } catch { $mismatch = $true }
 Assert $mismatch 'Fallback weakened creation-time identity verification.'
+
+# Exercise the bounded native decoder with byte fixtures, including the observed
+# state 0/1 metadata. Only this decoder consumes OWNER_PID_LISTENER API buffers.
+$layout = @{rowSize=24; addressSize=4; addressOffset=4; portOffset=8;
+    remoteAddressOffset=12; remotePortOffset=16; stateOffset=0; pidOffset=20}
+$buffer = [Runtime.InteropServices.Marshal]::AllocHGlobal(28)
+try {
+    foreach ($rawState in @(0,1,2)) {
+        $bytes = New-Object byte[] 28
+        [BitConverter]::GetBytes([int]1).CopyTo($bytes, 0)
+        [BitConverter]::GetBytes([int]$rawState).CopyTo($bytes, 4)
+        ([byte[]]@(127,0,0,1)).CopyTo($bytes, 8)
+        ([byte[]]@(34,61,0,0)).CopyTo($bytes, 12)
+        [BitConverter]::GetBytes([int]33184).CopyTo($bytes, 24)
+        [Runtime.InteropServices.Marshal]::Copy($bytes, 0, $buffer, 28)
+        $decoded = @(ConvertFrom-DashboardListenerTable $buffer 28 $layout 8765)
+        Assert ($decoded.Count -eq 1) 'Native listener fixture was lost.'
+        Assert ($decoded[0].ObservedState -eq $rawState) 'Native raw state was not preserved.'
+        Assert ($decoded[0].ListenerEvidence -eq 'OWNER_PID_LISTENER') 'Native selection proof missing.'
+        Assert (Test-DashboardOwnedListener $decoded[0] @(33184) 8765) 'Native owned listener rejected.'
+        Assert (-not (Test-DashboardOwnedListener $decoded[0] @(99999) 8765)) 'Native wrong PID accepted.'
+    }
+    # An arbitrary CLOSED row from the general table cannot use that proof.
+    $script:reported = @(Endpoint 'Closed' 33184)
+    $script:native = @()
+    Assert (@(Get-DashboardListeners -Port 8765).Count -eq 0) 'General CLOSED row accepted as proof.'
+    foreach ($badSize in @(0,3,27)) {
+        $rejected = $false
+        try { $null = ConvertFrom-DashboardListenerTable $buffer $badSize $layout 8765 }
+        catch { $rejected = $true }
+        Assert $rejected 'Partial native buffer was accepted.'
+    }
+    [Runtime.InteropServices.Marshal]::WriteInt32($buffer, 0, -1)
+    $rejected = $false
+    try { $null = ConvertFrom-DashboardListenerTable $buffer 28 $layout 8765 }
+    catch { $rejected = $true }
+    Assert $rejected 'Negative native row count was accepted.'
+    [Runtime.InteropServices.Marshal]::WriteInt32($buffer, 0, 1)
+    [Runtime.InteropServices.Marshal]::WriteInt32($buffer, 20, 123)
+    $rejected = $false
+    try { $null = ConvertFrom-DashboardListenerTable $buffer 28 $layout 8765 }
+    catch { $rejected = $true }
+    Assert $rejected 'Native connected remote port was accepted.'
+    [Runtime.InteropServices.Marshal]::WriteInt32($buffer, 20, 0)
+    [Runtime.InteropServices.Marshal]::WriteInt32($buffer, 16, 127)
+    $rejected = $false
+    try { $null = ConvertFrom-DashboardListenerTable $buffer 28 $layout 8765 }
+    catch { $rejected = $true }
+    Assert $rejected 'Native connected remote address was accepted.'
+} finally {
+    [Runtime.InteropServices.Marshal]::FreeHGlobal($buffer)
+}
 Write-Output 'Dashboard listener ownership fixtures passed.'

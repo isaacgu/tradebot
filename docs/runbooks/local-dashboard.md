@@ -98,6 +98,12 @@ socket states/PID-0 entries through the general TCP query, it uses the native
 listener-only ownership table for IPv4 and IPv6. Unknown ownership still fails
 closed; this fallback does not accept any responding process or disable PID,
 executable-path or creation-time checks.
+That API selects listeners even when this host misreports an individual row's state.
+The fallback preserves the raw state, checks the remote endpoint is unspecified,
+and uses the listener-only query contract as evidence. General-table closed or
+connected rows never establish readiness. The deterministic Windows fixtures run
+in CI as `windows-monitoring` and can be run locally with
+`./tests/windows/test_dashboard_listener.ps1`.
 
 ## Runtime setup
 

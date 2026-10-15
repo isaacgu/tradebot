@@ -45,6 +45,38 @@ function Get-OwnedService($entry) {
     return $existing
 }
 
+function ConvertFrom-DashboardListenerTable([IntPtr]$Buffer, [int]$Size, $Layout, [int]$Port) {
+    if ($Buffer -eq [IntPtr]::Zero -or $Size -lt 4) { throw 'Invalid TCP listener table buffer.' }
+    $count = [Runtime.InteropServices.Marshal]::ReadInt32($Buffer)
+    if ($count -lt 0 -or 4 + ([long]$count * $Layout.rowSize) -gt $Size) {
+        throw 'Invalid TCP listener table row count.'
+    }
+    for ($index=0; $index -lt $count; $index++) {
+        $row = [IntPtr]::Add($Buffer, 4 + $index * $Layout.rowSize)
+        $rawPort = [Runtime.InteropServices.Marshal]::ReadInt32($row, $Layout.portOffset)
+        $localPort = (($rawPort -band 255) -shl 8) -bor (($rawPort -shr 8) -band 255)
+        if ($localPort -ne $Port) { continue }
+        $remote = New-Object byte[] $Layout.addressSize
+        [Runtime.InteropServices.Marshal]::Copy(
+            [IntPtr]::Add($row, $Layout.remoteAddressOffset), $remote, 0, $remote.Length)
+        if (@($remote | Where-Object { $_ -ne 0 }).Count -gt 0 -or
+            [Runtime.InteropServices.Marshal]::ReadInt32($row, $Layout.remotePortOffset) -ne 0) {
+            throw 'Listener-only table returned a connected-shaped endpoint.'
+        }
+        $address = New-Object byte[] $Layout.addressSize
+        [Runtime.InteropServices.Marshal]::Copy(
+            [IntPtr]::Add($row, $Layout.addressOffset), $address, 0, $address.Length)
+        # OWNER_PID_LISTENER selects listening endpoints. On this Windows build,
+        # even that table reports raw state 0/1 for a healthy owned listener. Keep
+        # the raw value visible; infer Listen only from this native query contract
+        # plus an unspecified remote endpoint, never from general-table CLOSED rows.
+        [pscustomobject]@{LocalAddress=([Net.IPAddress]::new($address)).ToString();
+            LocalPort=$localPort; State='Listen'; ListenerEvidence='OWNER_PID_LISTENER';
+            ObservedState=[Runtime.InteropServices.Marshal]::ReadInt32($row, $Layout.stateOffset);
+            OwningProcess=[Runtime.InteropServices.Marshal]::ReadInt32($row, $Layout.pidOffset)}
+    }
+}
+
 function Get-NativeDashboardListeners([int]$Port) {
     # Windows can misreport states in OWNER_PID_ALL (including Get-NetTCPConnection).
     # Query OWNER_PID_LISTENER directly: this still proves actual socket ownership.
@@ -61,8 +93,10 @@ public static class TradebotDashboardTcpTable {
 '@
     }
     foreach ($layout in @(
-        @{family=2; rowSize=24; addressSize=4; addressOffset=4; portOffset=8; stateOffset=0; pidOffset=20},
-        @{family=23; rowSize=56; addressSize=16; addressOffset=0; portOffset=20; stateOffset=48; pidOffset=52}
+        @{family=2; rowSize=24; addressSize=4; addressOffset=4; portOffset=8;
+            remoteAddressOffset=12; remotePortOffset=16; stateOffset=0; pidOffset=20},
+        @{family=23; rowSize=56; addressSize=16; addressOffset=0; portOffset=20;
+            remoteAddressOffset=24; remotePortOffset=44; stateOffset=48; pidOffset=52}
     )) {
         $size = 0
         $result = [TradebotDashboardTcpTable]::GetExtendedTcpTable(
@@ -78,25 +112,8 @@ public static class TradebotDashboardTcpTable {
                     $buffer, [ref]$size, $false, $layout.family, 3, 0)
                 if ($result -eq 122) { continue }
                 if ($result -ne 0) { throw "Cannot read TCP listener ownership table: $result." }
-                $count = [Runtime.InteropServices.Marshal]::ReadInt32($buffer)
-                if ($count -lt 0 -or 4 + ([long]$count * $layout.rowSize) -gt $allocated) {
-                    throw 'Invalid TCP listener table row count.'
-                }
-                for ($index=0; $index -lt $count; $index++) {
-                    $row = [IntPtr]::Add($buffer, 4 + $index * $layout.rowSize)
-                    $rawPort = [Runtime.InteropServices.Marshal]::ReadInt32($row, $layout.portOffset)
-                    $localPort = (($rawPort -band 255) -shl 8) -bor (($rawPort -shr 8) -band 255)
-                    if ($localPort -ne $Port) { continue }
-                    if ([Runtime.InteropServices.Marshal]::ReadInt32($row, $layout.stateOffset) -ne 2) {
-                        throw 'Listener-only table returned an unrecognized socket state.'
-                    }
-                    $address = New-Object byte[] $layout.addressSize
-                    [Runtime.InteropServices.Marshal]::Copy(
-                        [IntPtr]::Add($row, $layout.addressOffset), $address, 0, $address.Length)
-                    [pscustomobject]@{LocalAddress=([Net.IPAddress]::new($address)).ToString();
-                        LocalPort=$localPort; State='Listen';
-                        OwningProcess=[Runtime.InteropServices.Marshal]::ReadInt32($row, $layout.pidOffset)}
-                }
+                if ($size -gt $allocated) { throw 'TCP listener table exceeded its buffer.' }
+                ConvertFrom-DashboardListenerTable -Buffer $buffer -Size $size -Layout $layout -Port $Port
                 $completed = $true
                 break
             } finally {

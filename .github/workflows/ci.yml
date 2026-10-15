@@ -104,3 +104,13 @@ jobs:
 
       - name: Scan full Git history for secrets
         run: /tmp/gitleaks git --redact --no-banner .
+
+  windows-monitoring:
+    runs-on: windows-2022
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check dashboard listener ownership fixtures
+        shell: pwsh
+        run: ./tests/windows/test_dashboard_listener.ps1
