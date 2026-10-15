@@ -10,10 +10,11 @@ from tradebot.core.bus import EventBus
 from tradebot.core.clock import SimClock
 from tradebot.core.ports import StrategyContext
 from tradebot.core.types import Bar, Forecast
-from tradebot.features.causal import FeatureSnapshot
+from tradebot.features.causal import FeatureSnapshot, validate_bars
 from tradebot.research.authorization import AuthorizationError, ResearchPurpose
 from tradebot.research.feed import ReplayBar
 from tradebot.research.guarded import ApprovedSnapshotStream
+from tradebot.research.splits import ChronologicalSplit
 from tradebot.strategies.momentum import MomentumConfig, MomentumStrategy
 
 
@@ -89,19 +90,38 @@ def validate_replay_request(
 
 
 def iter_decisions(
-    records: Iterable[ReplayBar], config: ReplayConfig, *, purpose: ResearchPurpose | None = None
+    records: Iterable[ReplayBar],
+    config: ReplayConfig,
+    *,
+    purpose: ResearchPurpose | None = None,
+    split: ChronologicalSplit | None = None,
+    partition: str | None = None,
 ) -> Iterator[DecisionRecord]:
     """Authorize eagerly; return the causal engineering decision iterator.
 
-    This function does not fit a strategy or certify economic results, regardless
-    of the purpose for which a separately released dataset may be consumed.
+    Optional partition routing happens inside the authorized consumer, not in a
+    wrapper that loses the guard-owned stream. All rows still receive structural
+    checks and EOF verification; only selected rows reach fresh strategy state.
+    This inspects unselected timestamps, and does not establish a blind lockbox.
+    No fitting or economic certification occurs here.
     """
+    if (split is None) != (partition is None):
+        raise ValueError("split and partition must be supplied together")
+    if split is not None and not isinstance(split, ChronologicalSplit):
+        raise TypeError("split must be ChronologicalSplit")
+    if partition is not None and partition not in {"training", "validation"}:
+        raise ValueError("only training and validation partitions may be replayed")
     validate_replay_request(records, config, purpose=purpose)
-    return _iter_decisions(records, config, purpose=purpose)
+    return _iter_decisions(records, config, purpose=purpose, split=split, partition=partition)
 
 
 def _iter_decisions(
-    records: Iterable[ReplayBar], config: ReplayConfig, *, purpose: ResearchPurpose | None
+    records: Iterable[ReplayBar],
+    config: ReplayConfig,
+    *,
+    purpose: ResearchPurpose | None,
+    split: ChronologicalSplit | None,
+    partition: str | None,
 ) -> Iterator[DecisionRecord]:
     """Yield decisions in strict availability/source/sequence order with bounded state.
 
@@ -118,6 +138,7 @@ def _iter_decisions(
     previous_key: tuple[datetime, str, int, str] | None = None
     last_sequences: dict[tuple[str, str], int] = {}
     sources: dict[str, str] = {}
+    previous_bars: dict[str, Bar] = {}
     clock: SimClock | None = None
     bus: EventBus | None = None
     emitted: list[Forecast] = []
@@ -146,6 +167,21 @@ def _iter_decisions(
             raise ValueError("source sequence regressed or was duplicated")
         previous_key = key
         last_sequences[series_key] = record.seq
+        if split is not None:
+            # Unpartitioned replay keeps its existing bus/strategy error contract.
+            # Routing must also validate bars that never reach that handler.
+            prior_bar = previous_bars.get(bar.instrument)
+            validate_bars(
+                (bar,) if prior_bar is None else (prior_bar, bar), known_at=bar.available_at
+            )
+            previous_bars[bar.instrument] = bar
+            decision_at = max(bar.ts_event, bar.ts_recv, bar.available_at)
+            try:
+                label_end = decision_at + split.label_horizon
+            except OverflowError as exc:
+                raise ValueError("label horizon overflows the datetime range") from exc
+            if split.classify(bar.ts_open, decision_at, label_end) != partition:
+                continue
         seen.add(bar.instrument)
         if clock is None:
             clock = SimClock(bar.available_at)

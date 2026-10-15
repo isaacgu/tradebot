@@ -636,6 +636,7 @@ class TickQualityPipeline:
             DataQualityFlag.CROSSED_QUOTE,
             DataQualityFlag.NONPOSITIVE_BID,
             DataQualityFlag.NONPOSITIVE_ASK,
+            DataQualityFlag.SPREAD_OUTLIER,
             DataQualityFlag.GAP,
             DataQualityFlag.OUT_OF_SESSION,
         }

@@ -48,6 +48,25 @@ class MomentumDecision:
 _DEFAULT_MOMENTUM_CONFIG = MomentumConfig()
 
 
+def momentum_components(features: FeatureSnapshot) -> tuple[tuple[int, float], ...]:
+    """Return dimensionless, unscaled momentum strengths before any forecast cap.
+
+    Fitting and inference share this calculation; calibration must never recover
+    a raw strength from an already clipped forecast.
+    """
+    if not math.isfinite(features.volatility) or features.volatility <= 0:
+        raise ValueError("momentum requires positive finite volatility")
+    if not features.log_returns or any(horizon <= 0 for horizon, _ in features.log_returns):
+        raise ValueError("momentum requires positive return horizons")
+    components = tuple(
+        (horizon, value / (features.volatility * math.sqrt(horizon)))
+        for horizon, value in features.log_returns
+    )
+    if any(not math.isfinite(value) for _, value in components):
+        raise ValueError("momentum components must be finite")
+    return components
+
+
 def _canonical(value: object) -> str:
     return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
 
@@ -169,12 +188,7 @@ class MomentumStrategy:
         features = compute_features(history, known_at=now, config=self._config.features)
         if features.volatility <= 0:
             return MomentumDecision("abstain", "zero_volatility", features)
-        components = tuple(
-            (horizon, value / (features.volatility * math.sqrt(horizon)))
-            for horizon, value in features.log_returns
-        )
-        if any(not math.isfinite(value) for _, value in components):
-            raise ValueError("momentum components must be finite")
+        components = momentum_components(features)
         raw_forecast = self._config.forecast_scale * fmean(value for _, value in components)
         if not math.isfinite(raw_forecast):
             raise ValueError("momentum forecast must be finite before clipping")

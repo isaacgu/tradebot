@@ -348,3 +348,30 @@ parameters are invented, not FBS terms or account/risk settings. The decision-re
 dashboard does not automatically display its separate cost-accounting artifact.
 See the [execution engineering report](docs/reports/execution-accounting-engineering.md)
 for commands, known answers, checks and remaining implementation work.
+
+## Forecast-calibration engineering preview
+
+The fixed invented fixture now exercises real train-only scalar fitting, saved
+model hashes and frozen validation. It does not open FBS files or start market-data
+training:
+
+```bash
+uv run --no-sync python -m tradebot.research.calibration_demo --output-root build/calibration-smoke-local --attempt-id first --git-sha UNCOMMITTED
+```
+
+Use a fresh attempt ID for retries. Completed and failed attempts remain in the
+local registry; models and reports are content-addressed and never overwritten.
+The result explicitly reports zero market-data models and no financial evaluation.
+The [calibration design](docs/adr/0016-training-only-forecast-calibration.md) describes
+training-only selection, embargo/purge, frozen validation and denied lockbox access.
+
+Additional [conservative matching](docs/adr/0015-conservative-synthetic-order-matching.md)
+tests cover limit, stop, stop-limit and bracket orders and adverse-first bracket
+bars. These additions are not a full SimBroker/portfolio stack or Gate-2 acceptance.
+The [October quality investigation](docs/reports/data_quality_resolution_20261015.md)
+records the corrected spread-failure summary and the unchanged failed FBS reference
+rate. Real training and order execution remain gated; a successful software demo
+does not release either.
+
+See the [October backtester/fitting delivery](docs/reports/backtest-fitting-engineering-20261015.md)
+for verification, local artifact identities and the remaining acceptance work.
