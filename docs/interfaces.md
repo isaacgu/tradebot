@@ -20,16 +20,27 @@ An event must expose `ts_event` and `ts_recv`, both UTC. The bus admits it only 
 timestamp has passed:
 
 ```text
-A(e) = max(ts_event, ts_recv)          # P0
-A(e) = max(ts_event, ts_recv, available_at)   # from P1, per ADR-0006
-A(e) <= clock.now()
+available_at <= clock.now()  AND  ts_event <= clock.now()  AND  ts_recv <= clock.now()
 ```
 
+Every event exposes `available_at`. `Tick` and `Fill` **store** it, and their constructor enforces
+`available_at >= max(ts_event, ts_recv)`. `Bar` and `Forecast` **derive** it from `ts_recv`, which
+their own fatal `ts_recv >= ts_event` invariant already makes the maximum — so it cannot drift.
+
+The bus checks all three stamps, not just the key. For a well-formed event the key dominates the
+other two, so the key alone would suffice; but `Event` is a *structural* protocol, so an adapter can
+supply an object whose key understates its own stamps. Checking each one keeps a specific rejection
+reason for the metrics and denies a malformed event a single field to lie about.
+
 `ts_event` and `ts_recv` come from different clocks — the venue's and the local host's. Adapters MUST
-measure the difference and never assume it is zero or non-negative. From P1, `Tick` and `Fill` carry
-an explicit `available_at` and the raw `ts_recv` is never normalised; `Bar` and `Forecast`, whose
-stamps are both ours, keep `ts_recv >= ts_event` as a fatal invariant. See ADR-0006, which blocks the
-first adapter.
+measure the difference and never assume it is zero or non-negative. `ts_recv` is the unmodified local
+observation and is never clamped, offset or normalised: it is what the SPEC §4.5 staleness watchdog
+measures. Skew is reported instead, via `skew_lb` and the `CLOCK_SKEW` quality flag.
+
+`tradebot.data.normalize` is the **single** normalizer for both the historical and live feed paths
+(NN-1). It imputes a missing receipt stamp as exactly `ts_event` under `TS_RECV_IMPUTED`, with no
+per-source latency knob, and sorts flags so re-ingesting the same source bytes is byte-identical.
+See ADR-0006.
 
 For a `Bar`, `ts_event == ts_close`; the bar is not visible while it is still forming. Feed order
 is authoritative. The bus preserves publication and subscription order and appends nested events.

@@ -7,6 +7,11 @@ __pycache__/
 .ruff_cache/
 .hypothesis/
 build/
+# Local licensed market data and mutable calendar stores are not source artifacts.
+data/**/*.parquet
+data/**/*.sqlite
+data/**/*.sqlite-*
+data/**/*.db
 dist/
 *.egg-info/
 .env

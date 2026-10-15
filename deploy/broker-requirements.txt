@@ -1,0 +1,4 @@
+# Native Windows MT5 IPC bridge; deliberately separate from the Linux data runtime.
+# Matches the currently verified acquisition environment. No credentials are included.
+MetaTrader5==5.0.6162; sys_platform == 'win32'
+numpy==2.5.2; sys_platform == 'win32'

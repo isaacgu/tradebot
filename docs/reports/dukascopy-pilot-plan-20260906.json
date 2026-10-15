@@ -1,0 +1,416 @@
+{
+  "schema": "dukascopy-pilot-plan-v1",
+  "prepared_at_utc": "2026-09-06 08:50:52 UTC",
+  "status": "AWAITING_DUKASCOPY_WRITTEN_PERMISSION",
+  "authorization": {
+    "user_message": "Please proceed with Dukascopy",
+    "scope": "Bounded source qualification; not vendor consent, source adoption, training, live trading, paid services, or outbound correspondence approval."
+  },
+  "source_candidate": "Dukascopy",
+  "instruments": [
+    "EURUSD"
+  ],
+  "unmeasured_instruments": [
+    "GBPUSD"
+  ],
+  "purpose": "Independent same-window FX comparison; do not splice into or clear FBS evidence.",
+  "inputs": [
+    {
+      "path": "build/gate1/reference-recapture-plan-20260906-v1/plan.json",
+      "sha256": "e864c902ffded738a7b02c4272f9f3a5172a742995121173a16210355526e982"
+    },
+    {
+      "path": "build/gate1/reference-recapture-comparison-20260906-v1/gap-review.csv",
+      "sha256": "f495aa11a13ad34bcc96f51c3a44ff6e946d476b7c2bf80d73335486da6828e5"
+    },
+    {
+      "path": "build/gate1/reference-recapture-comparison-20260906-v1/price-review.csv",
+      "sha256": "7f79f380a06555a4b71b8d631067335e591b5b49a1efa5406edcbfb5de46b308"
+    },
+    {
+      "path": "docs/adr/0007-data-source-selection.md",
+      "sha256": "769e3ff4e543baa5ecb45fef729bdcf01d51f3d51835873fd492a52a2a2d30cc"
+    }
+  ],
+  "scope": {
+    "target_minutes": 24,
+    "gap_minutes": 17,
+    "price_flagged_minutes": 7,
+    "price_events": 10,
+    "utc_dates": [
+      "2024-10-07",
+      "2024-10-09",
+      "2024-10-11",
+      "2024-10-16",
+      "2024-10-17",
+      "2024-10-18",
+      "2024-10-21",
+      "2024-10-23",
+      "2024-10-24",
+      "2024-10-25",
+      "2024-10-28",
+      "2024-10-29",
+      "2024-10-30",
+      "2024-10-31"
+    ],
+    "context_minutes_per_window": 71,
+    "interval_convention": "[start_utc,end_utc)",
+    "unique_hour_blocks": 38,
+    "timezone": "UTC; normalize source epochs only after provider documentation validation"
+  },
+  "request_proposal": {
+    "route": null,
+    "route_status": "Provider must confirm Historical Data Export or designate a documented permitted route; no archive URLs assumed or probed.",
+    "reference_page": "https://www.dukascopy.com/swiss/english/marketwatch/historical/",
+    "concurrency": 1,
+    "minimum_seconds_between_requests": 2,
+    "maximum_data_requests": 76,
+    "repeat_sweeps": 2,
+    "automatic_retries": 0,
+    "rate_status": "Proposed, not approved; smaller vendor limits prevail.",
+    "range_route_data_requests_if_one_response_per_window": 48,
+    "hourly_route_data_requests_if_one_response_per_hour": 76
+  },
+  "required_permission": [
+    "Exact automated access route and request rate",
+    "Raw and derived local retention, checksums, backups and reproducibility",
+    "Private research including possible future own-account trading through FBS",
+    "Non-reconstructable aggregate findings shown to an independent reviewer",
+    "No charge within current free-sources-only budget"
+  ],
+  "reference_terms": {
+    "checked_date": "2026-09-06",
+    "url": "https://www.dukascopy.com/swiss/english/legal-pages/terms-of-use/",
+    "sections": [
+      "3 Restrictions on Use",
+      "4 License"
+    ],
+    "permission_received": false
+  },
+  "windows": [
+    {
+      "id": "EURUSD-20241007T1345Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-07T13:45:00Z",
+      "start_utc": "2024-10-07T12:40:00Z",
+      "end_utc": "2024-10-07T13:51:00Z",
+      "flags": [
+        "GAP"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241007T1346Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-07T13:46:00Z",
+      "start_utc": "2024-10-07T12:41:00Z",
+      "end_utc": "2024-10-07T13:52:00Z",
+      "flags": [
+        "GAP"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241009T1329Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-09T13:29:00Z",
+      "start_utc": "2024-10-09T12:24:00Z",
+      "end_utc": "2024-10-09T13:35:00Z",
+      "flags": [
+        "GAP"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241009T1433Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-09T14:33:00Z",
+      "start_utc": "2024-10-09T13:28:00Z",
+      "end_utc": "2024-10-09T14:39:00Z",
+      "flags": [
+        "PRICE_OUTLIER"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241011T1443Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-11T14:43:00Z",
+      "start_utc": "2024-10-11T13:38:00Z",
+      "end_utc": "2024-10-11T14:49:00Z",
+      "flags": [
+        "GAP"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241016T1516Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-16T15:16:00Z",
+      "start_utc": "2024-10-16T14:11:00Z",
+      "end_utc": "2024-10-16T15:22:00Z",
+      "flags": [
+        "GAP"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241017T1200Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-17T12:00:00Z",
+      "start_utc": "2024-10-17T10:55:00Z",
+      "end_utc": "2024-10-17T12:06:00Z",
+      "flags": [
+        "GAP"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241017T1515Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-17T15:15:00Z",
+      "start_utc": "2024-10-17T14:10:00Z",
+      "end_utc": "2024-10-17T15:21:00Z",
+      "flags": [
+        "PRICE_OUTLIER"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241018T1433Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-18T14:33:00Z",
+      "start_utc": "2024-10-18T13:28:00Z",
+      "end_utc": "2024-10-18T14:39:00Z",
+      "flags": [
+        "GAP"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241021T1211Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-21T12:11:00Z",
+      "start_utc": "2024-10-21T11:06:00Z",
+      "end_utc": "2024-10-21T12:17:00Z",
+      "flags": [
+        "GAP"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241021T1302Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-21T13:02:00Z",
+      "start_utc": "2024-10-21T11:57:00Z",
+      "end_utc": "2024-10-21T13:08:00Z",
+      "flags": [
+        "GAP"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241021T1420Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-21T14:20:00Z",
+      "start_utc": "2024-10-21T13:15:00Z",
+      "end_utc": "2024-10-21T14:26:00Z",
+      "flags": [
+        "GAP"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241021T1453Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-21T14:53:00Z",
+      "start_utc": "2024-10-21T13:48:00Z",
+      "end_utc": "2024-10-21T14:59:00Z",
+      "flags": [
+        "GAP"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241023T1506Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-23T15:06:00Z",
+      "start_utc": "2024-10-23T14:01:00Z",
+      "end_utc": "2024-10-23T15:12:00Z",
+      "flags": [
+        "PRICE_OUTLIER"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241023T1507Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-23T15:07:00Z",
+      "start_utc": "2024-10-23T14:02:00Z",
+      "end_utc": "2024-10-23T15:13:00Z",
+      "flags": [
+        "PRICE_OUTLIER"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241024T1323Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-24T13:23:00Z",
+      "start_utc": "2024-10-24T12:18:00Z",
+      "end_utc": "2024-10-24T13:29:00Z",
+      "flags": [
+        "GAP"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241025T1527Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-25T15:27:00Z",
+      "start_utc": "2024-10-25T14:22:00Z",
+      "end_utc": "2024-10-25T15:33:00Z",
+      "flags": [
+        "GAP"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241028T1332Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-28T13:32:00Z",
+      "start_utc": "2024-10-28T12:27:00Z",
+      "end_utc": "2024-10-28T13:38:00Z",
+      "flags": [
+        "GAP"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241029T1344Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-29T13:44:00Z",
+      "start_utc": "2024-10-29T12:39:00Z",
+      "end_utc": "2024-10-29T13:50:00Z",
+      "flags": [
+        "GAP"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241029T1353Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-29T13:53:00Z",
+      "start_utc": "2024-10-29T12:48:00Z",
+      "end_utc": "2024-10-29T13:59:00Z",
+      "flags": [
+        "GAP"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241029T1600Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-29T16:00:00Z",
+      "start_utc": "2024-10-29T14:55:00Z",
+      "end_utc": "2024-10-29T16:06:00Z",
+      "flags": [
+        "PRICE_OUTLIER"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241030T1333Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-30T13:33:00Z",
+      "start_utc": "2024-10-30T12:28:00Z",
+      "end_utc": "2024-10-30T13:39:00Z",
+      "flags": [
+        "GAP"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241030T1430Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-30T14:30:00Z",
+      "start_utc": "2024-10-30T13:25:00Z",
+      "end_utc": "2024-10-30T14:36:00Z",
+      "flags": [
+        "PRICE_OUTLIER"
+      ],
+      "target_count": 1
+    },
+    {
+      "id": "EURUSD-20241031T1430Z",
+      "instrument": "EURUSD",
+      "minute_utc": "2024-10-31T14:30:00Z",
+      "start_utc": "2024-10-31T13:25:00Z",
+      "end_utc": "2024-10-31T14:36:00Z",
+      "flags": [
+        "PRICE_OUTLIER"
+      ],
+      "target_count": 4
+    }
+  ],
+  "hour_blocks_utc": [
+    "2024-10-07T12:00:00Z",
+    "2024-10-07T13:00:00Z",
+    "2024-10-09T12:00:00Z",
+    "2024-10-09T13:00:00Z",
+    "2024-10-09T14:00:00Z",
+    "2024-10-11T13:00:00Z",
+    "2024-10-11T14:00:00Z",
+    "2024-10-16T14:00:00Z",
+    "2024-10-16T15:00:00Z",
+    "2024-10-17T10:00:00Z",
+    "2024-10-17T11:00:00Z",
+    "2024-10-17T12:00:00Z",
+    "2024-10-17T14:00:00Z",
+    "2024-10-17T15:00:00Z",
+    "2024-10-18T13:00:00Z",
+    "2024-10-18T14:00:00Z",
+    "2024-10-21T11:00:00Z",
+    "2024-10-21T12:00:00Z",
+    "2024-10-21T13:00:00Z",
+    "2024-10-21T14:00:00Z",
+    "2024-10-23T14:00:00Z",
+    "2024-10-23T15:00:00Z",
+    "2024-10-24T12:00:00Z",
+    "2024-10-24T13:00:00Z",
+    "2024-10-25T14:00:00Z",
+    "2024-10-25T15:00:00Z",
+    "2024-10-28T12:00:00Z",
+    "2024-10-28T13:00:00Z",
+    "2024-10-29T12:00:00Z",
+    "2024-10-29T13:00:00Z",
+    "2024-10-29T14:00:00Z",
+    "2024-10-29T15:00:00Z",
+    "2024-10-29T16:00:00Z",
+    "2024-10-30T12:00:00Z",
+    "2024-10-30T13:00:00Z",
+    "2024-10-30T14:00:00Z",
+    "2024-10-31T13:00:00Z",
+    "2024-10-31T14:00:00Z"
+  ],
+  "comparison_plan": [
+    "Preserve every downloaded response unchanged with route/time/format/byte count/hash and repeat evidence; never overwrite.",
+    "Verify documented timestamp timezone/precision, bid/ask field order, quote units and volume semantics; retain order and multiplicity.",
+    "Profile parse errors, timestamp regressions, exact duplicates, missing/invalid prices, crossed quotes and observed gaps without silently repairing.",
+    "For each of the 17 exact FBS endpoint intervals, count strictly interior Dukascopy ticks and show observed endpoint distances; presence is other-venue activity, not proof of missing FBS quotes.",
+    "For 10 FBS price events in seven minutes, compare separately timed bid/ask and mid-price paths; disclose asynchronous quote ages and no lookahead in any research feature.",
+    "Do not manufacture shared sequence identifiers or assume Dukascopy volume equals FBS volume.",
+    "Pilot is targeted diagnostic evidence only, not a full-month acceptance denominator or proof of source quality."
+  ],
+  "safety": {
+    "network_downloads_performed": 0,
+    "duka_ticks_acquired": 0,
+    "message_sent": false,
+    "account_created": false,
+    "canonical_fbs_data_modified": false,
+    "training_enabled": false,
+    "execution_enabled": false,
+    "gate_approved": false
+  },
+  "next_stage": "After adequate written permission, implement and test the approved acquisition path, execute this pilot, then decide whether to propose full reference/stress-period source qualification. GBPUSD remains a separate later scope; no clean-month selection or threshold changes."
+}

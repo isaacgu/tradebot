@@ -67,6 +67,19 @@ jobs:
             fi
           done
 
+      - name: Reproducible synthetic calibration (not market-data training)
+        run: |
+          uv run --no-sync python -m tradebot.research.calibration_demo --output-root build/calibration/first --attempt-id ci-first --git-sha "$GIT_SHA"
+          uv run --no-sync python -m tradebot.research.calibration_demo --output-root build/calibration/second --attempt-id ci-second --git-sha "$GIT_SHA"
+          cmp build/calibration/first/reports/*/report.json build/calibration/second/reports/*/report.json
+
+      - name: Upload synthetic calibration evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: synthetic-calibration-${{ github.sha }}
+          path: build/calibration/first/
+          if-no-files-found: error
+
       - name: Upload Gate-0 evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -104,3 +117,13 @@ jobs:
 
       - name: Scan full Git history for secrets
         run: /tmp/gitleaks git --redact --no-banner .
+
+  windows-monitoring:
+    runs-on: windows-2022
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check dashboard listener ownership fixtures
+        shell: pwsh
+        run: ./tests/windows/test_dashboard_listener.ps1

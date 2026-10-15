@@ -11,10 +11,16 @@ records it here in the same change.
 | 0003 | Clock, timezone, and FX boundary rules | P0 | accepted |
 | 0004 | Errata adopted at specification freeze | P0 | accepted |
 | 0005 | Gate evidence categories and deferral policy | P0 (doc); enforcement deferred to P1 | accepted |
-| 0006 | Feed adapter timestamp, availability and skew boundary | P1 — **blocks the first adapter** | proposed |
-| 0007 | Data source selection | P1 | not started |
+| 0006 | Feed adapter timestamp, availability and skew boundary | P1 | accepted — partially implemented; see its Implementation status |
+| 0007 | Data source selection | P1 | accepted in part; continuity and calendar evidence pending |
+| 0008 | Local acquisition observability | P1 | accepted |
+| 0009 | Immutable corpus, quality policy and point-in-time calendars | P1 | in implementation |
+| 0010 | Causal decision replay and observable research inputs | Core engineering preparation | implemented; no phase-gate acceptance |
+| 0011 | Engineering research controls | Core engineering preparation | implemented; no financial evaluation or phase-gate acceptance |
+| 0012 | Offline simulated execution and exact cost accounting | P2 engineering preparation | implemented as a synthetic-only increment; no phase-gate acceptance |
+| 0013 | Purpose-scoped research releases and guarded consumption | Data/research engineering preparation | implemented; no production release, trust pin or training approval activated |
 
-**Next free number: 0008.**
+**Next free number: 0014.**
 
 Reserved topics that draw a number when written, at the phase shown:
 

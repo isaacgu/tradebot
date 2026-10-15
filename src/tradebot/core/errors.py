@@ -17,6 +17,14 @@ class LookAheadError(TradebotError):
     """An event is not yet available to the current clock."""
 
 
+class IngestAlignmentError(TradebotError):
+    """A re-fetch overlap could not be resolved within the retained tail."""
+
+
+class LateTickError(TradebotError):
+    """A tick arrived for a bar interval that has already been sealed."""
+
+
 class BusHaltedError(TradebotError):
     """Publication was attempted after dispatch failed closed."""
 

@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "policy_id": "gate1-reference-month-quality-v1-draft",
+  "status": "DRAFT_UNAPPROVED",
+  "scope": {
+    "venue": "FBS",
+    "source": "FBS-Demo",
+    "instrument": "EURUSD",
+    "calendar_instrument": "FBS-Demo/EURUSD",
+    "reference_month": "2024-10"
+  },
+  "criterion": {
+    "comparison": "STRICTLY_LESS_THAN",
+    "threshold": "0.001",
+    "denominator": "EXPECTED_LIQUID_MINUTE_BINS",
+    "interval_membership": "BAR_INTERVAL_FULLY_CONTAINED",
+    "missing_expected_bar_treatment": "UNRESOLVED"
+  },
+  "flag_rules": [
+    {
+      "name": "BACKFILLED",
+      "source": "CAUSAL_BAR",
+      "classification": "PROVENANCE",
+      "treatment": "UNRESOLVED",
+      "rationale": "Backfill provenance must be adjudicated prospectively before Gate-1 counting."
+    },
+    {
+      "name": "CLOCK_SKEW",
+      "source": "CAUSAL_BAR",
+      "classification": "CAUSAL_DEFECT",
+      "treatment": "COUNT_AS_FLAGGED",
+      "rationale": "A bar containing a receipt timestamp before event time is a causal data defect."
+    },
+    {
+      "name": "CROSSED_QUOTE",
+      "source": "CAUSAL_BAR",
+      "classification": "CAUSAL_DEFECT",
+      "treatment": "COUNT_AS_FLAGGED",
+      "rationale": "Crossed quotes are excluded from Mid aggregation and count as causal defects."
+    },
+    {
+      "name": "GAP",
+      "source": "CAUSAL_BAR",
+      "classification": "CAUSAL_DEFECT",
+      "treatment": "COUNT_AS_FLAGGED",
+      "rationale": "A calendar-confirmed unexpected liquid-hours gap counts as a causal defect."
+    },
+    {
+      "name": "GAP_CALENDAR_UNKNOWN",
+      "source": "CAUSAL_BAR",
+      "classification": "CALENDAR_UNKNOWN",
+      "treatment": "UNRESOLVED",
+      "rationale": "An unclassified gap cannot be counted or cleared before calendar review."
+    },
+    {
+      "name": "LOCKED_QUOTE",
+      "source": "CAUSAL_BAR",
+      "classification": "CAUSAL_DEFECT",
+      "treatment": "COUNT_AS_FLAGGED",
+      "rationale": "Locked quotes are excluded from Mid aggregation and count as causal defects."
+    },
+    {
+      "name": "NONPOSITIVE_ASK",
+      "source": "CAUSAL_BAR",
+      "classification": "CAUSAL_DEFECT",
+      "treatment": "COUNT_AS_FLAGGED",
+      "rationale": "A nonpositive ask is an invalid causal quote."
+    },
+    {
+      "name": "NONPOSITIVE_BID",
+      "source": "CAUSAL_BAR",
+      "classification": "CAUSAL_DEFECT",
+      "treatment": "COUNT_AS_FLAGGED",
+      "rationale": "A nonpositive bid is an invalid causal quote."
+    },
+    {
+      "name": "OUT_OF_SESSION",
+      "source": "CAUSAL_BAR",
+      "classification": "CAUSAL_DEFECT",
+      "treatment": "COUNT_AS_FLAGGED",
+      "rationale": "Out-of-session evidence must remain visible and counts as a causal defect."
+    },
+    {
+      "name": "QUALITY_WARMUP",
+      "source": "CAUSAL_BAR",
+      "classification": "WARMUP",
+      "treatment": "UNRESOLVED",
+      "rationale": "Rolling-history warmup treatment requires prospective human agreement."
+    },
+    {
+      "name": "SPREAD_OUTLIER",
+      "source": "CAUSAL_BAR",
+      "classification": "CAUSAL_DEFECT",
+      "treatment": "COUNT_AS_FLAGGED",
+      "rationale": "The configured causal spread diagnostic counts when present in liquid hours."
+    },
+    {
+      "name": "TIME_REGRESSION",
+      "source": "CAUSAL_BAR",
+      "classification": "CAUSAL_DEFECT",
+      "treatment": "COUNT_AS_FLAGGED",
+      "rationale": "A source-time regression is a causal ordering defect."
+    },
+    {
+      "name": "TS_RECV_IMPUTED",
+      "source": "CAUSAL_BAR",
+      "classification": "PROVENANCE",
+      "treatment": "UNRESOLVED",
+      "rationale": "Historical receipt imputation is provenance, not silently clean or defective."
+    },
+    {
+      "name": "PRICE_OUTLIER",
+      "source": "RETROSPECTIVE_TICK",
+      "classification": "RETROSPECTIVE_QA",
+      "treatment": "UNRESOLVED",
+      "rationale": "Future-confirmed reversion is QA-only and needs an explicit counting decision."
+    }
+  ]
+}

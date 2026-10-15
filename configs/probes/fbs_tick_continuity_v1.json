@@ -1,0 +1,47 @@
+{
+    "schema_version": 1,
+    "probe_id": "fbs-fx-continuity-v1",
+    "source": "FBS-Demo",
+    "symbols": {"EURUSD": "EURUSD", "GBPUSD": "GBPUSD"},
+    "repeat_fetches": 2,
+    "chunk_sessions": 1,
+    "purpose": "source_viability_not_gate_evidence",
+    "windows": [
+        {
+            "id": "brexit_2016",
+            "purpose": "Ten-session context around the 2016-06-24 Brexit result.",
+            "start_session_date": "2016-06-19",
+            "end_session_date_exclusive": "2016-07-01"
+        },
+        {
+            "id": "flash_crash_2016",
+            "purpose": "Ten-session context around the 2016-10-07 GBP flash crash.",
+            "start_session_date": "2016-10-02",
+            "end_session_date_exclusive": "2016-10-14"
+        },
+        {
+            "id": "covid_2020",
+            "purpose": "March 2020 liquidity crunch plus the spring US/EU DST mismatch.",
+            "start_session_date": "2020-03-01",
+            "end_session_date_exclusive": "2020-04-03"
+        },
+        {
+            "id": "gilt_crisis_2022",
+            "purpose": "Fifteen-session context around the mini-budget and 2022-09-26 gilt crisis.",
+            "start_session_date": "2022-09-18",
+            "end_session_date_exclusive": "2022-10-07"
+        },
+        {
+            "id": "autumn_dst_reference_2024",
+            "purpose": "Thirty-session reference span covering the autumn US/EU DST mismatch.",
+            "start_session_date": "2024-09-29",
+            "end_session_date_exclusive": "2024-11-08"
+        },
+        {
+            "id": "recent_2026",
+            "purpose": "Five recent completed sessions for current-density and pacing comparison.",
+            "start_session_date": "2026-08-16",
+            "end_session_date_exclusive": "2026-08-21"
+        }
+    ]
+}

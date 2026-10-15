@@ -16,6 +16,10 @@ class ProbeEvent:
     ts_recv: datetime
     name: str
 
+    @property
+    def available_at(self) -> datetime:
+        return max(self.ts_event, self.ts_recv)
+
 
 @dataclass(frozen=True, slots=True)
 class ChildEvent:
@@ -23,11 +27,35 @@ class ChildEvent:
     ts_recv: datetime
     name: str
 
+    @property
+    def available_at(self) -> datetime:
+        return max(self.ts_event, self.ts_recv)
+
 
 @dataclass(slots=True)
 class MutableEvent:
+    """Derives its key, so mutating either stamp also moves ``available_at``."""
+
     ts_event: datetime
     ts_recv: datetime
+    name: str
+
+    @property
+    def available_at(self) -> datetime:
+        return max(self.ts_event, self.ts_recv)
+
+
+@dataclass(frozen=True, slots=True)
+class UnderstatedEvent:
+    """A hostile adapter's event: a key that lies about its own stamps.
+
+    The concrete platform types cannot express this — their invariants forbid it —
+    but ``Event`` is a structural protocol, so the bus must not trust the key alone.
+    """
+
+    ts_event: datetime
+    ts_recv: datetime
+    available_at: datetime
     name: str
 
 
@@ -172,3 +200,44 @@ def test_bus_revalidates_between_subscribers() -> None:
 
     assert bus.halted
     assert seen == ["first"]
+
+
+def test_bus_rejects_an_event_whose_key_understates_its_stamps() -> None:
+    """The key alone is not trusted: each stamp is checked in its own right."""
+    now = _start()
+    bus = EventBus(SimClock(now))
+    seen: list[str] = []
+    bus.subscribe(UnderstatedEvent, lambda event: seen.append(event.name))
+
+    # available_at claims the event is already actionable while ts_event is future.
+    with pytest.raises(LookAheadError, match="ts_event"):
+        bus.publish(
+            UnderstatedEvent(
+                ts_event=now + timedelta(seconds=1),
+                ts_recv=now,
+                available_at=now,
+                name="understated",
+            )
+        )
+
+    assert seen == []
+
+
+def test_bus_rejects_a_future_availability_key() -> None:
+    """A deferred event is not admitted before its key, even with both stamps past."""
+    now = _start()
+    bus = EventBus(SimClock(now))
+    seen: list[str] = []
+    bus.subscribe(UnderstatedEvent, lambda event: seen.append(event.name))
+
+    with pytest.raises(LookAheadError, match="available_at"):
+        bus.publish(
+            UnderstatedEvent(
+                ts_event=now - timedelta(seconds=5),
+                ts_recv=now - timedelta(seconds=1),
+                available_at=now + timedelta(seconds=1),
+                name="deferred",
+            )
+        )
+
+    assert seen == []

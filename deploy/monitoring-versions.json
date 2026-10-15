@@ -1,0 +1,14 @@
+{
+  "grafana": {
+    "version": "13.2.1",
+    "url": "https://dl.grafana.com/grafana/release/13.2.1/grafana_13.2.1_33191028959_windows_amd64.tar.gz",
+    "sha256": "b6d7060b8d133930742a9326a6065f90e629b173188e041696856b337754a02b",
+    "source": "https://grafana.com/grafana/download/13.2.1?edition=oss&platform=windows"
+  },
+  "prometheus": {
+    "version": "3.14.0",
+    "url": "https://github.com/prometheus/prometheus/releases/download/v3.14.0/prometheus-3.14.0.windows-amd64.zip",
+    "sha256": "e57fbb99e4d0bc734d2f2b3aeb68c02fba38862259dc99a95c27ea46d9ccba0a",
+    "source": "https://prometheus.io/download/"
+  }
+}
